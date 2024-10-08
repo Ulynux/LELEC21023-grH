@@ -114,7 +114,7 @@ int main(void)
 
   while (1)
   {
-	  WFI();
+	  __WFI();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
