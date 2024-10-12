@@ -38,7 +38,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define ADC_BUF_SIZE 256
+#define ADC_BUF_SIZE 30000
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -69,7 +69,6 @@ uint32_t get_signal_power(uint16_t *buffer, size_t len);
 /* USER CODE BEGIN 0 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == B1_Pin) {
-		state = 1-state;
 
 		HAL_TIM_Base_Start(&htim3);
 		HAL_ADC_Start_DMA(&hadc1, (uint32_t*)ADCBuffer, 2*ADC_BUF_SIZE);
@@ -78,24 +77,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 }
 
 void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc) {
-    HAL_TIM_Base_Stop(&htim3);
-    HAL_ADC_Stop_DMA(&hadc1);
 
-    if (state) {
-    	hex_encode(hex_encoded_buffer, (uint8_t*) ADCData1, 2*ADC_BUF_SIZE);
-    	print_buffer(ADCData1);
-    	state = 1 - state;
-    	HAL_TIM_Base_Start(&htim3);
-    	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)ADCData2, 2*ADC_BUF_SIZE);
-    }
-    else {
-    	hex_encode(hex_encoded_buffer, (uint8_t*) ADCData2, 2*ADC_BUF_SIZE);
-    	print_buffer(ADCData2);
-      state = 1 - state;
-    }
+	print_buffer(ADCData1);
+}
 
-    
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 
+	print_buffer(ADCData2);
 }
 
 void hex_encode(char* s, const uint8_t* buf, size_t len) {

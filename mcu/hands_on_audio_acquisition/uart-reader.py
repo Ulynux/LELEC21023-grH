@@ -87,6 +87,10 @@ if __name__ == "__main__":
             plt.pause(0.001)
             plt.cla()
 
+            with open(f"csv_files/acq-{msg_counter}.csv", "w") as f:
+                f.write("Time (s),Voltage (mV)\n")
+                for t, v in zip(times, voltage_mV):
+                    f.write(f"{t},{v}\n")
             generate_audio(msg, f"acq-{msg_counter}")
 
             msg_counter += 1
