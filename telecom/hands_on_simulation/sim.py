@@ -260,7 +260,7 @@ def run_sim(chain: Chain):
     ax2.set_ylabel("Angle (radians)", color="g")
     ax2.grid(True)
     ax2.axis("tight")
-    plt.show()
+    plt.savefig("plots/FIR_response.png")
 
     # Bit error rate
     fig, ax = plt.subplots(constrained_layout=True)
@@ -338,7 +338,7 @@ def run_sim(chain: Chain):
     plt.ylim([-1, 101])
     plt.grid()
     plt.legend()
-    plt.show()
+    plt.savefig("plots/Preamble_detection.png")
 
     # RMSE CFO
     plt.figure()
@@ -347,7 +347,7 @@ def run_sim(chain: Chain):
     plt.ylabel("RMSE [-]")
     plt.xlabel("SNR [dB]")
     plt.grid()
-    plt.show()
+    plt.savefig("plots/RMSE_CFO.png")
 
     # RMSE STO
     plt.figure()
@@ -356,7 +356,7 @@ def run_sim(chain: Chain):
     plt.ylabel("RMSE [-]")
     plt.xlabel("SNR [dB]")
     plt.grid()
-    plt.show()
+    plt.savefig("plots/RMSE_STO.png")
 
     # Save simulation outputs (for later post-processing, building new figures,...)
     test_name = "test"
