@@ -76,7 +76,7 @@ class Chain:
         return x
 
     # Rx methods
-    bypass_preamble_detect: bool = False
+    bypass_preamble_detect: bool = True
 
     def preamble_detect(self, y: np.array) -> Optional[int]:
         """
@@ -88,7 +88,7 @@ class Chain:
         """
         raise NotImplementedError
 
-    bypass_cfo_estimation: bool = False
+    bypass_cfo_estimation: bool = True
 
     def cfo_estimation(self, y: np.array) -> float:
         """
@@ -99,7 +99,7 @@ class Chain:
         """
         raise NotImplementedError
 
-    bypass_sto_estimation: bool = False
+    bypass_sto_estimation: bool = True
 
     def sto_estimation(self, y: np.array) -> float:
         """
@@ -192,7 +192,7 @@ class BasicChain(Chain):
         # TO DO: generate the reference waveforms used for the correlation
         fd = self.freq_dev  # Frequency deviation, Delta_f
         B = self.bit_rate  # B=1/T
-        h = 2 * fd / B  # Modulation index
+        
 
         pih = 2 * np.pi * fd * (np.arange(R) / R) / B
         
