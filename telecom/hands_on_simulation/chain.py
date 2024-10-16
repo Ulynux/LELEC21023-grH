@@ -190,12 +190,24 @@ class BasicChain(Chain):
         y = np.resize(y, (nb_syms, R))
 
         # TO DO: generate the reference waveforms used for the correlation
+        fd = self.freq_dev  # Frequency deviation, Delta_f
+        B = self.bit_rate  # B=1/T
+        h = 2 * fd / B  # Modulation index
+        R = self.osr_tx  # Oversampling factor
+        pih = np.pi * h
+        
+        ref_wave_1 = np.exp(1j * pih)
+
+        ref_wave_0 = np.exp(-1j * pih)
         # hint: look at what is done in modulate() in chain.py
-
+        bits_hat = np.zeros(nb_syms, dtype=int)  # Default value, all bits=0. 
+        
         # TO DO: compute the correlations with the two reference waveforms (r0 and r1)
-
+        for i in range(nb_syms):
+            r0 = np.abs(np.sum(y[i] * np.conj(ref_wave_0)))
+            r1 = np.abs(np.sum(y[i] * np.conj(ref_wave_1)))
+            bits_hat[i] = 0 if np.abs(r0) > np.abs(r1) else 1
         # TO DO: performs the decision based on r0 and r1
 
-        bits_hat = np.zeros(nb_syms, dtype=int)  # Default value, all bits=0. TO CHANGE!
 
         return bits_hat
