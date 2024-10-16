@@ -193,8 +193,8 @@ class BasicChain(Chain):
         fd = self.freq_dev  # Frequency deviation, Delta_f
         B = self.bit_rate  # B=1/T
         h = 2 * fd / B  # Modulation index
-        R = self.osr_tx  # Oversampling factor
-        pih = np.pi * h
+
+        pih = 2 * np.pi * fd * (np.arange(R) / R) / B
         
         ref_wave_1 = np.exp(1j * pih)
 
