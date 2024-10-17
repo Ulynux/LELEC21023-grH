@@ -158,7 +158,6 @@ class BasicChain(Chain):
         # TO DO: extract 2 blocks of size N*R at the start of y
         block1 = y[:Nt]
         block2 = y[Nt:2*Nt] 
-        phase_shifts = np.exp(1j * 2 * np.pi * fd * Nt/R * T)
         alpha_hat = np.sum(block2 * np.conj(block1))
         # TO DO: apply the Moose algorithm on these two blocks to estimate the CFO
         
