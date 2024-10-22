@@ -97,13 +97,12 @@ def piechart_power(file_path, data_delimiter, skip_rows, title, output_file, tim
     time1 = int(times[0])
     time2 = int(times[1])
     time3 = int(times[2])
-    print(time1, time2, time3)
 
     
     # Calculate the power usage for each segment
+    print(data['Power(W)'][time1+20], data['Power(W)'][time2+20], data['Power(W)'][time3+20])
     power1 = data['Power(W)'][time1:time2].sum()   # * 0.001 (time step) *1000 (conversion to mW)
     power2 = data['Power(W)'][time2:time3].sum()   # * 0.001 (time step) *1000 (conversion to mW)
-    print(power1, power2)
     power_values = [power2, power1]
     total_power = power1 + power2
 
