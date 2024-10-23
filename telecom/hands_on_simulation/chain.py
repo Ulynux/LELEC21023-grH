@@ -152,7 +152,6 @@ class BasicChain(Chain):
         N = 4  # block of 4 bits (instructions)
         Nt = N*R # Number of blocks used for CFO estimation
         T = 1/self.bit_rate  # B=1/T
-        fd = self.freq_dev  # Frequency deviation, Delta_f
         
         
         # TO DO: extract 2 blocks of size N*R at the start of y
