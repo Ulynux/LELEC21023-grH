@@ -31,7 +31,7 @@ def cfo_estimation(y, B, R, Fdev):
     """
     Estimate CFO using Moose algorithm, on first samples of preamble
     """        
-    N = 16  # block of 4 bits (instructions)
+    N = 2  # block of 4 bits (instructions)
     Nt = N*R # Number of blocks used for CFO estimation    
     
     # TO DO: extract 2 blocks of size N*R at the start of y
