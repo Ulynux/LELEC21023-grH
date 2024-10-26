@@ -153,13 +153,12 @@ class BasicChain(Chain):
         Nt = N*R # Number of blocks used for CFO estimation
         T = 1/self.bit_rate  # B=1/T
         
-        
-        # TO DO: extract 2 blocks of size N*R at the start of y
+        # Extract 2 blocks of size N*R at the start of y
         block1 = y[:Nt]
         block2 = y[Nt:2*Nt] 
         alpha_hat = np.sum(block2 * np.conj(block1))
-        # TO DO: apply the Moose algorithm on these two blocks to estimate the CFO
-        
+
+        # Apply the Moose algorithm on these two blocks to estimate the CFO
         cfo_est = (1/(2*np.pi*T*Nt/R)) * np.angle(alpha_hat)
 
         return cfo_est
