@@ -123,7 +123,7 @@ class Chain:
 class BasicChain(Chain):
     name = "Basic Tx/Rx chain"
 
-    cfo_val, sto_val = np.nan, np.nan  # CFO and STO are random
+    cfo_val, sto_val = 5000, 5/BIT_RATE  # CFO and STO are random
 
     bypass_preamble_detect = True
 
@@ -149,7 +149,7 @@ class BasicChain(Chain):
         """
         R = self.osr_rx # Receiver oversampling factor
         
-        N = 4  # block of 4 bits (instructions)
+        N = 4  # Block of 4 bits (instructions) / Block of 2 bits (respect condition |cfo| < B/2N with cfo_range = 10e4)
         Nt = N*R # Number of blocks used for CFO estimation
         T = 1/self.bit_rate  # B=1/T
         
@@ -164,13 +164,13 @@ class BasicChain(Chain):
 
         return cfo_est
 
-    bypass_sto_estimation = True
+    bypass_sto_estimation = False
 
     def sto_estimation(self, y):
         """
         Estimates symbol timing (fractional) based on phase shifts.
         """
-        R = self.osr_rx
+        R = self.osr_rx  # Receiver oversampling factor
 
         # Computation of derivatives of phase function
         phase_function = np.unwrap(np.angle(y))
@@ -194,29 +194,25 @@ class BasicChain(Chain):
         """
         R = self.osr_rx  # Receiver oversampling factor
         nb_syms = len(y) // R  # Number of CPFSK symbols in y
+        fd = self.freq_dev  # Frequency deviation, Delta_f
+        B = self.bit_rate  # B=1/T
 
         # Group symbols together, in a matrix. Each row contains the R samples over one symbol period
         y = np.resize(y, (nb_syms, R))
-
-        # TO DO: generate the reference waveforms used for the correlation
-        fd = self.freq_dev  # Frequency deviation, Delta_f
-        B = self.bit_rate  # B=1/T
         
+        # Generate the reference waveforms used for the correlation
+        phi = 2 * np.pi * fd * (np.arange(R) / R) / B
+        ref_wave_1 = np.exp(1j * phi)
+        ref_wave_0 = np.exp(-1j * phi)
 
-        pih = 2 * np.pi * fd * (np.arange(R) / R) / B
-        
-        ref_wave_1 = np.exp(1j * pih)
-
-        ref_wave_0 = np.exp(-1j * pih)
-        # hint: look at what is done in modulate() in chain.py
         bits_hat = np.zeros(nb_syms, dtype=int)  # Default value, all bits=0. 
         
-        # TO DO: compute the correlations with the two reference waveforms (r0 and r1)
+        # Compute the correlations with the two reference waveforms (r0 and r1)
         for i in range(nb_syms):
             r0 = np.abs(np.sum(y[i] * np.conj(ref_wave_0)))
             r1 = np.abs(np.sum(y[i] * np.conj(ref_wave_1)))
-            bits_hat[i] = 0 if np.abs(r0) > np.abs(r1) else 1
-        # TO DO: performs the decision based on r0 and r1
+            
+            bits_hat[i] = 0 if np.abs(r0) > np.abs(r1) else 1  # Performs the decision based on r0 and r1
 
 
         return bits_hat
