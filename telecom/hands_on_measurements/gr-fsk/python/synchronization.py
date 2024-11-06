@@ -30,8 +30,19 @@ from .utils import logging, measurements_logger
 def cfo_estimation(y, B, R, Fdev):
     """
     Estimate CFO using Moose algorithm, on first samples of preamble
-    """
-    return 0.0  # TODO
+    """        
+    N = 2  # block of 4 bits (instructions)
+    Nt = N*R # Number of blocks used for CFO estimation    
+    
+    # TO DO: extract 2 blocks of size N*R at the start of y
+    block1 = y[:Nt]
+    block2 = y[Nt:2*Nt] 
+    alpha_hat = np.sum(block2 * np.conj(block1))
+    # TO DO: apply the Moose algorithm on these two blocks to estimate the CFO
+    
+    cfo_est = (1/(2*np.pi*1/B*Nt/R)) * np.angle(alpha_hat)
+
+    return cfo_est
 
 
 def sto_estimation(y, B, R, Fdev):
