@@ -194,9 +194,16 @@ module dual_running_sum #(
 	end
 	
 	
-	wire  [(LONG_SUM_WIDTH+8 -1):0] long_shift_rescale;
+	reg  [(LONG_SUM_WIDTH+8 -1):0] long_shift_rescale;
 	
-	assign long_shift_rescale  = long_sum_reg ;
+	always @(posedge clock) begin
+		if (reset | clear_rs) begin
+			long_shift_rescale <= 'b0;
+		end
+		else begin
+			long_shift_rescale <= (long_sum_reg * K) >> 3;
+		end
+	end
 
 	assign long_shift_full = (long_counter==LONG_SHIFT_LEN);
 	

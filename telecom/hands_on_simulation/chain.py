@@ -31,7 +31,7 @@ class Chain:
 
     cfo_val: float = 0
     cfo_range: float = (
-        10000  # defines the CFO range when random (in Hz) #(1000 in old repo)
+        1000  # defines the CFO range when random (in Hz) #(1000 in old repo)
     )
 
     snr_range: np.ndarray = np.arange(-10, 25)
@@ -123,9 +123,9 @@ class Chain:
 class BasicChain(Chain):
     name = "Basic Tx/Rx chain"
 
-    cfo_val, sto_val = 5000, 5/BIT_RATE  # CFO and STO are random
-
-    bypass_preamble_detect = True
+    cfo_val, sto_val = np.nan, np.nan  # CFO and STO are random
+    
+    bypass_preamble_detect = False
 
     def preamble_detect(self, y):
         """
@@ -149,7 +149,7 @@ class BasicChain(Chain):
         """
         R = self.osr_rx # Receiver oversampling factor
         
-        N = 4  # Block of 4 bits (instructions) / Block of 2 bits (respect condition |cfo| < B/2N with cfo_range = 10e4)
+        N = 64 # Block of 4 bits (instructions) / Block of 2 bits (respect condition |cfo| < B/2N with cfo_range = 10e4)
         Nt = N*R # Number of blocks used for CFO estimation
         T = 1/self.bit_rate  # B=1/T
         
