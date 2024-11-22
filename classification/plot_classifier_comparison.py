@@ -135,4 +135,5 @@ for ds_cnt, ds in enumerate(datasets):
         i += 1
 
 plt.tight_layout()
+plt.savefig("classification/plot_classifier_comparison.png")
 plt.show()

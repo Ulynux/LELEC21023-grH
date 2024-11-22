@@ -348,6 +348,9 @@ def run_sim(chain: Chain):
     plt.xlabel("SNR [dB]")
     plt.grid()
     plt.savefig("plots/RMSE_CFO.png")
+    # Assuming SNRs_dB and RMSE_cfo are your data arrays
+    data = np.column_stack((SNRs_dB, RMSE_cfo))
+    np.savetxt('plots/RMSE_CFO_data.csv', data, delimiter=',', header='SNR_dB,RMSE_cfo', comments='')
 
     # RMSE STO
     plt.figure()
