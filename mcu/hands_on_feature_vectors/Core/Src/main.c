@@ -159,6 +159,7 @@ void print_buffer(volatile uint16_t *buffer, size_t len) {
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
