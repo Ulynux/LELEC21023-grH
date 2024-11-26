@@ -12,6 +12,8 @@ from serial.tools import list_ports
 
 from classification.utils.plots import plot_specgram
 
+from  import 
+
 PRINT_PREFIX = "DF:HEX:"
 FREQ_SAMPLING = 10200
 MELVEC_LENGTH = 20
@@ -82,5 +84,5 @@ if __name__ == "__main__":
             )
             plt.draw()
             plt.pause(0.001)
-            plt.savefig(f"mcu/hands_on_feature_vectors/mel_spectrogram_{msg_counter}.png")
+            plt.savefig("/home/hg/Documents/Projet elec/git/LELEC21023-grH/mcu/hands_on_feature_vectors/mel_spectrogram_{msg_counter}.png")
             plt.clf()
