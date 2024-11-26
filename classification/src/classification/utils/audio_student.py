@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sounddevice as sd
 import soundfile as sf
+import scipy
 from numpy import ndarray
 from scipy.signal import fftconvolve
 
@@ -57,7 +58,7 @@ class AudioUtil:
         sign *= C
         return (sign, sr)
 
-    def resample(audio, newsr=11025) -> Tuple[ndarray, int]:
+    def resample(audio, newsr=11025) -> Tuple[np.ndarray, int]:
         """
         Resample to target sampling frequency.
 
@@ -66,7 +67,9 @@ class AudioUtil:
         """
         sig, sr = audio
 
-        ### TO COMPLETE
+        num_samples = int(len(sig) * newsr / sr)
+
+        resig = scipy.signal.resample(sig, num_samples)
 
         return (resig, newsr)
 
@@ -122,8 +125,14 @@ class AudioUtil:
         """
         sig, sr = audio
 
-        ### TO COMPLETE
-
+        scaling = random.uniform(0, scaling_limit)
+        
+        scaled_sig = sig * scaling
+        
+        scaled_sig = np.clip(scaled_sig, -1, 1)
+        
+        scaled_sig,sr = audio
+        
         return audio
 
     def add_noise(audio, sigma=0.05) -> Tuple[ndarray, int]:
@@ -135,7 +144,14 @@ class AudioUtil:
         """
         sig, sr = audio
 
-        ### TO COMPLETE
+        noise = np.random.normal(0, sigma, len(sig))
+        
+        sig += noise
+        
+        sig = np.clip(sig, -1, 1)
+        
+        sig,sr = audio
+
 
         return audio
 
@@ -165,8 +181,8 @@ class AudioUtil:
         :param filt: The filter to apply.
         """
         sig, sr = audio
-
-        ### TO COMPLETE
+        conv_sig = np.fft.fft(sig)
+        sig = np.fft.ifft(conv_sig * filt).real
 
         return (sig, sr)
 
@@ -184,9 +200,29 @@ class AudioUtil:
         """
         sig, sr = audio
 
-        ### TO COMPLETE
+        # Liste des classes de sons de fond disponibles
+        classes = dataset.list_classes()
 
-        return audio
+        for _ in range(num_sources):
+            cls = random.choice(classes)
+            audio_file = random.choice(dataset.get_class_files(cls))
+            
+            bg_sig, bg_sr = AudioUtil.open(audio_file)
+            if bg_sr != sr:
+                bg_sig, _ = AudioUtil.resample((bg_sig, bg_sr), sr)   # Rééchantillonnage
+            bg_sig, _ = AudioUtil.pad_trunc((bg_sig, sr), max_ms)    # Troncature/Padding
+            
+            bg_sig = bg_sig / np.max(np.abs(bg_sig))  # Normalisation à [-1, 1]
+            bg_amplitude = random.uniform(0, amplitude_limit) * np.max(np.abs(sig))
+            bg_sig = bg_sig * bg_amplitude
+
+            # Ajouter le bruit au signal principal
+            sig = sig + bg_sig[:len(sig)]  # Assurer la compatibilité des longueurs
+
+        sig = np.clip(sig, -1, 1)
+
+        return sig, sr
+
 
     def specgram(audio, Nft=512, fs2=11025) -> ndarray:
         """
@@ -196,8 +232,15 @@ class AudioUtil:
         :param Nft: The number of points of the FFT.
         :param fs2: The sampling frequency.
         """
-        ### TO COMPLETE
+        sig, sr = audio
+        if sr != fs2:
+            sig, _ = AudioUtil.resample(audio, fs2)
+            
+        stft = librosa.stft(sig, n_fft=Nft, hop_length=Nft)
+        
         # stft /= float(2**8)
+        
+        
         return stft
 
     def get_hz2mel(fs2=11025, Nft=512, Nmel=20) -> ndarray:
@@ -223,8 +266,15 @@ class AudioUtil:
         :param Nft: The number of points of the FFT.
         :param fs2: The sampling frequency.
         """
-        ### TO COMPLETE
+        sig, sr = audio
+        if sr != fs2:
+            sig, _ = AudioUtil.resample(audio, fs2)
 
+        stft = AudioUtil.specgram((sig, fs2), Nft=Nft, fs2=fs2)
+        
+        mels = librosa.filters.mel(sr=fs2, n_fft=Nft, n_mels=Nmel)
+        mels = mels / np.max(mels)
+        melspec = np.dot(mels, np.abs(stft))
         return melspec
 
     def spectro_aug_timefreq_masking(
