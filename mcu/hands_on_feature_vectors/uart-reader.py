@@ -13,11 +13,11 @@ from serial.tools import list_ports
 from classification.utils.plots import plot_specgram
 
 import pickle
-model_knn = pickle.load(open('model2.pickle', 'rb')) # Write your path to the model here!
-model_pca = pickle.load(open('pca.pickle', 'rb')) # Write your path to the model here!
+model_knn = pickle.load(open('classification/modeltest.pickle', 'rb')) # Write your path to the model here!
+model_pca = pickle.load(open('classification/pca.pickle', 'rb')) # Write your path to the model here!
 
 PRINT_PREFIX = "DF:HEX:"
-FREQ_SAMPLING = 10200
+FREQ_SAMPLING = 11025
 MELVEC_LENGTH = 20
 N_MELVECS = 20
 
@@ -74,8 +74,9 @@ if __name__ == "__main__":
         for melvec in input_stream:
             
             melvec = melvec.reshape(1, -1)
-            predict = model_knn.predict(melvec)
-            proba_knn = model_knn.predict_proba(melvec)
+            print(melvec.shape)
+            melvec_reduced = model_pca.transform(melvec)
+            proba_knn = model_knn.predict_proba(melvec_reduced)
             msg_counter += 1
 
             print(f"MEL Spectrogram #{msg_counter}")
@@ -93,6 +94,6 @@ if __name__ == "__main__":
             )
             plt.draw()
             plt.pause(0.001)
-            plt.savefig("/home/hg/Documents/Projet elec/git/LELEC21023-grH/mcu/hands_on_feature_vectors/mel_spectrogram_{msg_counter}.png")
+            plt.savefig("mcu/hands_on_feature_vectors/mel_spectrogram_{msg_counter}.png")
             plt.clf()
         
