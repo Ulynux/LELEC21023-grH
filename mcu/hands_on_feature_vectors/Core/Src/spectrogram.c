@@ -143,8 +143,8 @@ void Spectrogram_Compute(q15_t *samples, q15_t *melvec)
 	arm_mat_init_q15(&hz2mel_inst, MELVEC_LENGTH,          SAMPLES_PER_MELVEC / 2, hz2mel_mat);
 	arm_mat_init_q15(&fftmag_inst, SAMPLES_PER_MELVEC / 2, 1,                      buf);
 	arm_mat_init_q15(&melvec_inst, MELVEC_LENGTH,          1,                      melvec);
-	start_cycle_count();
+	//start_cycle_count();
 	arm_mat_mult_fast_q15(&hz2mel_inst, &fftmag_inst, &melvec_inst, buf_tmp);
-	stop_cycle_count("STEP 4");
+	//stop_cycle_count("STEP 4");
 }
 
