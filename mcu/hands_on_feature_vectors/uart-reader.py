@@ -17,7 +17,7 @@ model_knn = pickle.load(open('classification/modeltest.pickle', 'rb')) # Write y
 model_pca = pickle.load(open('classification/pca.pickle', 'rb')) # Write your path to the model here!
 
 PRINT_PREFIX = "DF:HEX:"
-FREQ_SAMPLING = 11025
+FREQ_SAMPLING = 10200
 MELVEC_LENGTH = 20
 N_MELVECS = 20
 
@@ -73,6 +73,7 @@ if __name__ == "__main__":
         print(input_stream)
         for melvec in input_stream:
             
+            melvec = melvec/np.linalg.norm(melvec)
             melvec = melvec.reshape(1, -1)
             print(melvec.shape)
             melvec_reduced = model_pca.transform(melvec)
