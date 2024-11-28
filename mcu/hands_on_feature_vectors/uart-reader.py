@@ -13,8 +13,8 @@ from serial.tools import list_ports
 from classification.utils.plots import plot_specgram
 
 import pickle
-model_knn = pickle.load(open('classification/modeltest.pickle', 'rb')) # Write your path to the model here!
-model_pca = pickle.load(open('classification/pca.pickle', 'rb')) # Write your path to the model here!
+model_knn = pickle.load(open('classification/data/models/modeltest.pickle', 'rb')) # Write your path to the model here!
+model_pca = pickle.load(open('classification/data/models/pca.pickle', 'rb')) # Write your path to the model here!
 
 PRINT_PREFIX = "DF:HEX:"
 FREQ_SAMPLING = 10200

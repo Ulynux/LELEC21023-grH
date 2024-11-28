@@ -32,11 +32,12 @@ void Spectrogram_Format(q15_t *buf)
 
 	// /!\ When multiplying/dividing by a power 2, always prefer shifting left/right instead, ARM instructions to do so are more efficient.
 	// Here we should shift left by 3.
-	__disable_irq();
-	start_cycle_count();
+
+	// __disable_irq();
+	// start_cycle_count();
 	arm_shift_q15(buf, 3, buf, SAMPLES_PER_MELVEC);
-	stop_cycle_count("Step_0.1");
-	__enable_irq();
+	// stop_cycle_count("Step_0.1");
+	// __enable_irq();
 
 	// STEP 0.2 : Remove DC Component
 	//            --> Pointwise substract
@@ -49,16 +50,16 @@ void Spectrogram_Format(q15_t *buf)
 	// [?] Why don't we use the full scale of the 16-bit?
 	// Are we done computing things with this array ?
 	// What would happen if we used the full scale and do, for example, a multiplication between two values?
-	__disable_irq();
-	start_cycle_count();
+	// __disable_irq();
+	// start_cycle_count();
 	const uint16_t DC_VALUE = 1u << 14;
 	for(uint16_t i=0; i < SAMPLES_PER_MELVEC; i++)
 	{
 		// Remove DC component
 		buf[i] -= DC_VALUE;
 	}
-	stop_cycle_count("Step_0.2");
-	__enable_irq();
+	// stop_cycle_count("Step_0.2");
+	// __enable_irq();
 }
 
 // Compute spectrogram of samples and transform into MEL vectors.
@@ -68,11 +69,11 @@ void Spectrogram_Compute(q15_t *samples, q15_t *melvec)
 	//           --> Pointwise product
 	//           Complexity: O(N)
 	//           Number of cycles: 3922
-	__disable_irq();
-	start_cycle_count();
+	// __disable_irq();
+	// start_cycle_count();
 	arm_mult_q15(samples, hamming_window, buf, SAMPLES_PER_MELVEC);
-	stop_cycle_count("STEP 1");
-	__enable_irq();
+	// stop_cycle_count("STEP 1");
+	// __enable_irq();
 
 	// STEP 2  : Discrete Fourier Transform
 	//           --> In-place Fast Fourier Transform (FFT) on a real signal
@@ -85,11 +86,11 @@ void Spectrogram_Compute(q15_t *samples, q15_t *melvec)
 	arm_rfft_instance_q15 rfft_inst;
 
 	arm_rfft_init_q15(&rfft_inst, SAMPLES_PER_MELVEC, 0, 1);
-	__disable_irq();
-	start_cycle_count();
+	// __disable_irq();
+	// start_cycle_count();
 	arm_rfft_q15(&rfft_inst, buf, buf_fft);
-	stop_cycle_count("STEP 2");
-	__enable_irq();
+	// stop_cycle_count("STEP 2");
+	// __enable_irq();
 
 	// STEP 3  : Compute the complex magnitude of the FFT
 	//           Because the FFT can output a great proportion of very small values,
@@ -103,43 +104,43 @@ void Spectrogram_Compute(q15_t *samples, q15_t *melvec)
 
 	q15_t vmax;
 	uint32_t pIndex=0;
-	__disable_irq();
-	start_cycle_count();
+	// __disable_irq();
+	// start_cycle_count();
 	arm_absmax_q15(buf_fft, SAMPLES_PER_MELVEC, &vmax, &pIndex);
-	stop_cycle_count("STEP 3.1");
-	__enable_irq();
+	// stop_cycle_count("STEP 3.1");
+	// __enable_irq();
 
 	// STEP 3.2: Normalize the vector
 	//           Complexity: O(N)
 	//           Number of cycles: 15130
-	__disable_irq();
-	start_cycle_count();
+	// __disable_irq();
+	// start_cycle_count();
 	for (int i=0; i < SAMPLES_PER_MELVEC; i++)
 	{
 		buf[i] = (q15_t) (((q31_t) buf_fft[i] << 15) / ((q31_t) vmax));
 	}
-	stop_cycle_count("STEP 3.2");
-	__enable_irq();
+	// stop_cycle_count("STEP 3.2");
+	// __enable_irq();
 	// STEP 3.3: Compute the complex magnitude
 	//           --> The output buffer is now two times smaller because (real|imag) --> (mag)
 	//           Complexity: O(N**2)
 	//           Number of cycles: 8000-14000
-	__disable_irq();
-	start_cycle_count();
+	// __disable_irq();
+	// start_cycle_count();
 	arm_cmplx_mag_q15(buf, buf, SAMPLES_PER_MELVEC / 2);
-	stop_cycle_count("STEP 3.3");
-	__enable_irq();
+	// stop_cycle_count("STEP 3.3");
+	// __enable_irq();
 	// STEP 3.4: Denormalize the vector
 	//           Complexity: O(N)
 	//           Number of cycles: 6400
-	__disable_irq();
-	start_cycle_count();
+	// __disable_irq();
+	// start_cycle_count();
 	for (int i=0; i < SAMPLES_PER_MELVEC / 2; i++)
 	{
 		buf[i] = (q15_t) ((((q31_t) buf[i]) * ((q31_t) vmax) ) >> 15 );
 	}
-	stop_cycle_count("STEP 3.4");
-	__enable_irq();
+	// stop_cycle_count("STEP 3.4");
+	// __enable_irq();
 	// STEP 4:   Apply MEL transform
 	//           --> Fast Matrix Multiplication
 	//           Complexity: O(N)
@@ -158,10 +159,10 @@ void Spectrogram_Compute(q15_t *samples, q15_t *melvec)
 	arm_mat_init_q15(&hz2mel_inst, MELVEC_LENGTH,          SAMPLES_PER_MELVEC / 2, hz2mel_mat);
 	arm_mat_init_q15(&fftmag_inst, SAMPLES_PER_MELVEC / 2, 1,                      buf);
 	arm_mat_init_q15(&melvec_inst, MELVEC_LENGTH,          1,                      melvec);
-	__disable_irq();
-	start_cycle_count();
+	// __disable_irq();
+	// start_cycle_count();
 	arm_mat_mult_fast_q15(&hz2mel_inst, &fftmag_inst, &melvec_inst, buf_tmp);
-	stop_cycle_count("STEP 4");
-	__enable_irq();
+	// stop_cycle_count("STEP 4");
+	// __enable_irq();
 }
 
