@@ -70,20 +70,21 @@ if __name__ == "__main__":
     else:
         input_stream = reader(port=args.port)
         msg_counter = 0
-        print(input_stream)
+        # print(input_stream)
         for melvec in input_stream:
             
             melvec = melvec/np.linalg.norm(melvec)
             melvec = melvec.reshape(1, -1)
-            print(melvec.shape)
             melvec_reduced = model_pca.transform(melvec)
             proba_knn = model_knn.predict_proba(melvec_reduced)
+            prediction = model_knn.predict(melvec_reduced)
             msg_counter += 1
 
             print(f"MEL Spectrogram #{msg_counter}")
 
             print("\n")
             print("max", proba_knn)
+            print("prediction", prediction)
 
             plt.figure()
             plot_specgram(
@@ -95,6 +96,6 @@ if __name__ == "__main__":
             )
             plt.draw()
             plt.pause(0.001)
-            plt.savefig("mcu/hands_on_feature_vectors/mel_spectrogram_{msg_counter}.png")
+            plt.savefig(f"mcu/hands_on_feature_vectors/mel_spectrogram_chainsaw00.png")
             plt.clf()
         
