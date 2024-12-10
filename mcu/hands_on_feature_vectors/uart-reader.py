@@ -4,17 +4,19 @@ ELEC PROJECT - 210x
 """
 
 import argparse
-
 import matplotlib.pyplot as plt
 import numpy as np
 import serial
 from serial.tools import list_ports
-
-from classification.utils.plots import plot_specgram
-
+from collections import Counter
+from sklearn.metrics import accuracy_score, confusion_matrix
+import pandas as pd
 import pickle
-model_knn = pickle.load(open('classification/data/models/modeltest.pickle', 'rb')) # Write your path to the model here!
-model_pca = pickle.load(open('classification/data/models/pca.pickle', 'rb')) # Write your path to the model here!
+from classification.utils.plots import plot_specgram
+import seaborn as sns
+import time
+model_knn = pickle.load(open('classification/data/models/modeltest.pickle', 'rb'))  # Write your path to the model here!
+model_pca = pickle.load(open('classification/data/models/pca.pickle', 'rb'))  # Write your path to the model here!
 
 PRINT_PREFIX = "DF:HEX:"
 FREQ_SAMPLING = 10200
@@ -27,7 +29,7 @@ dt = np.dtype(np.uint16).newbyteorder("<")
 def parse_buffer(line):
     line = line.strip()
     if line.startswith(PRINT_PREFIX):
-        return bytes.fromhex(line[len(PRINT_PREFIX) :])
+        return bytes.fromhex(line[len(PRINT_PREFIX):])
     else:
         print(line)
         return None
@@ -38,16 +40,36 @@ def reader(port=None):
     while True:
         line = ""
         while not line.endswith("\n"):
-            line += ser.read_until(b"\n", size=2 * N_MELVECS * MELVEC_LENGTH).decode(
-                "ascii"
-            )
+            line += ser.read_until(b"\n", size=2 * N_MELVECS * MELVEC_LENGTH).decode("ascii")
             print(line)
         line = line.strip()
         buffer = parse_buffer(line)
         if buffer is not None:
             buffer_array = np.frombuffer(buffer, dtype=dt)
-
             yield buffer_array
+
+
+def show_confusion_matrix(y_predict, y_true, classnames, title=""):
+    """
+    From target labels and prediction arrays, sort them appropriately and plot confusion matrix.
+    The arrays can contain either ints or str quantities, as long as classnames contains all the elements present in them.
+    """
+    plt.figure(figsize=(3, 3))
+    confmat = confusion_matrix(y_true, y_predict)
+    sns.heatmap(
+        confmat.T,
+        square=True,
+        annot=True,
+        fmt="d",
+        cbar=False,
+        xticklabels=classnames,
+        yticklabels=classnames,
+        ax=plt.gca(),
+    )
+    plt.xlabel("True label")
+    plt.ylabel("Predicted label")
+    plt.title(title)
+    plt.show()
 
 
 if __name__ == "__main__":
@@ -55,11 +77,9 @@ if __name__ == "__main__":
     argParser.add_argument("-p", "--port", help="Port for serial communication")
     args = argParser.parse_args()
     print("uart-reader launched...\n")
-
+    CLASSNAMES = ["birds", "chainsaw", "fire", "handsaw","helicopter"]
     if args.port is None:
-        print(
-            "No port specified, here is a list of serial communication port available"
-        )
+        print("No port specified, here is a list of serial communication port available")
         print("================")
         port = list(list_ports.comports())
         for p in port:
@@ -70,32 +90,81 @@ if __name__ == "__main__":
     else:
         input_stream = reader(port=args.port)
         msg_counter = 0
-        # print(input_stream)
+        memory = []
+        results = []
+        classs = "helicopter"
         for melvec in input_stream:
-            
-            melvec = melvec/np.linalg.norm(melvec)
+            melvec = melvec / np.linalg.norm(melvec)
             melvec = melvec.reshape(1, -1)
             melvec_reduced = model_pca.transform(melvec)
             proba_knn = model_knn.predict_proba(melvec_reduced)
             prediction = model_knn.predict(melvec_reduced)
+
+            memory.append(proba_knn)
+
+            if len(memory) > 5:
+                memory.pop(0)
+
+            # Convert memory to numpy array
+            memory_array = np.array(memory)
+
+            # Naive method
+            naive_class = np.argmax(np.mean(memory_array, axis=0))
+
+            # Majority voting
+            majority_class = np.bincount(np.argmax(memory_array, axis=2).flatten()).argmax()
+
+            # Average the feature representation
+            avg_feature = np.mean(memory_array, axis=0)
+            avg_class = np.argmax(avg_feature)
+
+            # Maximum Likelihood
+            likelihoods = np.sum(np.log(memory_array), axis=0)
+            max_likelihood_class = np.argmax(likelihoods)
+
+            # Save results
+            results.append({
+                "naive_class": CLASSNAMES[naive_class],
+                "majority_class": CLASSNAMES[majority_class],
+                "avg_class": CLASSNAMES[avg_class],
+                "max_likelihood_class": CLASSNAMES[max_likelihood_class],
+                "true_class": str(classs)  # Set the true class to "birds"
+            })
+
+            print(f"Naive class: {CLASSNAMES[naive_class]}")
+            print(f"Majority voting class: {CLASSNAMES[majority_class]}")
+            print(f"Average feature class: {CLASSNAMES[avg_class]}")
+            print(f"Maximum Likelihood class: {CLASSNAMES[max_likelihood_class]}")
+
+            # Break after 101 seconds
             msg_counter += 1
+            print(msg_counter)
+            if msg_counter >= 100:
+                break
 
-            print(f"MEL Spectrogram #{msg_counter}")
+        # Convert results to DataFrame
+        results_df = pd.DataFrame(results)
+        results_df.to_csv("predictions_"+str(classs)+".csv", index=False)
+        # Compute mean accuracy
+        mean_accuracy_naive = accuracy_score(results_df["true_class"], results_df["naive_class"])
+        mean_accuracy_majority = accuracy_score(results_df["true_class"], results_df["majority_class"])
+        mean_accuracy_avg = accuracy_score(results_df["true_class"], results_df["avg_class"])
+        mean_accuracy_max_likelihood = accuracy_score(results_df["true_class"], results_df["max_likelihood_class"])
 
-            print("\n")
-            print("max", proba_knn)
-            print("prediction", prediction)
+        print(f"Mean accuracy (Naive): {mean_accuracy_naive}")
+        print(f"Mean accuracy (Majority Voting): {mean_accuracy_majority}")
+        print(f"Mean accuracy (Average Feature): {mean_accuracy_avg}")
+        print(f"Mean accuracy (Maximum Likelihood): {mean_accuracy_max_likelihood}")
 
-            plt.figure()
-            plot_specgram(
-                melvec.reshape((N_MELVECS, MELVEC_LENGTH)).T,
-                ax=plt.gca(),
-                is_mel=True,
-                title=f"MEL Spectrogram #{msg_counter}",
-                xlabel="Mel vector",
-            )
-            plt.draw()
-            plt.pause(0.001)
-            plt.savefig(f"mcu/hands_on_feature_vectors/mel_spectrogram_chainsaw00.png")
-            plt.clf()
-        
+        # Compute confusion matrices
+        confusion_matrix_naive = confusion_matrix(results_df["true_class"], results_df["naive_class"])
+        confusion_matrix_majority = confusion_matrix(results_df["true_class"], results_df["majority_class"])
+        confusion_matrix_avg = confusion_matrix(results_df["true_class"], results_df["avg_class"])
+        confusion_matrix_max_likelihood = confusion_matrix(results_df["true_class"], results_df["max_likelihood_class"])
+
+        # Show confusion matrices
+        show_confusion_matrix(results_df["naive_class"], results_df["true_class"], CLASSNAMES, title="Naive Method")
+        show_confusion_matrix(results_df["majority_class"], results_df["true_class"], CLASSNAMES, title="Majority Voting")
+        show_confusion_matrix(results_df["avg_class"], results_df["true_class"], CLASSNAMES, title="Average Feature")
+        show_confusion_matrix(results_df["max_likelihood_class"], results_df["true_class"], CLASSNAMES, title="Maximum Likelihood")
+
