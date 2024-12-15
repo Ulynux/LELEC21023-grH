@@ -92,7 +92,7 @@ if __name__ == "__main__":
         msg_counter = 0
         memory = []
         results = []
-        classs = "helicopter"
+        classs = "fire"
         for melvec in input_stream:
             melvec = melvec / np.linalg.norm(melvec)
             melvec = melvec.reshape(1, -1)
@@ -139,7 +139,7 @@ if __name__ == "__main__":
             # Break after 101 seconds
             msg_counter += 1
             print(msg_counter)
-            if msg_counter >= 50:
+            if msg_counter >= 25:
                 break
 
         # Convert results to DataFrame
