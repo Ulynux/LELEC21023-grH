@@ -20,7 +20,7 @@ class Chain:
     preamble: np.ndarray = PREAMBLE
     sync_word: np.ndarray = SYNC_WORD
 
-    payload_len: int = 100  # Number of bits per packet
+    payload_len: int = 800  # Number of bits per packet
 
     # Simulation parameters
     n_packets: int = 100  # Number of sent packets
@@ -40,7 +40,7 @@ class Chain:
     numtaps: int = 100
     #cutoff: float = BIT_RATE * osr_rx / 2.0001  # or 2*BIT_RATE,...
     cutoff = 130000
-    print(cutoff)
+
     # Tx methods
 
     def modulate(self, bits: np.array) -> np.array:

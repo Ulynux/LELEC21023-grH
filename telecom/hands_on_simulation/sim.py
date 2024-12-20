@@ -240,6 +240,7 @@ def run_sim(chain: Chain):
             sum_Cu += Cu[len(taps) - 1 + r - rt]
     shift_SNR_out = 10 * np.log10(R**2 / sum_Cu)  # 10*np.log10(chain.osr_rx)
     shift_SNR_filter = 10 * np.log10(1 / np.sum(np.abs(taps) ** 2))
+    
 
     SNR_th = np.arange(SNRs_dB[0], SNRs_dB[-1] + shift_SNR_out)
     BER_th = 0.5 * erfc(np.sqrt(10 ** (SNR_th / 10.0) / 2))
@@ -273,6 +274,7 @@ def run_sim(chain: Chain):
     ax1.set_ylabel("Amplitude (dB)", color="b")
     ax1.set_xlabel("Frequency (Hz)")
     ax2 = ax1.twinx()
+    ax1.set_xlim(0,132000)
     angles = np.unwrap(np.angle(h))
     ax2.plot(f, angles, "g")
     ax2.set_ylabel("Angle ", color="g")
@@ -314,14 +316,14 @@ def run_sim(chain: Chain):
     # Packet error rate
     fig, ax = plt.subplots(constrained_layout=True)
     ax.plot(SNRs_dB + shift_SNR_out, PER, "-s", label="Simulation")
-    ax.plot(per.SNR_aver,per.PACKET_ERROR,"-s",label="Measurements")
+    ax.plot(per.SNR_aver -shift_SNR_filter,per.PACKET_ERROR,"-s",label="Measurements")
 
     #ax.plot(SNR_th, 1 - (1 - BER_th_BPSK) ** chain.payload_len, label="AWGN Th. BPSK")
     ax.set_ylabel("PER")
     ax.set_xlabel("SNR$_{o}$ [dB]")
     ax.set_yscale("log")
     ax.set_ylim((1e-2, 1))
-    ax.set_xlim((0, 25))
+    ax.set_xlim((0, 18))
     ax.grid(True)
     ax.set_title("Average Packet Error Rate")
     ax.legend()
@@ -416,7 +418,7 @@ def run_sim(chain: Chain):
     #plt.savefig("plots/BER_from_file.png")
 
     fig, ax = plt.subplots(constrained_layout=True)
-    ax.plot(per.SNR_aver,per.PACKET_ERROR,label="Measurements")
+    ax.plot(per.SNR_aver - shift_SNR_filter,per.PACKET_ERROR,label="Measurements")
     ax.plot(SNRs_dB_shifted, PER, "-s", label="Simulation")
     ax.set_ylabel("PER")
     ax.set_xlabel("SNR$_{o}$ [dB]")

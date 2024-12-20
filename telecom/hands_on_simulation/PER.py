@@ -33,7 +33,7 @@ if data_exp:
     cfo, snr, txp, ber, invalid = zip(*data_exp)
     txp_count = dict(Counter(txp))
 
-print(txp_count)
+
 key = list(txp_count.keys())
 occurence = []
 for i in range(len(key)):
@@ -41,15 +41,20 @@ for i in range(len(key)):
 
 SNR = []
 INVALID = []
+CFO = []
 index = 0
 
 snr = list(snr)
 invalid = list(invalid)
+cfo = list(cfo)
+print(occurence)
 for i in range(0,len(occurence)):
     SNR.append(snr[:occurence[i]])
     del snr[:occurence[i]]
     INVALID.append(invalid[:occurence[i]])
     del invalid[:occurence[i]]
+
+    
 
     packet = 0
 for i in range(len(INVALID)):
@@ -71,15 +76,21 @@ for i in range(len(INVALID)):
         packet+=INVALID[i][j]
     PACKET_ERROR.append(packet/100)
 
-print(PACKET_ERROR)
-print(SNR_aver)
+
+plt.figure()
+plt.hist(cfo,bins = 20)
+plt.xlabel("CFO")
+plt.ylabel("OCCURENCe")
+plt.savefig('/home/matthieu/MASTER1/LELEC21023-grH/telecom/CFO.png')
+
+
 plt.figure()
 plt.plot(SNR_aver,PACKET_ERROR,'o',linestyle = '-')
 plt.yscale('log')
 plt.grid(True)
 plt.xlabel('SNR')
 plt.ylabel('PER')
-plt.savefig('/home/matthieu/MASTER1/LELEC21023-grH/telecom/test_packet.png')
+#plt.savefig('/home/matthieu/MASTER1/LELEC21023-grH/telecom/test_packet.png')
 
 plt.show()
 
