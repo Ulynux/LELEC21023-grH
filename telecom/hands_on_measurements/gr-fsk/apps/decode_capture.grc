@@ -160,7 +160,7 @@ blocks:
     alias: ''
     begin_tag: pmt.PMT_NIL
     comment: ''
-    file: /home/ulysse/Documents/LELEC21023-grH/telecom/hands_on_measurements/gr-fsk/misc/fsk_capture.mat
+    file: /mnt/d/Pol/Documents/Courses/LELEC2102/Github/LELEC210X/telecom/hands_on_measurements/gr-fsk/misc/fsk_capture.mat
     length: '0'
     maxoutbuf: '0'
     minoutbuf: '0'

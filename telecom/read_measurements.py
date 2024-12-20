@@ -6,6 +6,7 @@ and plots the PER/SNR curve, plus CFO values.
 import sys
 from collections import defaultdict
 
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -37,10 +38,21 @@ if __name__ == "__main__":
                 invalid = 1 if ber > 0 else 0
                 data["ber"].append(ber)
                 data["invalid"].append(invalid)
+        max_length = max(len(v) for v in data.values())
+        for key in data:
+            while len(data[key]) < max_length:
+                data[key].append(None)
 
         df = pd.DataFrame.from_dict(data)
 
         print(df)
+    
+
+    nom_fichier = f"Data.txt"
+    if not os.path.exists(nom_fichier):
+        with open(nom_fichier, "w") as file:
+            file.write(df.to_string(index=False))
+    
 
     fig = df.groupby("txp").hist(column="cfo")
     plt.show()

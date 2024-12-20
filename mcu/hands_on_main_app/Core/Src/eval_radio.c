@@ -36,9 +36,9 @@ void eval_radio(void)
 
 			for(uint16_t j=0; j < PACKET_DELAY; j++) {
 				HAL_GPIO_WritePin(GPIOB, LD2_Pin, GPIO_PIN_SET);
-				HAL_Delay(500);
+				HAL_Delay(50);
 				HAL_GPIO_WritePin(GPIOB, LD2_Pin, GPIO_PIN_RESET);
-				HAL_Delay(500);
+				HAL_Delay(50);
 			}
 		}
 	}

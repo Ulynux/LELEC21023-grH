@@ -3,6 +3,7 @@ import numpy as np
 from chain import Chain
 from scipy.signal import firwin, freqz
 from scipy.special import erfc
+import PER as per
 
 
 def add_delay(chain: Chain, x: np.ndarray, tau: float):
@@ -46,6 +47,7 @@ def run_sim(chain: Chain):
     """
     SNRs_dB = chain.snr_range
     R = chain.osr_rx
+    print("R = ",R)
     B = chain.bit_rate
     fs = B * R
 
@@ -68,8 +70,7 @@ def run_sim(chain: Chain):
     )  # Padding some zeros before the packets
 
     # Lowpass filter taps
-    taps = firwin(chain.numtaps, chain.cutoff, fs=fs)
-
+    taps = firwin(chain.numtaps, 130000, fs=fs)
     rng = np.random.default_rng()
 
     # For loop on the number of packets to send
@@ -239,25 +240,44 @@ def run_sim(chain: Chain):
             sum_Cu += Cu[len(taps) - 1 + r - rt]
     shift_SNR_out = 10 * np.log10(R**2 / sum_Cu)  # 10*np.log10(chain.osr_rx)
     shift_SNR_filter = 10 * np.log10(1 / np.sum(np.abs(taps) ** 2))
+    
 
     SNR_th = np.arange(SNRs_dB[0], SNRs_dB[-1] + shift_SNR_out)
     BER_th = 0.5 * erfc(np.sqrt(10 ** (SNR_th / 10.0) / 2))
     BER_th_BPSK = 0.5 * erfc(np.sqrt(10 ** (SNR_th / 10.0)))
     BER_th_noncoh = 0.5 * np.exp(-(10 ** (SNR_th / 10.0)) / 2)
 
+    # Bit error rate
+    fig, ax = plt.subplots(constrained_layout=True)
+    ax.plot(np.arange(len(Cu)), Cu)
+    ax.plot(np.arange(len(Cu)), np.abs(Cu))
+    ax.grid(True)
+    ax.set_title("Correlation")
+
+    print(Cu)
+    print(sum_Cu)
+    print(R**2 / sum_Cu)
+    print(np.sum(np.abs(taps) ** 2))
+    print(SNRs_dB)
+    print(SNR_th)
+    print(SNRs_dB - shift_SNR_filter + shift_SNR_out)
+    print(shift_SNR_out)
+    print(shift_SNR_filter)
     ### Plot dashboard
 
     fig, ax1 = plt.subplots()
     w, h = freqz(taps)
     f = w * fs * 0.5 / np.pi
+    
     ax1.set_title("FIR response")
     ax1.plot(f, 20 * np.log10(abs(h)), "b")
     ax1.set_ylabel("Amplitude (dB)", color="b")
     ax1.set_xlabel("Frequency (Hz)")
     ax2 = ax1.twinx()
+    ax1.set_xlim(0,132000)
     angles = np.unwrap(np.angle(h))
     ax2.plot(f, angles, "g")
-    ax2.set_ylabel("Angle (radians)", color="g")
+    ax2.set_ylabel("Angle ", color="g")
     ax2.grid(True)
     ax2.axis("tight")
     plt.savefig("plots/FIR_response.png")
@@ -296,18 +316,14 @@ def run_sim(chain: Chain):
     # Packet error rate
     fig, ax = plt.subplots(constrained_layout=True)
     ax.plot(SNRs_dB + shift_SNR_out, PER, "-s", label="Simulation")
-    ax.plot(SNR_th, 1 - (1 - BER_th) ** chain.payload_len, label="AWGN Th. FSK")
-    ax.plot(
-        SNR_th,
-        1 - (1 - BER_th_noncoh) ** chain.payload_len,
-        label="AWGN Th. FSK non-coh.",
-    )
-    ax.plot(SNR_th, 1 - (1 - BER_th_BPSK) ** chain.payload_len, label="AWGN Th. BPSK")
+    ax.plot(per.SNR_aver -shift_SNR_filter,per.PACKET_ERROR,"-s",label="Measurements")
+
+    #ax.plot(SNR_th, 1 - (1 - BER_th_BPSK) ** chain.payload_len, label="AWGN Th. BPSK")
     ax.set_ylabel("PER")
     ax.set_xlabel("SNR$_{o}$ [dB]")
     ax.set_yscale("log")
-    ax.set_ylim((1e-6, 1))
-    ax.set_xlim((0, 30))
+    ax.set_ylim((1e-2, 1))
+    ax.set_xlim((0, 18))
     ax.grid(True)
     ax.set_title("Average Packet Error Rate")
     ax.legend()
@@ -327,6 +343,7 @@ def run_sim(chain: Chain):
         ax2.set_xlim(ax.get_xlim())
         ax2.xaxis.label.set_color("b")
         ax2.tick_params(axis="x", colors="b")
+    plt.savefig("plots/PER_out_from_file.png")
 
     # Preamble metrics
     plt.figure()
@@ -398,15 +415,16 @@ def run_sim(chain: Chain):
     ax.grid(True)
     ax.set_title("Average Bit Error Rate")
     ax.legend()
-    plt.savefig("plots/BER_from_file.png")
+    #plt.savefig("plots/BER_from_file.png")
 
     fig, ax = plt.subplots(constrained_layout=True)
+    ax.plot(per.SNR_aver - shift_SNR_filter,per.PACKET_ERROR,label="Measurements")
     ax.plot(SNRs_dB_shifted, PER, "-s", label="Simulation")
     ax.set_ylabel("PER")
     ax.set_xlabel("SNR$_{o}$ [dB]")
     ax.set_yscale("log")
-    ax.set_ylim((1e-6, 1))
-    ax.set_xlim((0, 30))
+    ax.set_ylim((1e-2, 1))
+    ax.set_xlim((0, 20))
     ax.grid(True)
     ax.set_title("Average Packet Error Rate")
     ax.legend()

@@ -53,7 +53,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-volatile uint8_t counting_cycles = 0;
+//volatile uint8_t counting_cycles = 0;
 
 volatile int state = 0;
 volatile int bounce = 0;
@@ -112,31 +112,31 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 }
 
 // Starts the cycle counter
-void start_cycle_count() {
-	uint32_t prim = __get_PRIMASK();
-	__disable_irq();
-	if (counting_cycles) {
-		DEBUG_PRINT("Tried re-entrant cycle counting.\r\n");
-		Error_Handler();
-	} else {
-		counting_cycles = 1;
-	}
-	if (!prim) {
-		__enable_irq();
-	}
-	DWT->CTRL |= 1 ; // Enable the cycle counter
-	DWT->CYCCNT = 0; // Reset the cycle counter
-}
+//void start_cycle_count() {
+//	uint32_t prim = __get_PRIMASK();
+//	__disable_irq();
+//	if (counting_cycles) {
+//		DEBUG_PRINT("Tried re-entrant cycle counting.\r\n");
+//		Error_Handler();
+//	} else {
+//		counting_cycles = 1;
+//	}
+//	if (!prim) {
+//		__enable_irq();
+//	}
+//	DWT->CTRL |= 1 ; // Enable the cycle counter
+//	DWT->CYCCNT = 0; // Reset the cycle counter
+//}
 
-// Stop the cycle counter
-// char *s allows to print a header (title of the measured block) before reporting the number of cycles
-void stop_cycle_count(char *s) {
-	uint32_t res = DWT->CYCCNT; // Read the cycle counter
-	counting_cycles = 0;
-	printf("[PERF] ");
-	printf(s);
-	printf(" %lu cycles.\r\n", res);
-}
+//// Stop the cycle counter
+//// char *s allows to print a header (title of the measured block) before reporting the number of cycles
+//void stop_cycle_count(char *s) {
+//	uint32_t res = DWT->CYCCNT; // Read the cycle counter
+//	counting_cycles = 0;
+//	printf("[PERF] ");
+//	printf(s);
+//	printf(" %lu cycles.\r\n", res);
+//}
 
 void hex_encode(char* s, const uint8_t* buf, size_t len) {
   s[2*len] = '\0'; // A string terminated by a zero char.

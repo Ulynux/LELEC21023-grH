@@ -91,11 +91,11 @@ if __name__ == "__main__":
                 melvec.reshape((N_MELVECS, MELVEC_LENGTH)).T,
                 ax=plt.gca(),
                 is_mel=True,
-                title=f"MEL Spectrogram #{msg_counter}",
+                title=f"",
                 xlabel="Mel vector",
             )
             plt.draw()
             plt.pause(0.001)
-            plt.savefig(f"mcu/hands_on_feature_vectors/mel_spectrogram_chainsaw00.png")
+            plt.savefig(f"mcu/hands_on_feature_vectors/mel_spectrogram_fire.png")
             plt.clf()
         
