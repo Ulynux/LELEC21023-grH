@@ -274,13 +274,14 @@ def run_sim(chain: Chain):
     ax1.set_ylabel("Amplitude (dB)", color="b")
     ax1.set_xlabel("Frequency (Hz)")
     ax2 = ax1.twinx()
-    ax1.set_xlim(0,132000)
+
     angles = np.unwrap(np.angle(h))
     ax2.plot(f, angles, "g")
     ax2.set_ylabel("Angle ", color="g")
     ax2.grid(True)
-    ax2.axis("tight")
-    plt.savefig("plots/FIR_response.png")
+    ax1.set_xlim(0,160000)
+    ax2.set_xlim(0,160000)
+    plt.savefig("plots/FIR.png")
 
     # Bit error rate
     fig, ax = plt.subplots(constrained_layout=True)
@@ -301,7 +302,7 @@ def run_sim(chain: Chain):
     bool_2_axis = True
     if bool_2_axis:
         ax2 = ax.twiny()
-        # ax2.set_xticks(SNRs_dB + shift_SNR_out)
+        #ax2.set_xticks(SNRs_dB + shift_SNR_out)
         ax2.set_xticks(SNRs_dB - shift_SNR_filter + shift_SNR_out)
         ax2.set_xticklabels(SNRs_dB)
         ax2.xaxis.set_ticks_position("bottom")
@@ -312,18 +313,20 @@ def run_sim(chain: Chain):
         ax2.set_xlim(ax.get_xlim())
         ax2.xaxis.label.set_color("b")
         ax2.tick_params(axis="x", colors="b")
+        plt.savefig('plots/SNRe')
+
 
     # Packet error rate
     fig, ax = plt.subplots(constrained_layout=True)
     ax.plot(SNRs_dB + shift_SNR_out, PER, "-s", label="Simulation")
-    ax.plot(per.SNR_aver -shift_SNR_filter,per.PACKET_ERROR,"-s",label="Measurements")
+    ax.plot(per.SNR_aver +shift_SNR_filter ,per.PACKET_ERROR,"-s",label="Measurements")
 
     #ax.plot(SNR_th, 1 - (1 - BER_th_BPSK) ** chain.payload_len, label="AWGN Th. BPSK")
     ax.set_ylabel("PER")
     ax.set_xlabel("SNR$_{o}$ [dB]")
     ax.set_yscale("log")
-    ax.set_ylim((1e-2, 1))
-    ax.set_xlim((0, 18))
+
+
     ax.grid(True)
     ax.set_title("Average Packet Error Rate")
     ax.legend()
