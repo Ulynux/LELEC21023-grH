@@ -1,0 +1,33 @@
+CPU Duty cycles count for all phases.
+
+NEW PHASE 3 COM
+
+
+OBSOLET CAUSE WRONG DATA
+/////////////////////////////////////////////
+PHASE 1 AUDIO :
+It start at 0.976 finish at 1.962 MEANING 0.986
+Called 20 times :
+1	FROM 1.013 TO 1.017 MEANING 4ms
+2	FROM 1.063 TO 1.067 MEANING 4ms
+3	FROM 1.113 TO 1.117 MEANING 4ms
+4	FROM 1.116 TO 1.167 MEANING 4ms
+5	FROM 1.213 TO 1.217 MEANING 4ms
+Feels weird they all are perfectly synchronised and delayed
+6	FROM 1.263 TO 1.267 MEANING 4ms
+7	FROM 1.313 TO 1.317 MEANING 4ms
+8	FROM 1.363 TO 1.367 MEANING 4ms
+9	FROM 1.412 TO 1.417 MEANING 5ms
+10	FROM 1.463 TO 1.467 MEANING 4ms
+J'ai pas regarder les dixième de millisecondes mais pas fais les 20 pics
+11 12 13 15 16 17 18 19 20
+
+PHASE 2 TAG ET PACKET :
+It start at 1.966 finish at 2.267 MEANING 301ms
+
+PHASE 3 COM :
+It start at 2.268 finish at 2.362 MEANING 94ms
+
+PHASE 4 UNKNOWN
+
+It start at 2.364 finish at 2.495 MEANING 131ms
