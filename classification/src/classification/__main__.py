@@ -54,14 +54,11 @@ def main(
     This way, you will directly receive the authentified packets from STDIN
     (standard input, i.e., the terminal).
     """
-    if model:
-        with open('classification/data/models/modeltest.pickle', 'rb') as file:
-            model_knn = pickle.load(file)
-        with open('classification/data/models/pca.pickle', 'rb') as file:
-            model_pca = pickle.load(file)
-        m = (model_knn, model_pca)
-    else:
-        m = None
+    with open('classification/data/models/modeltest.pickle', 'rb') as file:
+        model_knn = pickle.load(file)
+    with open('classification/data/models/pca.pickle', 'rb') as file:
+        model_pca = pickle.load(file)
+   
 
     for payload in _input:
         if PRINT_PREFIX in payload:
@@ -71,13 +68,15 @@ def main(
             logger.info(f"Parsed payload into Mel vectors: {melvecs}")
 
             if model_knn and model_pca:
-                melvecs_normalized = melvecs / np.max(melvecs, axis=1, keepdims=True)
-                melvecs_reduced = model_pca.transform(melvecs_normalized)
-                predictions = model_knn.predict(melvecs_reduced)
+                melvec = melvec/np.linalg.norm(melvec)
+                melvec = melvec.reshape(1, -1)
+                melvec_reduced = model_pca.transform(melvec)
+                proba_knn = model_knn.predict_proba(melvec_reduced)
+                prediction = model_knn.predict(melvec_reduced)
                 
-                logger.info(f"Predictions: {predictions}")
+                logger.info(f"Predictions: {proba_knn}")
                 
-                answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{predictions}", timeout=1)
+                answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{prediction}", timeout=1)
                 
                 json_answer = json.loads(answer.text)
                 print(json_answer)
