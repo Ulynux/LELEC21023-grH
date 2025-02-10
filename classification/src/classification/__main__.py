@@ -1,7 +1,7 @@
 import pickle
 from pathlib import Path
 from typing import Optional
-
+import numpy as np
 import click
 
 import common
@@ -9,8 +9,11 @@ from auth import PRINT_PREFIX
 from common.env import load_dotenv
 from common.logging import logger
 
+import requests
+import json
 from .utils import payload_to_melvecs
-
+hostname = "http://localhost:5000"
+key = "TOADD" #################################
 load_dotenv()
 
 
@@ -52,8 +55,11 @@ def main(
     (standard input, i.e., the terminal).
     """
     if model:
-        with open(model, "rb") as file:
-            m = pickle.load(file)
+        with open('classification/data/models/modeltest.pickle', 'rb') as file:
+            model_knn = pickle.load(file)
+        with open('classification/data/models/pca.pickle', 'rb') as file:
+            model_pca = pickle.load(file)
+        m = (model_knn, model_pca)
     else:
         m = None
 
@@ -64,6 +70,14 @@ def main(
             melvecs = payload_to_melvecs(payload, melvec_length, n_melvecs)
             logger.info(f"Parsed payload into Mel vectors: {melvecs}")
 
-            if m:
-                # TODO: perform classification
-                pass
+            if model_knn and model_pca:
+                melvecs_normalized = melvecs / np.max(melvecs, axis=1, keepdims=True)
+                melvecs_reduced = model_pca.transform(melvecs_normalized)
+                predictions = model_knn.predict(melvecs_reduced)
+                
+                logger.info(f"Predictions: {predictions}")
+                
+                answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{predictions}", timeout=1)
+                
+                json_answer = json.loads(answer.text)
+                print(json_answer)
