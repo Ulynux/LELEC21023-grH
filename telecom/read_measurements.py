@@ -48,7 +48,7 @@ if __name__ == "__main__":
         print(df)
     
 
-    nom_fichier = f"data{2}_K3.txt"
+    nom_fichier = f"Data.txt"
     if not os.path.exists(nom_fichier):
         with open(nom_fichier, "w") as file:
             file.write(df.to_string(index=False))
