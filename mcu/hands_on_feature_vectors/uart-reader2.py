@@ -14,7 +14,6 @@ import pandas as pd
 import pickle
 from classification.utils.plots import plot_specgram
 import seaborn as sns
-import time
 model_knn = pickle.load(open('classification/data/models/modeltest.pickle', 'rb'))  # Write your path to the model here!
 model_pca = pickle.load(open('classification/data/models/pca.pickle', 'rb'))  # Write your path to the model here!
 
@@ -92,7 +91,7 @@ if __name__ == "__main__":
         msg_counter = 0
         memory = []
         results = []
-        classs = "fire"
+        classs = "helicopter"
         for melvec in input_stream:
             melvec = melvec / np.linalg.norm(melvec)
             melvec = melvec.reshape(1, -1)
@@ -144,7 +143,7 @@ if __name__ == "__main__":
 
         # Convert results to DataFrame
         results_df = pd.DataFrame(results)
-        results_df.to_csv("predictions_"+str(classs)+"_generalization.csv", index=False)
+        results_df.to_csv("predictions_"+str(classs)+"_generalization_mic.csv", index=False)
         # Compute mean accuracy
         # mean_accuracy_naive = accuracy_score(results_df["true_class"], results_df["naive_class"])
         # mean_accuracy_majority = accuracy_score(results_df["true_class"], results_df["majority_class"])

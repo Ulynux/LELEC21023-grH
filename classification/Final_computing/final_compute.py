@@ -33,6 +33,7 @@ def show_confusion_matrix(y_predict, y_true, classnames, title="", filename=""):
     plt.savefig(filename)
     plt.close()
 
+
 # Read the CSV files for the training/validation set
 df_train_helicopter = pd.read_csv("predictions_helicopter.csv")
 df_train_handsaw = pd.read_csv("predictions_handsaw.csv")
@@ -41,59 +42,115 @@ df_train_chainsaw = pd.read_csv("predictions_chainsaw.csv")
 df_train_birds = pd.read_csv("predictions_birds.csv")
 
 # Concatenate the DataFrames for the training/validation set
-train_results_df = pd.concat([df_train_helicopter, df_train_handsaw, df_train_fire, df_train_chainsaw, df_train_birds], ignore_index=True)
+train_results_jack_df = pd.concat([df_train_helicopter, df_train_handsaw, df_train_fire, df_train_chainsaw, df_train_birds], ignore_index=True)
 
-# Compute mean accuracy for the training/validation set
-train_accuracy_naive = accuracy_score(train_results_df["true_class"], train_results_df["naive_class"]) * 100
-train_accuracy_majority = accuracy_score(train_results_df["true_class"], train_results_df["majority_class"]) * 100
-train_accuracy_avg = accuracy_score(train_results_df["true_class"], train_results_df["avg_class"]) * 100
-train_accuracy_max_likelihood = accuracy_score(train_results_df["true_class"], train_results_df["max_likelihood_class"]) * 100
-
-print(f"Training accuracy (Naive): {train_accuracy_naive:.2f}%")
-print(f"Training accuracy (Majority Voting): {train_accuracy_majority:.2f}%")
-print(f"Training accuracy (Average Feature): {train_accuracy_avg:.2f}%")
-print(f"Training accuracy (Maximum Likelihood): {train_accuracy_max_likelihood:.2f}%")
-
-# Read the CSV files for the test set
-df_test_helicopter = pd.read_csv("predictions_helicopter_generalization.csv")
-df_test_handsaw = pd.read_csv("predictions_handsaw_generalization.csv")
-df_test_fire = pd.read_csv("predictions_fire_generalization.csv")
-df_test_chainsaw = pd.read_csv("predictions_chainsaw_generalization.csv")
-df_test_birds = pd.read_csv("predictions_birds_generalization.csv")
+df_test_jack_helicopter = pd.read_csv("predictions_helicopter_generalization_jack.csv")
+df_test_jack_handsaw = pd.read_csv("predictions_handsaw_generalization_jack.csv")
+df_test_jack_fire = pd.read_csv("predictions_fire_generalization_jack.csv")
+df_test_jack_chainsaw = pd.read_csv("predictions_chainsaw_generalization_jack.csv")
+df_test_jack_birds = pd.read_csv("predictions_birds_generalization_jack.csv")
 
 # Concatenate the DataFrames for the test set
-test_results_df = pd.concat([df_test_helicopter, df_test_handsaw, df_test_fire, df_test_chainsaw, df_test_birds], ignore_index=True)
+test_results_jack_df = pd.concat([df_test_jack_helicopter, df_test_jack_handsaw, df_test_jack_fire, df_test_jack_chainsaw, df_test_jack_birds], ignore_index=True)
 
-# Compute mean accuracy for the test set
-test_accuracy_naive = accuracy_score(test_results_df["true_class"], test_results_df["naive_class"]) * 100
-test_accuracy_majority = accuracy_score(test_results_df["true_class"], test_results_df["majority_class"]) * 100
-test_accuracy_avg = accuracy_score(test_results_df["true_class"], test_results_df["avg_class"]) * 100
-test_accuracy_max_likelihood = accuracy_score(test_results_df["true_class"], test_results_df["max_likelihood_class"]) * 100
+df_train_helicopter_mic = pd.read_csv("predictions_helicopter_generalization.csv")
+df_train_handsaw_mic = pd.read_csv("predictions_handsaw_generalization.csv")
+df_train_fire_mic = pd.read_csv("predictions_fire_generalization.csv")
+df_train_chainsaw_mic = pd.read_csv("predictions_chainsaw_generalization.csv")
+df_train_birds_mic = pd.read_csv("predictions_birds_generalization.csv")
 
-print(f"Test accuracy (Naive): {test_accuracy_naive:.2f}%")
-print(f"Test accuracy (Majority Voting): {test_accuracy_majority:.2f}%")
-print(f"Test accuracy (Average Feature): {test_accuracy_avg:.2f}%")
-print(f"Test accuracy (Maximum Likelihood): {test_accuracy_max_likelihood:.2f}%")
+# Concatenate the DataFrames for the test set
+train_results_df_mic = pd.concat([df_train_helicopter_mic, df_train_handsaw_mic, df_train_fire_mic, df_train_chainsaw_mic, df_train_birds_mic], ignore_index=True)
 
-# Compute generalization error
-generalization_error_naive = train_accuracy_naive - test_accuracy_naive
-generalization_error_majority = train_accuracy_majority - test_accuracy_majority
-generalization_error_avg = train_accuracy_avg - test_accuracy_avg
-generalization_error_max_likelihood = train_accuracy_max_likelihood - test_accuracy_max_likelihood
+df_test_fire_mic = pd.read_csv("predictions_fire_generalization_mic.csv")
+df_test_handsaw_mic = pd.read_csv("predictions_handsaw_generalization_mic.csv")
+df_test_chainsaw_mic = pd.read_csv("predictions_chainsaw_generalization_mic.csv")
+df_test_birds_mic = pd.read_csv("predictions_birds_generalization_mic.csv")
+df_test_helicopter_mic = pd.read_csv("predictions_helicopter_generalization_mic.csv")
 
-print(f"Generalization error (Naive): {generalization_error_naive:.2f}%")
-print(f"Generalization error (Majority Voting): {generalization_error_majority:.2f}%")
-print(f"Generalization error (Average Feature): {generalization_error_avg:.2f}%")
-print(f"Generalization error (Maximum Likelihood): {generalization_error_max_likelihood:.2f}%")
+# Concatenate the DataFrames for the test set
+test_results_df_mic = pd.concat([df_test_fire_mic, df_test_handsaw_mic, df_test_chainsaw_mic, df_test_birds_mic, df_test_helicopter_mic], ignore_index=True) 
 
-# Compute confusion matrices for the test set
-confusion_matrix_naive = confusion_matrix(test_results_df["true_class"], test_results_df["naive_class"], labels=CLASSNAMES)
-confusion_matrix_majority = confusion_matrix(test_results_df["true_class"], test_results_df["majority_class"], labels=CLASSNAMES)
-confusion_matrix_avg = confusion_matrix(test_results_df["true_class"], test_results_df["avg_class"], labels=CLASSNAMES)
-confusion_matrix_max_likelihood = confusion_matrix(test_results_df["true_class"], test_results_df["max_likelihood_class"], labels=CLASSNAMES)
+# Compute mean accuracy for the training/validation set (Jack)
+train_accuracy_naive_jack = accuracy_score(train_results_jack_df["true_class"], train_results_jack_df["naive_class"]) * 100
+train_accuracy_majority_jack = accuracy_score(train_results_jack_df["true_class"], train_results_jack_df["majority_class"]) * 100
+train_accuracy_avg_jack = accuracy_score(train_results_jack_df["true_class"], train_results_jack_df["avg_class"]) * 100
+train_accuracy_max_likelihood_jack = accuracy_score(train_results_jack_df["true_class"], train_results_jack_df["max_likelihood_class"]) * 100
 
-# Show confusion matrices for the test set
-show_confusion_matrix(test_results_df["naive_class"], test_results_df["true_class"], CLASSNAMES, title="Naive Method", filename="confusion_matrix_naive_generalization.png")
-show_confusion_matrix(test_results_df["majority_class"], test_results_df["true_class"], CLASSNAMES, title="Majority Voting", filename="confusion_matrix_majority_generalization.png")
-show_confusion_matrix(test_results_df["avg_class"], test_results_df["true_class"], CLASSNAMES, title="Average Feature", filename="confusion_matrix_avg_generalization.png")
-show_confusion_matrix(test_results_df["max_likelihood_class"], test_results_df["true_class"], CLASSNAMES, title="Maximum Likelihood", filename="confusion_matrix_max_likelihood_generalization.png")
+print(f"Training accuracy (Naive - Jack): {train_accuracy_naive_jack:.2f}%")
+print(f"Training accuracy (Majority Voting - Jack): {train_accuracy_majority_jack:.2f}%")
+print(f"Training accuracy (Average Feature - Jack): {train_accuracy_avg_jack:.2f}%")
+print(f"Training accuracy (Maximum Likelihood - Jack): {train_accuracy_max_likelihood_jack:.2f}%")
+
+# Compute mean accuracy for the test set (Jack)
+test_accuracy_naive_jack = accuracy_score(test_results_jack_df["true_class"], test_results_jack_df["naive_class"]) * 100
+test_accuracy_majority_jack = accuracy_score(test_results_jack_df["true_class"], test_results_jack_df["majority_class"]) * 100
+test_accuracy_avg_jack = accuracy_score(test_results_jack_df["true_class"], test_results_jack_df["avg_class"]) * 100
+test_accuracy_max_likelihood_jack = accuracy_score(test_results_jack_df["true_class"], test_results_jack_df["max_likelihood_class"]) * 100
+
+print(f"Test accuracy (Naive - Jack): {test_accuracy_naive_jack:.2f}%")
+print(f"Test accuracy (Majority Voting - Jack): {test_accuracy_majority_jack:.2f}%")
+print(f"Test accuracy (Average Feature - Jack): {test_accuracy_avg_jack:.2f}%")
+print(f"Test accuracy (Maximum Likelihood - Jack): {test_accuracy_max_likelihood_jack:.2f}%")
+
+# Compute mean accuracy for the training/validation set (Mic)
+train_accuracy_naive_mic = accuracy_score(train_results_df_mic["true_class"], train_results_df_mic["naive_class"]) * 100
+train_accuracy_majority_mic = accuracy_score(train_results_df_mic["true_class"], train_results_df_mic["majority_class"]) * 100
+train_accuracy_avg_mic = accuracy_score(train_results_df_mic["true_class"], train_results_df_mic["avg_class"]) * 100
+train_accuracy_max_likelihood_mic = accuracy_score(train_results_df_mic["true_class"], train_results_df_mic["max_likelihood_class"]) * 100
+
+print(f"Training accuracy (Naive - Mic): {train_accuracy_naive_mic:.2f}%")
+print(f"Training accuracy (Majority Voting - Mic): {train_accuracy_majority_mic:.2f}%")
+print(f"Training accuracy (Average Feature - Mic): {train_accuracy_avg_mic:.2f}%")
+print(f"Training accuracy (Maximum Likelihood - Mic): {train_accuracy_max_likelihood_mic:.2f}%")
+
+# Compute mean accuracy for the test set (Mic)
+test_accuracy_naive_mic = accuracy_score(test_results_df_mic["true_class"], test_results_df_mic["naive_class"]) * 100
+test_accuracy_majority_mic = accuracy_score(test_results_df_mic["true_class"], test_results_df_mic["majority_class"]) * 100
+test_accuracy_avg_mic = accuracy_score(test_results_df_mic["true_class"], test_results_df_mic["avg_class"]) * 100
+test_accuracy_max_likelihood_mic = accuracy_score(test_results_df_mic["true_class"], test_results_df_mic["max_likelihood_class"]) * 100
+
+print(f"Test accuracy (Naive - Mic): {test_accuracy_naive_mic:.2f}%")
+print(f"Test accuracy (Majority Voting - Mic): {test_accuracy_majority_mic:.2f}%")
+print(f"Test accuracy (Average Feature - Mic): {test_accuracy_avg_mic:.2f}%")
+print(f"Test accuracy (Maximum Likelihood - Mic): {test_accuracy_max_likelihood_mic:.2f}%")
+
+# Compute generalization errors for Jack
+generalization_error_naive_jack = train_accuracy_naive_jack - test_accuracy_naive_jack
+generalization_error_majority_jack = train_accuracy_majority_jack - test_accuracy_majority_jack
+generalization_error_avg_jack = train_accuracy_avg_jack - test_accuracy_avg_jack
+generalization_error_max_likelihood_jack = train_accuracy_max_likelihood_jack - test_accuracy_max_likelihood_jack
+
+print(f"Generalization error (Naive - Jack): {generalization_error_naive_jack:.2f}%")
+print(f"Generalization error (Majority Voting - Jack): {generalization_error_majority_jack:.2f}%")
+print(f"Generalization error (Average Feature - Jack): {generalization_error_avg_jack:.2f}%")
+print(f"Generalization error (Maximum Likelihood - Jack): {generalization_error_max_likelihood_jack:.2f}%")
+
+# Compute generalization errors for Mic
+generalization_error_naive_mic = train_accuracy_naive_mic - test_accuracy_naive_mic
+generalization_error_majority_mic = train_accuracy_majority_mic - test_accuracy_majority_mic
+generalization_error_avg_mic = train_accuracy_avg_mic - test_accuracy_avg_mic
+generalization_error_max_likelihood_mic = train_accuracy_max_likelihood_mic - test_accuracy_max_likelihood_mic
+
+print(f"Generalization error (Naive - Mic): {generalization_error_naive_mic:.2f}%")
+print(f"Generalization error (Majority Voting - Mic): {generalization_error_majority_mic:.2f}%")
+print(f"Generalization error (Average Feature - Mic): {generalization_error_avg_mic:.2f}%")
+print(f"Generalization error (Maximum Likelihood - Mic): {generalization_error_max_likelihood_mic:.2f}%")
+
+# Plot confusion matrix for Maximum Likelihood - Jack (Training)
+show_confusion_matrix(
+    train_results_jack_df["max_likelihood_class"],
+    train_results_jack_df["true_class"],
+    CLASSNAMES,
+    title="Confusion Matrix (Maximum Likelihood - Jack Training)",
+    filename="confusion_matrix_max_likelihood_jack_training.png"
+)
+
+# Plot confusion matrix for Naive - Mic (Test)
+show_confusion_matrix(
+    test_results_df_mic["naive_class"],
+    test_results_df_mic["true_class"],
+    CLASSNAMES,
+    title="Confusion Matrix (Naive - Mic Test)",
+    filename="confusion_matrix_naive_mic_test.png"
+)

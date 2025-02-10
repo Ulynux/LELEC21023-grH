@@ -96,6 +96,6 @@ if __name__ == "__main__":
             )
             plt.draw()
             plt.pause(0.001)
-            plt.savefig(f"mcu/hands_on_feature_vectors/mel_spectrogram_fire.png")
+            plt.savefig(f"mcu/hands_on_feature_vectors/mel_spectrogram_fire10.png")
             plt.clf()
         

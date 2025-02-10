@@ -19,7 +19,7 @@ if __name__ == "__main__":
     
         for file in files:
             print(f"Current file: {file}")
-            if file.endswith(".wav") and "helicopter" in file:  # Ensure only .wav files are processed
+            if file.endswith(".wav") and "fire" in file:  # Ensure only .wav files are processed
                 print(f"Processing file: {file}")
                 file_path = os.path.join(root, file)
                 print(f"Playing sound: {file_path}")
