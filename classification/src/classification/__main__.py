@@ -13,7 +13,7 @@ import requests
 import json
 from .utils import payload_to_melvecs
 hostname = "http://localhost:5000"
-key = "TOADD" #################################
+key = "9G740q4Ca_RC4AwpNbubuucSYHbcy9qXerYchghU" #################################
 load_dotenv()
 
 
@@ -64,8 +64,8 @@ def main(
         if PRINT_PREFIX in payload:
             payload = payload[len(PRINT_PREFIX) :]
 
-            melvecs = payload_to_melvecs(payload, melvec_length, n_melvecs)
-            logger.info(f"Parsed payload into Mel vectors: {melvecs}")
+            melvec = payload_to_melvecs(payload, melvec_length, n_melvecs)
+            logger.info(f"Parsed payload into Mel vectors: {melvec}")
 
             if model_knn and model_pca:
                 melvec = melvec/np.linalg.norm(melvec)
