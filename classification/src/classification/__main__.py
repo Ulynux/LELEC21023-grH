@@ -12,8 +12,8 @@ from common.logging import logger
 import requests
 import json
 from .utils import payload_to_melvecs
-hostname = "http://localhost:5000"
-key = "9G740q4Ca_RC4AwpNbubuucSYHbcy9qXerYchghU" #################################
+hostname = "http://lelec210x.sipr.ucl.ac.be"
+key = "t-meiXk3RHRYwfdeGoM8fObRRnggVsjrv6KToE5r" #################################
 load_dotenv()
 
 

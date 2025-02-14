@@ -104,7 +104,7 @@ def create_app() -> Flask:
         "logger": logger,
     }
 
-    if os.environ["FLASK_RUN_HOST"].lower() in ["localhost", "0.0.0.0"]:
+    if os.environ["FLASK_RUN_HOST"].lower() in ["http://lelec210x.sipr.ucl.ac.be", "0.0.0.0"]:
         socketio = SocketIO(
             app,
             **socketio_kwargs,
@@ -181,12 +181,12 @@ def serve(_open: bool = False, _open_doc: bool = False):
     host = os.environ["FLASK_RUN_HOST"].lower()
     port = os.environ["FLASK_RUN_PORT"]
 
-    if _open and host in ["localhost", "0.0.0.0"]:
+    if _open and host in ["http://lelec210x.sipr.ucl.ac.be", "0.0.0.0"]:
         Timer(
             1, lambda: webbrowser.open(f"http://{host}:{port}/lelec210x/leaderboard")
         ).start()
 
-    if _open_doc and host in ["localhost", "0.0.0.0"]:
+    if _open_doc and host in ["http://lelec210x.sipr.ucl.ac.be", "0.0.0.0"]:
         Timer(
             1,
             lambda: webbrowser.open(f"http://{host}:{port}/lelec210x/leaderboard/doc"),
