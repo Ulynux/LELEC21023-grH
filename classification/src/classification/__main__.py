@@ -64,19 +64,37 @@ def main(
         if PRINT_PREFIX in payload:
             payload = payload[len(PRINT_PREFIX) :]
 
-            melvecs = payload_to_melvecs(payload, melvec_length, n_melvecs)
-            logger.info(f"Parsed payload into Mel vectors: {melvecs}")
+            melvec = payload_to_melvecs(payload, melvec_length, n_melvecs)
+            logger.info(f"Parsed payload into Mel vectors: {melvec}")
+            memory = []
 
             if model_knn and model_pca:
                 melvec = melvec/np.linalg.norm(melvec)
                 melvec = melvec.reshape(1, -1)
                 melvec_reduced = model_pca.transform(melvec)
                 proba_knn = model_knn.predict_proba(melvec_reduced)
-                prediction = model_knn.predict(melvec_reduced)
-                
-                logger.info(f"Predictions: {proba_knn}")
-                
-                answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{prediction}", timeout=1)
-                
-                json_answer = json.loads(answer.text)
-                print(json_answer)
+                if len(memory) > 5:
+                    memory.pop(0)
+
+                # Convert memory to numpy array
+                memory_array = np.array(memory)
+
+                # Naive method
+                memory.append(proba_knn)
+
+                # Convert memory to numpy array
+                memory_array = np.array(memory)
+
+                # Majority voting
+                majority_class = np.bincount(np.argmax(memory_array, axis=2).flatten()).argmax()
+                if memory_array.size > 4:
+                    logger.info(f"Predictions: {majority_class}")
+                    
+                    answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{majority_class}", timeout=1)
+                    
+                    json_answer = json.loads(answer.text)
+                    print(json_answer)
+                    memory.clear()
+                    wait_iterations = 3
+                    for _ in range(wait_iterations):
+                        next(_input)
