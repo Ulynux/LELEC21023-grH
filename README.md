@@ -3,7 +3,7 @@
 ## Telecommunication
 - [ ] Change modulation index "h" and proove its optimality 
 - [ ] Use different values of h (1,2,3,... => int values) and explain why one is better than the others 
-- [ ] Prooving that CFO is a bottleneck
+- [x] Prooving that CFO is a bottleneck
 - [ ] Prooving that STO is a bottleneck (simulation)
 - [ ] Prooving that STO is a bottleneck (real measurement en optimal value)
 - [ ] Testing different demodulations methods (discriminateur using simu)
