@@ -13,7 +13,7 @@ import requests
 import json
 from .utils import payload_to_melvecs
 hostname = "http://localhost:5000"
-key = "TOADD" #################################
+key = "9G740q4Ca_RC4AwpNbubuucSYHbcy9qXerYchghU" #################################
 load_dotenv()
 
 
