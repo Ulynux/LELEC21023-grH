@@ -72,21 +72,22 @@ def main(
                 melvec = melvec/np.linalg.norm(melvec)
                 melvec = melvec.reshape(1, -1)
                 melvec_reduced = model_pca.transform(melvec)
-                guess_knn = model_knn.predict(melvec_reduced)
+                proba_knn = model_knn.predict_proba(melvec_reduced)
                 if len(memory) > 5:
                     memory.pop(0)
 
-                # Append the guess to memory
-                memory.append(guess_knn)
+                # Convert memory to numpy array
+                memory_array = np.array(memory)
+
+                # Naive method
+                memory.append(proba_knn)
 
                 # Convert memory to numpy array
                 memory_array = np.array(memory)
 
                 # Majority voting
-                majority_class = np.bincount(memory_array.flatten()).argmax()
-
-                # Majority voting
-                majority_class = np.bincount(np.argmax(memory_array, axis=2).flatten()).argmax()
+                majority_class_index = np.bincount(np.argmax(memory_array, axis=2).flatten()).argmax()
+                majority_class = model_knn.classes_[majority_class_index]
                 if memory_array.size > 4:
                     logger.info(f"Predictions: {majority_class}")
                     
