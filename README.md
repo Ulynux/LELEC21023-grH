@@ -21,4 +21,7 @@
 - [ ] PCA should be the main tool we use firstly
 
 ## MCU
-- [ ] Objectifs de Hugo 
+- [ ] First optimization of the clock of our MCU (3MHz)
+- [ ] Use the low power mode run and the low power mode sleep but need to reduce the sammpling frequency to max 8 kHz
+- [ ] Use the AES accelerator
+- [ ] Optimize the fast mult function in spectrogram.c
