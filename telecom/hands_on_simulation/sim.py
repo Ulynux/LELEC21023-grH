@@ -3,6 +3,7 @@ import numpy as np
 from chain import Chain
 from scipy.signal import firwin, freqz
 from scipy.special import erfc
+from scipy.signal import savgol_filter
 import PER as per
 
 

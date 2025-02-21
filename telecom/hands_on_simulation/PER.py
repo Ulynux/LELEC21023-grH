@@ -20,7 +20,7 @@ def extract_data(file_path):
         print(f"Erreur lors de la lecture du fichier : {e}")
 
 # Exemple d'utilisation
-file_path = '/home/matthieu/MASTER1/LELEC21023-grH/telecom/Data.txt'  # Remplace par le chemin réel de ton fichier
+file_path = '/home/matthieu/MASTER1/Q2/LELEC21023-grH/telecom/Data.txt'  # Remplace par le chemin réel de ton fichier
 data_exp = extract_data(file_path)
 
 cfo = []
@@ -81,7 +81,7 @@ plt.figure()
 plt.hist(cfo,bins = 20)
 plt.xlabel("CFO")
 plt.ylabel("OCCURENCe")
-plt.savefig('/home/matthieu/MASTER1/LELEC21023-grH/telecom/CFO.png')
+plt.savefig('/home/matthieu/MASTER1/Q2/LELEC21023-grH/telecom/CFO.png')
 
 
 plt.figure()

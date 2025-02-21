@@ -1,6 +1,8 @@
 from typing import Optional
 
 import numpy as np
+import matplotlib.pyplot as plt
+from scipy.signal import savgol_filter
 
 BIT_RATE = 50e3
 PREAMBLE = np.array([int(bit) for bit in f"{0xAAAAAAAA:0>32b}"])
@@ -174,6 +176,16 @@ class BasicChain(Chain):
 
         # Computation of derivatives of phase function
         phase_function = np.unwrap(np.angle(y))
+        w = 15
+        p = 1
+        y_smoothed = savgol_filter(phase_function, w, p)
+        plt.plot(y_smoothed[:100])
+        plt.plot(phase_function[:100])
+        plt.title("Signal lissé")
+        plt.show()
+
+
+
         phase_derivative_1 = phase_function[1:] - phase_function[:-1]
         phase_derivative_2 = np.abs(phase_derivative_1[1:] - phase_derivative_1[:-1])
 
