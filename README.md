@@ -3,7 +3,7 @@
 ## Telecommunication
 - [ ] Change modulation index "h" and proove its optimality 
 - [ ] Use different values of h (1,2,3,... => int values) and explain why one is better than the others 
-- [ ] Prooving that CFO is a bottleneck
+- [x] Prooving that CFO is a bottleneck
 - [ ] Prooving that STO is a bottleneck (simulation)
 - [ ] Prooving that STO is a bottleneck (real measurement en optimal value)
 - [ ] Testing different demodulations methods (discriminateur using simu)
@@ -21,4 +21,7 @@
 - [ ] PCA should be the main tool we use firstly
 
 ## MCU
-- [ ] Objectifs de Hugo 
+- [x] First optimization of the clock of our MCU (3MHz)
+- [ ] Use the low power mode run and the low power mode sleep but need to reduce the sammpling frequency to max 8 kHz
+- [ ] Use the AES accelerator
+- [ ] Optimize the fast mult function in spectrogram.c
