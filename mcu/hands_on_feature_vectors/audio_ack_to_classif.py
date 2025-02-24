@@ -7,5 +7,9 @@ melspectrograms = np.load("mcu/hands_on_feature_vectors/melspectrograms"+str(cla
 labels = np.load("mcu/hands_on_feature_vectors/labels"+str(classe)+".npy")
 print(labels,labels.shape)
 print(melspectrograms)
+for i in range(0, len(labels)):
+    print(labels[i])
+    print(melspectrograms[i])
+    print("=====================================")
 # Print the shape of the loaded data
 print(melspectrograms.shape)
