@@ -73,8 +73,9 @@ if __name__ == "__main__":
         all_melvecs = []  # Keep a global list of melvecs
         all_labels = []  # Keep a global list of labels
         # print(input_stream)
-        all_classes = ["gunshot", "fireworks", "chainsaw", "crackling fire"]
+        all_classes = ["gunshot", "fireworks", "chainsaw", "fire"]
         classe = all_classes[0]
+        print(classe)
         for melvec in input_stream:
             
             all_melvecs.append(melvec)
