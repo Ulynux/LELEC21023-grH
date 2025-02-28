@@ -1,7 +1,7 @@
 import numpy as np
 
 # Load the melspectrograms.npy file
-all_classes = ["gunshot", "fireworks", "chainsaw", "fire"]
+all_classes = ["gun", "fireworks", "chainsaw", "fire"]
 classe = all_classes[2]
 melspectrograms = np.load("mcu/hands_on_feature_vectors/melspectrograms"+str(classe)+".npy")
 labels = np.load("mcu/hands_on_feature_vectors/labels"+str(classe)+".npy")
