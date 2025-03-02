@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from chain import Chain
+from chain_opti import Chain
 from scipy.signal import firwin, freqz
 from scipy.special import erfc
 from scipy.signal import savgol_filter
@@ -66,10 +66,11 @@ def run_sim(chain: Chain):
     # Transmitted signals that are independent of the payload bits
     x_pr = chain.modulate(chain.preamble)  # Modulated signal containing preamble
     x_sync = chain.modulate(chain.sync_word)  # Modulated signal containing sync_word
+    """
     x_noise = np.zeros(
         chain.payload_len * chain.osr_tx
     )  # Padding some zeros before the packets
-
+    """
     # Lowpass filter taps
     taps = firwin(chain.numtaps, 130000, fs=fs)
     rng = np.random.default_rng()
@@ -81,7 +82,7 @@ def run_sim(chain: Chain):
 
         # Transmitted signal
         x_pay = chain.modulate(bits)  # Modulated signal with payload
-        x = np.concatenate((x_noise, x_pr, x_sync, x_pay, np.zeros(chain.osr_tx)))
+        x = np.concatenate((x_pr, x_sync, x_pay, np.zeros(chain.osr_tx)))
 
         # Channel application (without noise addition): delay and frequency offset
         if np.isnan(chain.sto_val):  # STO should be random
@@ -109,7 +110,7 @@ def run_sim(chain: Chain):
         for k, SNR_dB in enumerate(SNRs_dB):
             # Add noise
             SNR = 10 ** (SNR_dB / 10.0)
-            y_noisy = y_cfo + w * np.sqrt(1 / SNR)
+            y_noisy = y_cfo 
 
             # Low-pass filtering
             y_filt = np.convolve(y_noisy, taps, mode="same")
@@ -284,6 +285,24 @@ def run_sim(chain: Chain):
     ax2.set_xlim(0,160000)
     plt.savefig("plots/FIR.png")
 
+
+    y_sine = np.sin(2 * np.pi * 100 * np.arange(0, 1, 1 / fs))
+    smooth = savgol_filter(y_sine, 15, 3)
+
+    phase_derivative_1 = smooth[1:] - smooth[:-1]
+    p_d = phase_derivative_1[1:] - phase_derivative_1[:-1]
+
+    sine_d = y_sine[1:] - y_sine[:-1]
+    p_d_sine = sine_d[1:] - sine_d[:-1]
+
+    plt.figure()
+    plt.plot(p_d)
+    plt.plot(p_d_sine)
+    plt.grid(True)
+    plt.title("Phase derivative")
+    plt.show()
+
+"""
     # Bit error rate
     fig, ax = plt.subplots(constrained_layout=True)
     ax.plot(SNRs_dB + shift_SNR_out, BER, "-s", label="Simulation")
@@ -332,6 +351,8 @@ def run_sim(chain: Chain):
     ax.set_title("Average Packet Error Rate")
     ax.legend()
 
+
+
     # add second axis
     bool_2_axis = True
     if bool_2_axis:
@@ -361,7 +382,6 @@ def run_sim(chain: Chain):
     plt.legend()
     plt.savefig("plots/Preamble_detection.png")
 
-    """
     # RMSE CFO
     plt.figure()
     plt.semilogy(SNRs_dB, RMSE_cfo, "-s")
@@ -382,7 +402,7 @@ def run_sim(chain: Chain):
     plt.xlabel("SNR [dB]")
     plt.grid()
     plt.savefig("plots/RMSE_STO.png")
-    """
+
     # Save simulation outputs (for later post-processing, building new figures,...)
     test_name = "test"
     save_var = np.column_stack(
@@ -445,7 +465,7 @@ def run_sim(chain: Chain):
     plt.grid()
     plt.legend()
     plt.savefig("plots/Preamble_detection_from_file.png")
-"""
+
     plt.figure()
     plt.semilogy(SNRs_dB, RMSE_cfo, "-s")
     plt.title("RMSE CFO")
@@ -454,7 +474,6 @@ def run_sim(chain: Chain):
     plt.grid()
     plt.savefig("plots/RMSE_CFO_from_file.png")
 
-
     plt.figure()
     plt.semilogy(SNRs_dB, RMSE_sto, "-s")
     plt.title("RMSE STO")
@@ -462,10 +481,10 @@ def run_sim(chain: Chain):
     plt.xlabel("SNR [dB]")
     plt.grid()
     plt.savefig("plots/RMSE_STO_from_file.png")
+
 """
-
 if __name__ == "__main__":
-    from chain import BasicChain
+    from chain_opti import BasicChain
 
-    chain = BasicChain()
-    run_sim(chain)
+    chain_opti = BasicChain()
+    run_sim(chain_opti)

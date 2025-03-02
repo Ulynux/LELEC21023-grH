@@ -88,6 +88,8 @@ def main(
                 # Majority voting
                 majority_class_index = np.bincount(np.argmax(memory_array, axis=2).flatten()).argmax()
                 majority_class = model_knn.classes_[majority_class_index]
+                if majority_class == "birds" or majority_class == "handsaw" or majority_class == "helicopter":
+                    majority_class = "gunshot"
                 if memory_array.size > 4:
                     logger.info(f"Predictions: {majority_class}")
                     

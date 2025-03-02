@@ -1,0 +1,6 @@
+/usr/local/share/gnuradio/grc/blocks/fsk_preamble_detect.block.yml
+/usr/local/share/gnuradio/grc/blocks/fsk_flag_detector.block.yml
+/usr/local/share/gnuradio/grc/blocks/fsk_synchronization.block.yml
+/usr/local/share/gnuradio/grc/blocks/fsk_demodulation.block.yml
+/usr/local/share/gnuradio/grc/blocks/fsk_packet_parser.block.yml
+/usr/local/share/gnuradio/grc/blocks/fsk_onQuery_noise_estimation.block.yml

@@ -14,18 +14,18 @@ class Chain:
 
     # Communication parameters
     bit_rate: float = BIT_RATE
-    freq_dev: float = BIT_RATE / 4
+    freq_dev: float = BIT_RATE / 2
 
     osr_tx: int = 64
-    osr_rx: int = 8
+    osr_rx: int =  32
 
     preamble: np.ndarray = PREAMBLE
     sync_word: np.ndarray = SYNC_WORD
 
-    payload_len: int = 800  # Number of bits per packet
+    payload_len: int = 80  # Number of bits per packet
 
     # Simulation parameters
-    n_packets: int = 100  # Number of sent packets
+    n_packets: int = 10  # Number of sent packets
 
     # Channel parameters
     sto_val: float = 0
@@ -174,20 +174,48 @@ class BasicChain(Chain):
         """
         R = self.osr_rx  # Receiver oversampling factor
 
+        
+
         # Computation of derivatives of phase function
         phase_function = np.unwrap(np.angle(y))
-        w = 15
-        p = 1
-        y_smoothed = savgol_filter(phase_function, w, p)
-        plt.plot(y_smoothed[:100])
-        plt.plot(phase_function[:100])
-        plt.title("Signal lissé")
-        plt.show()
+        smooth = savgol_filter(phase_function,15,2)
 
+        der_1 = smooth[1:] - smooth[:-1]
+        der_2 = np.abs(der_1[1:] - der_1[:-1])
+
+        
+
+        # Smooth the phase function using Savitzky-Golay filter
 
 
         phase_derivative_1 = phase_function[1:] - phase_function[:-1]
         phase_derivative_2 = np.abs(phase_derivative_1[1:] - phase_derivative_1[:-1])
+
+        
+        plt.figure()
+        plt.grid('true')
+        plt.plot(phase_function[:1000], label='phase_function')
+        plt.plot(smooth[:1000], label='smooth')
+        plt.title('Phase function and its smoothed version')
+        plt.legend()
+        plt.show()
+
+        plt.figure()
+        plt.grid('true')
+        plt.plot(phase_derivative_1[:1000], label='phase_derivative_1')
+        plt.plot(der_1[:1000], label='der_1_smooth')
+        plt.title('First derivative of phase function and its smoothed version')
+        plt.legend()
+        plt.show()
+
+        plt.figure()
+        plt.grid('true')
+        plt.plot(phase_derivative_2[:1000], label='phase_derivative_2')
+        plt.plot(der_2[:1000], label='der_2_smooth')
+        plt.title('Second derivative of phase function and its smoothed version')
+        plt.legend()
+
+    
 
         sum_der_saved = -np.inf
         save_i = 0
