@@ -12,10 +12,10 @@ class Chain:
 
     # Communication parameters
     bit_rate: float = BIT_RATE
-    freq_dev: float = BIT_RATE / 4
+    freq_dev: float = BIT_RATE / 2 * 2
 
     osr_tx: int = 64
-    osr_rx: int = 8
+    osr_rx: int = 16
 
     preamble: np.ndarray = PREAMBLE
     sync_word: np.ndarray = SYNC_WORD
@@ -41,7 +41,85 @@ class Chain:
     #cutoff: float = BIT_RATE * osr_rx / 2.0001  # or 2*BIT_RATE,...
     cutoff = 130000
 
+    # Viterbi encoder parameters
+    R1 = np.array([0,1,3,2])
+    R0 = np.array([0,2,3,1])
+    out_R1 = np.array([[0,0],[1,1],[1,0],[0,1]])
+    out_R0 = np.array([[0,0],[1,1],[0,1],[1,0]])
+    symb_R1 = 
+    len_b = 100
+
     # Tx methods
+
+    def conv_encoder(self, u):
+        """
+        This function encodes the bit stream <u> with a convolutional encoder 
+        whose trellis is described by <R1>, <R0>, <out_R1> and <out_R0>, producing 
+        a bit stream <c>. The encoding process works on blocks of <len_b> bits, 
+        each block being encoded seprately.
+        
+        In the below function, the block separation has already been handled. You
+        need to fill in the numpy array <c_i> which is the non-systematic part of the 
+        coded sequence corresponding to the input block <u_i>.    
+
+        Parameters
+        ----------
+        u : 1D numpy array
+            Input sequence.
+        R1 : 1D numpy array
+            Trellis decomposition - transitions if 1.
+        R0 : 1D numpy array
+            Trellis decomposition - transitions of 0.
+        out_R1 : 2D numpy array
+            Trellis decomposition - output bits corresponding to transitions with 1.
+        out_R0 : 2D numpy array
+            Trellis decomposition - output bits corresponding to transitions with 1.
+        len_b : int
+            Length of each block. We assume that N_b = len(u)/len_b is an integer!
+
+        Returns
+        -------
+        u : 1D numpy array
+            Systematic part of the coded sequence (i.e. the input bit stream).
+        c : 1D numpy array
+            Non-systematic part of the coded sequence.
+        """
+        # Viterbi encoder parameters
+        R1 = self.R1
+        R0 = self.R0
+        out_R1 = self.out_R1
+        out_R0 = self.out_R0
+        len_b = self.len_b
+    
+        # number of states in the trellis
+        nb_states = len(R1)
+        
+        ## Block decomposition for the non-systematic output
+        N_b = int(len(u)/len_b)
+        
+        u_b = np.reshape(u,(N_b,len_b))
+        c_b = np.zeros(u_b.shape,dtype=np.int32)
+        
+        # block convolutional encoder (non-systematic output)
+        for i in range(0,N_b): 
+            # input of block i
+            u_i = u_b[i,:]
+            # non systematic output of block i (TO FILL!)
+            c_i = c_b[i,:] 
+            state = 0
+            for j in range(0,len_b):
+                if u_i[j] == 1:
+                    c_i[j] = out_R1[state,1]
+                    state = R1[state]
+
+                else:
+                    c_i[j] = out_R0[state,1]
+                    state = R0[state]
+                              
+        # non-systematic output
+        c = np.reshape(c_b,u.shape)
+        
+        return (u,c)
 
     def modulate(self, bits: np.array) -> np.array:
         """
@@ -77,7 +155,7 @@ class Chain:
         return x
 
     # Rx methods
-    bypass_preamble_detect: bool = True
+    bypass_preamble_detect: bool = False
 
     def preamble_detect(self, y: np.array) -> Optional[int]:
         """
@@ -89,7 +167,7 @@ class Chain:
         """
         raise NotImplementedError
 
-    bypass_cfo_estimation: bool = True
+    bypass_cfo_estimation: bool = False
 
     def cfo_estimation(self, y: np.array) -> float:
         """
@@ -100,7 +178,7 @@ class Chain:
         """
         raise NotImplementedError
 
-    bypass_sto_estimation: bool = True
+    bypass_sto_estimation: bool = False
 
     def sto_estimation(self, y: np.array) -> float:
         """
@@ -150,7 +228,7 @@ class BasicChain(Chain):
         """
         R = self.osr_rx # Receiver oversampling factor
         
-        N = 64 # Block of 4 bits (instructions) / Block of 2 bits (respect condition |cfo| < B/2N with cfo_range = 10e4)
+        N = 4 # Block of 4 bits (instructions) / Block of 2 bits (respect condition |cfo| < B/2N with cfo_range = 10e4)
         Nt = N*R # Number of blocks used for CFO estimation
         T = 1/self.bit_rate  # B=1/T
         
@@ -216,3 +294,81 @@ class BasicChain(Chain):
 
 
         return bits_hat
+
+    def viterbi_decoder(self, x_tilde):
+
+        # Viterbi decoder parameters
+        R1 = self.R1
+        R0 = self.R0
+        symb_R1 = self.out_R1
+        symb_R0 = self.out_R0
+        len_b = self.len_b
+
+        def dist(a,b):
+            return np.abs(a-b)**2
+        
+        N_b = int(len(x_tilde)/len_b)
+        
+        x_tilde_b = np.reshape(x_tilde,(N_b,len_b))
+        u_hat_b = np.zeros(x_tilde_b.shape,dtype=np.int32)
+        
+        nb_states = len(R1)
+
+        for i in range(N_b):           
+            x_tilde_i  = x_tilde_b[i,:]
+            u_hat_i = u_hat_b[i,:]
+            
+            bits = np.zeros((nb_states,len_b))
+            weights = np.inf*np.ones((nb_states,))
+            weights[0] = 0
+            
+            new_states = np.zeros((2,nb_states))
+            new_weights = np.zeros((2,nb_states))
+            new_bits = np.zeros((2,nb_states,len_b))  
+            
+            for j in range(len_b):
+                for k in range(nb_states):
+                    new_states[1,k] = R1[k]
+                    new_states[0,k] = R0[k]
+                    new_weights[1,k] = weights[k] + dist(x_tilde_i[j],symb_R1[k])
+                    new_weights[0,k] = weights[k] + dist(x_tilde_i[j],symb_R0[k])       
+                    new_bits[1,k,:] = bits[k,:]
+                    new_bits[0,k,:] = bits[k,:]
+                    new_bits[1,k,j] = 1
+                    
+                for k in range(nb_states):
+                    idx_0_filled = False
+                    for l in range(nb_states):
+                        if new_states[0,l] == k:
+                            if idx_0_filled:
+                                idx_10 = 0
+                                idx_11 = l
+                            else:
+                                idx_00 = 0
+                                idx_01 = l 
+                                idx_0_filled = True
+                                
+                        if new_states[1,l] == k:
+                            if idx_0_filled:
+                                idx_10 = 1
+                                idx_11 = l
+                            else:
+                                idx_00 = 1
+                                idx_01 = l 
+                                idx_0_filled = True
+                    
+                    if new_weights[idx_00,idx_01] <= new_weights[idx_10,idx_11]:
+                        weights[k] = new_weights[idx_00,idx_01]
+                        bits[k,:] = new_bits[idx_00,idx_01,:]
+                    else:
+                        weights[k] = new_weights[idx_10,idx_11]
+                        bits[k,:] = new_bits[idx_10,idx_11,:]
+
+            final_weight = np.inf
+            for k in range(nb_states):
+                if weights[k] < final_weight:
+                    final_weight = weights[k]
+                    u_hat_i[:] = bits[k,:]
+        
+        u_hat = np.reshape(u_hat_b,(u_hat_b.size,))
+        return u_hat
