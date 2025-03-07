@@ -3,6 +3,7 @@ import numpy as np
 from chain import Chain
 from scipy.signal import firwin, freqz
 from scipy.special import erfc
+from scipy.signal import savgol_filter
 import PER as per
 
 
@@ -372,6 +373,7 @@ def run_sim(chain: Chain):
     plt.legend()
     if savefig: plt.savefig(plots_folder+"Preamble_detection.png")
 
+    """
     # RMSE CFO
     plt.figure()
     plt.semilogy(SNRs_dB, RMSE_cfo, "-s")

@@ -1,6 +1,8 @@
 from typing import Optional
 
 import numpy as np
+import matplotlib.pyplot as plt
+from scipy.signal import savgol_filter
 
 BIT_RATE = 50e3
 PREAMBLE = np.array([int(bit) for bit in f"{0xAAAAAAAA:0>32b}"])
@@ -20,10 +22,10 @@ class Chain:
     preamble: np.ndarray = PREAMBLE
     sync_word: np.ndarray = SYNC_WORD
 
-    payload_len: int = 800  # Number of bits per packet
+    payload_len: int = 80  # Number of bits per packet
 
     # Simulation parameters
-    n_packets: int = 100  # Number of sent packets
+    n_packets: int = 10  # Number of sent packets
 
     # Channel parameters
     sto_val: float = 0
@@ -250,10 +252,48 @@ class BasicChain(Chain):
         """
         R = self.osr_rx  # Receiver oversampling factor
 
+        
+
         # Computation of derivatives of phase function
         phase_function = np.unwrap(np.angle(y))
+        smooth = savgol_filter(phase_function,15,2)
+
+        der_1 = smooth[1:] - smooth[:-1]
+        der_2 = np.abs(der_1[1:] - der_1[:-1])
+
+        
+
+        # Smooth the phase function using Savitzky-Golay filter
+
+
         phase_derivative_1 = phase_function[1:] - phase_function[:-1]
         phase_derivative_2 = np.abs(phase_derivative_1[1:] - phase_derivative_1[:-1])
+
+        
+        plt.figure()
+        plt.grid('true')
+        plt.plot(phase_function[:1000], label='phase_function')
+        plt.plot(smooth[:1000], label='smooth')
+        plt.title('Phase function and its smoothed version')
+        plt.legend()
+        plt.show()
+
+        plt.figure()
+        plt.grid('true')
+        plt.plot(phase_derivative_1[:1000], label='phase_derivative_1')
+        plt.plot(der_1[:1000], label='der_1_smooth')
+        plt.title('First derivative of phase function and its smoothed version')
+        plt.legend()
+        plt.show()
+
+        plt.figure()
+        plt.grid('true')
+        plt.plot(phase_derivative_2[:1000], label='phase_derivative_2')
+        plt.plot(der_2[:1000], label='der_2_smooth')
+        plt.title('Second derivative of phase function and its smoothed version')
+        plt.legend()
+
+    
 
         sum_der_saved = -np.inf
         save_i = 0
