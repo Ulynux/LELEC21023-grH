@@ -17,7 +17,7 @@ class Chain:
     freq_dev: float = BIT_RATE / 2 * 2
 
     osr_tx: int = 64
-    osr_rx: int = 16
+    osr_rx: int = 32
 
     preamble: np.ndarray = PREAMBLE
     sync_word: np.ndarray = SYNC_WORD
@@ -41,14 +41,14 @@ class Chain:
     # Lowpass filter parameters
     numtaps: int = 100
     #cutoff: float = BIT_RATE * osr_rx / 2.0001  # or 2*BIT_RATE,...
-    cutoff = 130000
+    cutoff = 100000
 
     # Viterbi encoder parameters
     R1 = np.array([0,1,3,2])
     R0 = np.array([0,2,3,1])
     out_R1 = np.array([[0,0],[1,1],[1,0],[0,1]])
     out_R0 = np.array([[0,0],[1,1],[0,1],[1,0]])
-    symb_R1 = 
+    
     len_b = 100
 
     # Tx methods
@@ -269,32 +269,7 @@ class BasicChain(Chain):
         phase_derivative_1 = phase_function[1:] - phase_function[:-1]
         phase_derivative_2 = np.abs(phase_derivative_1[1:] - phase_derivative_1[:-1])
 
-        
-        plt.figure()
-        plt.grid('true')
-        plt.plot(phase_function[:1000], label='phase_function')
-        plt.plot(smooth[:1000], label='smooth')
-        plt.title('Phase function and its smoothed version')
-        plt.legend()
-        plt.show()
-
-        plt.figure()
-        plt.grid('true')
-        plt.plot(phase_derivative_1[:1000], label='phase_derivative_1')
-        plt.plot(der_1[:1000], label='der_1_smooth')
-        plt.title('First derivative of phase function and its smoothed version')
-        plt.legend()
-        plt.show()
-
-        plt.figure()
-        plt.grid('true')
-        plt.plot(phase_derivative_2[:1000], label='phase_derivative_2')
-        plt.plot(der_2[:1000], label='der_2_smooth')
-        plt.title('Second derivative of phase function and its smoothed version')
-        plt.legend()
-
     
-
         sum_der_saved = -np.inf
         save_i = 0
         for i in range(0, R):
@@ -334,7 +309,7 @@ class BasicChain(Chain):
 
 
         return bits_hat
-
+"""
     def viterbi_decoder(self, x_tilde):
 
         # Viterbi decoder parameters
@@ -412,3 +387,5 @@ class BasicChain(Chain):
         
         u_hat = np.reshape(u_hat_b,(u_hat_b.size,))
         return u_hat
+"""
+    
