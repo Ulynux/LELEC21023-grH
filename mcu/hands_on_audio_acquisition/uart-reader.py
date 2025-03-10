@@ -27,7 +27,7 @@ def parse_buffer(line):
 
 
 def reader(port=None):
-    ser = serial.Serial(port=port, baudrate=230400)
+    ser = serial.Serial(port=port, baudrate=115200)
     while True:
         line = ""
         while not line.endswith("\n"):
@@ -46,7 +46,7 @@ def generate_audio(buf, file_name):
     buf = np.asarray(buf, dtype=np.float64)
     buf = buf - np.mean(buf)
     buf /= max(abs(buf))
-    sf.write("audio_files/" + file_name + ".ogg", buf, FREQ_SAMPLING)
+    sf.write("audio_files/" + file_name + ".wav", buf, FREQ_SAMPLING)
 
 
 if __name__ == "__main__":
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         msg_counter = 0
 
         for msg in input_stream:
-            name = input("buffer sent, press OK to continue: ")
+            name = input("buffer sent, press anything to continue: ")
 
             buffer_size = len(msg)
             print("Buffer size is {}".format(buffer_size))
@@ -84,7 +84,7 @@ if __name__ == "__main__":
             plt.title(name)
             plt.xlabel("Time (s)")
             plt.ylabel("Voltage (mV)")
-            plt.ylim([0, 3300])
+            plt.ylim([0, 1800])
             # plt.draw()
             # plt.pause(0.001)
             # plt.cla()

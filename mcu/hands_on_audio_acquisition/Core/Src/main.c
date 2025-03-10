@@ -38,7 +38,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define ADC_BUF_SIZE 27100
+#define ADC_BUF_SIZE 24000
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -50,12 +50,9 @@
 
 /* USER CODE BEGIN PV */
 volatile int state;
-volatile int is_listening;
 volatile uint16_t ADCBuffer[2*ADC_BUF_SIZE]; /* ADC group regular conversion data (array of data) */
 volatile uint16_t* ADCData1;
 volatile uint16_t* ADCData2;
-volatile uint16_t signalPower;
-volatile uint16_t lastSample = 0;
 
 char hex_encoded_buffer[4*ADC_BUF_SIZE+1];
 /* USER CODE END PV */
@@ -70,44 +67,9 @@ uint32_t get_signal_power(uint16_t *buffer, size_t len);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-/*void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc){
-	signalPower = get_signal_power(ADCData1, ADC_BUF_SIZE);
-	printf("%d", signalPower);
-	printf("\n");
-	if(lastSample == 1){
-		HAL_TIM_Base_Stop(&htim3);
-		HAL_ADC_Stop_DMA(&hadc1);
-		lastSample = 0;
-		state = 0;
-		print_buffer(ADCData1);
-	}
-	if(signalPower > 50000){
-		lastSample = 1;
-	}
-	//print_buffer(ADCData1);
-}*/
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc){
-	/*signalPower = get_signal_power(ADCData2, ADC_BUF_SIZE);
-	printf("%d", signalPower);
-	printf("\n");
-	if(lastSample == 1){
-		HAL_TIM_Base_Stop(&htim3);
-		HAL_ADC_Stop_DMA(&hadc1);
-		lastSample = 0;
-		state = 0;
-		print_buffer(ADCData1);
-	}
-	if(signalPower > 50000){
-		lastSample = 1;
-	}*/
-	HAL_TIM_Base_Stop(&htim3);
-	HAL_ADC_Stop_DMA(&hadc1);
-	printf("Stop listening, sending the buffer.\n");
-	print_buffer(ADCData1);
-	//print_buffer(ADCData2);
-}
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-	if (GPIO_Pin == B1_Pin) {
+  if (GPIO_Pin == B1_Pin) {
 		state = 1-state;
 	}
 	if (state == 1){
@@ -118,7 +80,22 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	}
 }
 
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc){
+  // buffer is full
+  HAL_TIM_Base_Stop(&htim3);
+  HAL_ADC_Stop_DMA(&hadc1);
+	printf("Stop, sending the buffer.\n");
+  print_buffer(ADCData1);  
+
+}
+
+// void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc){
+//   // If half of the buffer is filled
+	
+// }
+
 void hex_encode(char* s, const uint8_t* buf, size_t len) {
+  /* Encode buffer in hexadecimal format */
     s[2*len] = '\0'; // A string terminated by a zero char.
     for (size_t i=0; i<len; i++) {
         s[i*2] = "0123456789abcdef"[buf[i] >> 4];
@@ -127,11 +104,13 @@ void hex_encode(char* s, const uint8_t* buf, size_t len) {
 }
 
 void print_buffer(uint16_t *buffer) {
+  /* Print buffer in hexadecimal format*/
 	hex_encode(hex_encoded_buffer, (uint8_t*)buffer, 2*ADC_BUF_SIZE);
 	printf("SND:HEX:%s\r\n", hex_encoded_buffer);
 }
 
 uint32_t get_signal_power(uint16_t *buffer, size_t len){
+  /* Compute signal power */
 	uint64_t sum = 0;
 	uint64_t sum2 = 0;
 	for (size_t i=0; i<len; i++) {
@@ -177,24 +156,29 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   RetargetInit(&hlpuart1);
-  printf("Ready for the acquisition!\r\n");
-  state=0;
-  is_listening=0;
+
+  state = 0;
   ADCData1 = &ADCBuffer[0];
   ADCData2 = &ADCBuffer[ADC_BUF_SIZE];
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-	HAL_Delay(500);
-	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-	HAL_Delay(500);
+  while (1){
+    if(0) __WFI(); // Wait for interrupt
+    else {
+      // Start the ADC and the timer
+      HAL_TIM_Base_Start(&htim3);
+      HAL_ADC_Start_DMA(&hadc1, ADCData1, 2*ADC_BUF_SIZE);
+      // buttonPressed = 0;
+    }
+  
+  // Convert the ADC values if button is pressed
+    
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
   }
   /* USER CODE END 3 */
 }
@@ -254,8 +238,9 @@ void SystemClock_Config(void)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
+  /* User can add his own implementation to report the HAL error return buttonPressed */
   __disable_irq();
+  printf("Error!\r\n");
   while (1)
   {
   }
@@ -278,4 +263,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
