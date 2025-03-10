@@ -14,7 +14,7 @@ from serial.tools import list_ports
 PRINT_PREFIX = "SND:HEX:"
 FREQ_SAMPLING = 10200
 VAL_MAX_ADC = 4096
-VDD = 1.8
+VDD = 3.3
 
 
 def parse_buffer(line):
@@ -27,7 +27,7 @@ def parse_buffer(line):
 
 
 def reader(port=None):
-    ser = serial.Serial(port=port, baudrate=115200)
+    ser = serial.Serial(port=port, baudrate=230400)
     while True:
         line = ""
         while not line.endswith("\n"):
@@ -46,7 +46,7 @@ def generate_audio(buf, file_name):
     buf = np.asarray(buf, dtype=np.float64)
     buf = buf - np.mean(buf)
     buf /= max(abs(buf))
-    sf.write("audio_files/" + file_name + ".wav", buf, FREQ_SAMPLING)
+    sf.write("audio_files/" + file_name + ".ogg", buf, FREQ_SAMPLING)
 
 
 if __name__ == "__main__":
