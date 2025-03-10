@@ -38,7 +38,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define ADC_BUF_SIZE 10000
+#define ADC_BUF_SIZE 27100
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -50,9 +50,12 @@
 
 /* USER CODE BEGIN PV */
 volatile int state;
+volatile int is_listening;
 volatile uint16_t ADCBuffer[2*ADC_BUF_SIZE]; /* ADC group regular conversion data (array of data) */
 volatile uint16_t* ADCData1;
 volatile uint16_t* ADCData2;
+volatile uint16_t signalPower;
+volatile uint16_t lastSample = 0;
 
 char hex_encoded_buffer[4*ADC_BUF_SIZE+1];
 /* USER CODE END PV */
@@ -67,21 +70,52 @@ uint32_t get_signal_power(uint16_t *buffer, size_t len);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+/*void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc){
+	signalPower = get_signal_power(ADCData1, ADC_BUF_SIZE);
+	printf("%d", signalPower);
+	printf("\n");
+	if(lastSample == 1){
+		HAL_TIM_Base_Stop(&htim3);
+		HAL_ADC_Stop_DMA(&hadc1);
+		lastSample = 0;
+		state = 0;
+		print_buffer(ADCData1);
+	}
+	if(signalPower > 50000){
+		lastSample = 1;
+	}
+	//print_buffer(ADCData1);
+}*/
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc){
+	/*signalPower = get_signal_power(ADCData2, ADC_BUF_SIZE);
+	printf("%d", signalPower);
+	printf("\n");
+	if(lastSample == 1){
+		HAL_TIM_Base_Stop(&htim3);
+		HAL_ADC_Stop_DMA(&hadc1);
+		lastSample = 0;
+		state = 0;
+		print_buffer(ADCData1);
+	}
+	if(signalPower > 50000){
+		lastSample = 1;
+	}*/
+	HAL_TIM_Base_Stop(&htim3);
+	HAL_ADC_Stop_DMA(&hadc1);
+	printf("Stop listening, sending the buffer.\n");
+	print_buffer(ADCData1);
+	//print_buffer(ADCData2);
+}
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == B1_Pin) {
-
-		HAL_TIM_Base_Start(&htim3);
-		HAL_ADC_Start_DMA(&hadc1, (uint32_t*)ADCBuffer, ADC_BUF_SIZE);
-    
+		state = 1-state;
 	}
-}
-
-
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
-
-  // HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-  print_buffer(ADCBuffer);
-  // HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+	if (state == 1){
+		printf("Is listening.\n");
+		HAL_TIM_Base_Start(&htim3);
+		HAL_ADC_Start_DMA(&hadc1, ADCData1, ADC_BUF_SIZE*2);
+		state = 0;
+	}
 }
 
 void hex_encode(char* s, const uint8_t* buf, size_t len) {
@@ -143,8 +177,9 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   RetargetInit(&hlpuart1);
-  printf("Hello world!\r\n");
+  printf("Ready for the acquisition!\r\n");
   state=0;
+  is_listening=0;
   ADCData1 = &ADCBuffer[0];
   ADCData2 = &ADCBuffer[ADC_BUF_SIZE];
   /* USER CODE END 2 */
@@ -153,8 +188,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      __WFI();
-
+	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+	HAL_Delay(500);
+	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+	HAL_Delay(500);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -241,3 +278,4 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
+

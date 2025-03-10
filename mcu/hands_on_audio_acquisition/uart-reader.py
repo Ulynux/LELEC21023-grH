@@ -22,7 +22,7 @@ def parse_buffer(line):
     if line.startswith(PRINT_PREFIX):
         return bytes.fromhex(line[len(PRINT_PREFIX) :])
     else:
-        # print(line)
+        print(line)
         return None
 
 
@@ -70,29 +70,27 @@ if __name__ == "__main__":
         plt.figure(figsize=(10, 5))
         input_stream = reader(port=args.port)
         msg_counter = 0
-        print("time to process \n")
+
         for msg in input_stream:
-            print(f"Acquisition #{msg_counter}")
+            name = input("buffer sent, press OK to continue: ")
+
             buffer_size = len(msg)
+            print("Buffer size is {}".format(buffer_size))
             times = np.linspace(0, buffer_size - 1, buffer_size) * 1 / FREQ_SAMPLING
-
             voltage_mV = msg * VDD / VAL_MAX_ADC * 1e3
+          
 
-            # plt.plot(times, voltage_mV)
-            # plt.title(f"Acquisition #{msg_counter}")
-            # plt.xlabel("Time (s)")
-            # plt.ylabel("Voltage (mV)")
-            # plt.ylim([0, 3300])
+            plt.plot(times, voltage_mV)
+            plt.title(name)
+            plt.xlabel("Time (s)")
+            plt.ylabel("Voltage (mV)")
+            plt.ylim([0, 3300])
             # plt.draw()
             # plt.pause(0.001)
             # plt.cla()
 
-            # with open(f"csv_files/acq-{msg_counter}.csv", "w") as f:
-            #     f.write("Time (s),Voltage (mV)\n")
-            #     for t, v in zip(times, voltage_mV):
-            #         f.write(f"{t},{v}\n")
-            print(f"Saving audio file acq-{msg_counter}.wav")
-            generate_audio(msg, f"acq-{msg_counter}")
-            print(f"Acquisition #{msg_counter} done\n")
+            generate_audio(msg, name)
 
             msg_counter += 1
+            plt.show()
+            break
