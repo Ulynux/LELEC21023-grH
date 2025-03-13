@@ -164,21 +164,11 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1){
-    if(0) __WFI(); // Wait for interrupt
-    else {
-      // Start the ADC and the timer
-      HAL_TIM_Base_Start(&htim3);
-      HAL_ADC_Start_DMA(&hadc1, ADCData1, 2*ADC_BUF_SIZE);
-      // buttonPressed = 0;
-    }
-  
-  // Convert the ADC values if button is pressed
-    
+  while (1) {
+    __WFI(); // Wait for interrupt
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
   }
   /* USER CODE END 3 */
 }
