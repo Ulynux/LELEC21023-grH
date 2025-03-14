@@ -3,11 +3,8 @@ import numpy as np
 from chain import Chain
 from scipy.signal import firwin, freqz
 from scipy.special import erfc
+from scipy.signal import savgol_filter
 import PER as per
-
-
-plots_folder = "telecom/plots/"
-test_name = "h_osr"
 
 
 def add_delay(chain: Chain, x: np.ndarray, tau: float):
@@ -81,9 +78,6 @@ def run_sim(chain: Chain):
     for n in range(chain.n_packets):
         # Random generation of payload bits
         bits = rng.integers(2, size=chain.payload_len)
-
-        # Viterbi encoding
-        bits = chain.conv_encoder(bits)
 
         # Transmitted signal
         x_pay = chain.modulate(bits)  # Modulated signal with payload
@@ -210,9 +204,6 @@ def run_sim(chain: Chain):
                     start_frame : start_frame + chain.payload_len
                 ]  # Demodulated payload bits
 
-                ## Viterbi decoding
-                bits_hat_pay = chain.viterbi_decoder(bits_hat_pay)
-
                 ## Computing performance metrics
                 if len(bits) == len(bits_hat_pay) and not preamble_error:
                     errors = bits ^ bits_hat_pay
@@ -275,8 +266,6 @@ def run_sim(chain: Chain):
     print(shift_SNR_filter)
     ### Plot dashboard
 
-    savefig = True
-
     fig, ax1 = plt.subplots()
     w, h = freqz(taps)
     f = w * fs * 0.5 / np.pi
@@ -293,7 +282,7 @@ def run_sim(chain: Chain):
     ax2.grid(True)
     ax1.set_xlim(0,160000)
     ax2.set_xlim(0,160000)
-    # if savefig: plt.savefig(plots_folder+"FIR.png")
+    plt.savefig("plots/FIR.png")
 
     # Bit error rate
     fig, ax = plt.subplots(constrained_layout=True)
@@ -325,7 +314,7 @@ def run_sim(chain: Chain):
         ax2.set_xlim(ax.get_xlim())
         ax2.xaxis.label.set_color("b")
         ax2.tick_params(axis="x", colors="b")
-        if savefig: plt.savefig(plots_folder+'SNRe')
+        plt.savefig('plots/SNRe')
 
 
     # Packet error rate
@@ -358,7 +347,7 @@ def run_sim(chain: Chain):
         ax2.set_xlim(ax.get_xlim())
         ax2.xaxis.label.set_color("b")
         ax2.tick_params(axis="x", colors="b")
-    if savefig: plt.savefig(plots_folder+"PER_out_from_file.png")
+    plt.savefig("plots/PER_out_from_file.png")
 
     # Preamble metrics
     plt.figure()
@@ -370,8 +359,9 @@ def run_sim(chain: Chain):
     plt.ylim([-1, 101])
     plt.grid()
     plt.legend()
-    if savefig: plt.savefig(plots_folder+"Preamble_detection.png")
+    plt.savefig("plots/Preamble_detection.png")
 
+    """
     # RMSE CFO
     plt.figure()
     plt.semilogy(SNRs_dB, RMSE_cfo, "-s")
@@ -379,10 +369,10 @@ def run_sim(chain: Chain):
     plt.ylabel("RMSE [-]")
     plt.xlabel("SNR [dB]")
     plt.grid()
-    if savefig: plt.savefig(plots_folder+"RMSE_CFO.png")
+    plt.savefig("plots/RMSE_CFO.png")
     # Assuming SNRs_dB and RMSE_cfo are your data arrays
     data = np.column_stack((SNRs_dB, RMSE_cfo))
-    np.savetxt(plots_folder+'RMSE_CFO_data.csv', data, delimiter=',', header='SNR_dB,RMSE_cfo', comments='')
+    np.savetxt('plots/RMSE_CFO_data.csv', data, delimiter=',', header='SNR_dB,RMSE_cfo', comments='')
 
     # RMSE STO
     plt.figure()
@@ -391,10 +381,10 @@ def run_sim(chain: Chain):
     plt.ylabel("RMSE [-]")
     plt.xlabel("SNR [dB]")
     plt.grid()
-    if savefig: plt.savefig(plots_folder+"RMSE_STO.png")
-
+    plt.savefig("plots/RMSE_STO.png")
+    """
     # Save simulation outputs (for later post-processing, building new figures,...)
-
+    test_name = "test"
     save_var = np.column_stack(
         (
             SNRs_dB,
@@ -407,8 +397,72 @@ def run_sim(chain: Chain):
             preamble_false,
         )
     )
-    np.savetxt(f"telecom/plots/{test_name}.csv", save_var, delimiter="\t")
-    
+    np.savetxt(f"{test_name}.csv", save_var, delimiter="\t")
+    # Read file:
+    data = np.loadtxt(f"{test_name}.csv", delimiter="\t")
+    SNRs_dB = data[:, 0]
+    SNRs_dB_shifted = data[:, 1]
+    BER = data[:, 2]
+    PER = data[:, 3]
+    RMSE_cfo = data[:, 4]
+    RMSE_sto = data[:, 5]
+    preamble_mis = data[:, 6]
+    preamble_false = data[:, 7]
+
+    # Plot the data from the file
+    fig, ax = plt.subplots(constrained_layout=True)
+    ax.plot(SNRs_dB_shifted, BER, "-s", label="Simulation")
+    ax.set_ylabel("BER")
+    ax.set_xlabel("SNR$_{o}$ [dB]")
+    ax.set_yscale("log")
+    ax.set_ylim((1e-6, 1))
+    ax.set_xlim((0, 30))
+    ax.grid(True)
+    ax.set_title("Average Bit Error Rate")
+    ax.legend()
+    #plt.savefig("plots/BER_from_file.png")
+
+    fig, ax = plt.subplots(constrained_layout=True)
+    ax.plot(per.SNR_aver - shift_SNR_filter,per.PACKET_ERROR,label="Measurements")
+    ax.plot(SNRs_dB_shifted, PER, "-s", label="Simulation")
+    ax.set_ylabel("PER")
+    ax.set_xlabel("SNR$_{o}$ [dB]")
+    ax.set_yscale("log")
+    ax.set_ylim((1e-2, 1))
+    ax.set_xlim((0, 20))
+    ax.grid(True)
+    ax.set_title("Average Packet Error Rate")
+    ax.legend()
+    plt.savefig("plots/PER_from_file.png")
+
+    plt.figure()
+    plt.plot(SNRs_dB, preamble_mis * 100, "-s", label="Miss-detection")
+    plt.plot(SNRs_dB, preamble_false * 100, "-s", label="False-detection")
+    plt.title("Preamble detection error ")
+    plt.ylabel("[%]")
+    plt.xlabel("SNR [dB]")
+    plt.ylim([-1, 101])
+    plt.grid()
+    plt.legend()
+    plt.savefig("plots/Preamble_detection_from_file.png")
+"""
+    plt.figure()
+    plt.semilogy(SNRs_dB, RMSE_cfo, "-s")
+    plt.title("RMSE CFO")
+    plt.ylabel("RMSE [-]")
+    plt.xlabel("SNR [dB]")
+    plt.grid()
+    plt.savefig("plots/RMSE_CFO_from_file.png")
+
+
+    plt.figure()
+    plt.semilogy(SNRs_dB, RMSE_sto, "-s")
+    plt.title("RMSE STO")
+    plt.ylabel("RMSE [-]")
+    plt.xlabel("SNR [dB]")
+    plt.grid()
+    plt.savefig("plots/RMSE_STO_from_file.png")
+"""
 
 if __name__ == "__main__":
     from chain import BasicChain
