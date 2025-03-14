@@ -18,13 +18,13 @@ PRINT_PREFIX = "SND:HEX:"
 FREQ_SAMPLING = 10200
 VAL_MAX_ADC = 4096
 VDD = 1.8
-start = 2.5
-starting_time = 1
+start = 0
+starting_time = 0
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sound_files_path =  str(current_dir) + '/../../classification/src/classification/datasets/soundfiles'
 audio_file = str(current_dir) + '/audio_files'
-sound_files = [f for f in os.listdir(sound_files_path) if f.endswith('.wav') and 'chainsaw' in f]
+sound_files = [f for f in os.listdir(sound_files_path) if f.endswith('.wav') and 'firew' in f]
 sound_files = sorted(sound_files)
 ###################################
 
