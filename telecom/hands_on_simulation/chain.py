@@ -17,7 +17,7 @@ class Chain:
     freq_dev: float = BIT_RATE / 2 * 2
 
     osr_tx: int = 64
-    osr_rx: int = 32
+    osr_rx: int = 16
 
     preamble: np.ndarray = PREAMBLE
     sync_word: np.ndarray = SYNC_WORD
