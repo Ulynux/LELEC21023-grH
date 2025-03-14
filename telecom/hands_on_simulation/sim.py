@@ -3,7 +3,6 @@ import numpy as np
 from chain import Chain
 from scipy.signal import firwin, freqz
 from scipy.special import erfc
-from scipy.signal import savgol_filter
 import PER as per
 
 
@@ -75,9 +74,7 @@ def run_sim(chain: Chain):
     )  # Padding some zeros before the packets
 
     # Lowpass filter taps
-    
-    
-    taps = firwin(chain.numtaps, 50000, fs=fs)
+    taps = firwin(chain.numtaps, 130000, fs=fs)
     rng = np.random.default_rng()
 
     # For loop on the number of packets to send
@@ -86,7 +83,7 @@ def run_sim(chain: Chain):
         bits = rng.integers(2, size=chain.payload_len)
 
         # Viterbi encoding
-        #bits = chain.conv_encoder(bits)
+        bits = chain.conv_encoder(bits)
 
         # Transmitted signal
         x_pay = chain.modulate(bits)  # Modulated signal with payload
@@ -214,7 +211,7 @@ def run_sim(chain: Chain):
                 ]  # Demodulated payload bits
 
                 ## Viterbi decoding
-            
+                bits_hat_pay = chain.viterbi_decoder(bits_hat_pay)
 
                 ## Computing performance metrics
                 if len(bits) == len(bits_hat_pay) and not preamble_error:
@@ -299,9 +296,6 @@ def run_sim(chain: Chain):
     # if savefig: plt.savefig(plots_folder+"FIR.png")
 
     # Bit error rate
-    print("SNR", SNRs_dB+ shift_SNR_out- shift_SNR_filter)
-    print("BER", BER)
-
     fig, ax = plt.subplots(constrained_layout=True)
     ax.plot(SNRs_dB + shift_SNR_out, BER, "-s", label="Simulation")
     ax.plot(SNR_th, BER_th, label="AWGN Th. FSK")
@@ -337,7 +331,7 @@ def run_sim(chain: Chain):
     # Packet error rate
     fig, ax = plt.subplots(constrained_layout=True)
     ax.plot(SNRs_dB + shift_SNR_out, PER, "-s", label="Simulation")
-    ax.plot(per.SNR_aver + shift_SNR_filter ,per.PACKET_ERROR,"-s",label="Measurements")
+    ax.plot(per.SNR_aver +shift_SNR_filter ,per.PACKET_ERROR,"-s",label="Measurements")
 
     #ax.plot(SNR_th, 1 - (1 - BER_th_BPSK) ** chain.payload_len, label="AWGN Th. BPSK")
     ax.set_ylabel("PER")
