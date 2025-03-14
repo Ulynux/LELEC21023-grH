@@ -17,35 +17,36 @@ import time
 PRINT_PREFIX = "SND:HEX:"
 FREQ_SAMPLING = 10200
 VAL_MAX_ADC = 4096
-VDD = 3.3
-
-###################################
-# File path for the sounds
-###################################
+VDD = 1.8
+start = 2.5
+starting_time = 1   
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
-sound_files_path = str(current_dir) + '/../../classification/src/classification/datasets/micro_sounds'
+sound_files_path =  str(current_dir) + '/../../classification/src/classification/datasets/soundfiles'
 audio_file = str(current_dir) + '/audio_files'
-sound_files = [f for f in os.listdir(sound_files_path) if f.endswith('.wav')]
-sound_files = sound_files[45:]
-
+sound_files = [f for f in os.listdir(sound_files_path) if f.endswith('.wav') and 'chainsaw' in f]
+sound_files = sorted(sound_files)
 ###################################
 
-def playsound(sound_file):
+def playsound(sound_file,start_time = 0.0):
     """
-        Play a sound file
+    Play a sound file from a specific start time.
+    
     Args:
-        sound_file (str): The name of the sound file to be
-        played
-
+        sound_file (str): The name of the sound file to be played.
+        start_time (float): The start time in seconds from which to begin playback.
+    
     Returns:
         None
     """
     sound_path = os.path.join(sound_files_path, sound_file)
-    print(f'Playing {sound_file}')
-    # Play the sound
+    print(f'Playing {sound_file} from {start_time} seconds')
+    
     data, fs = sf.read(sound_path)
-    sd.play(data, fs)
+    
+    start_sample = int(start_time * fs)
+    
+    sd.play(data[start_sample:], fs)
 
 
 def parse_buffer(line):
@@ -105,7 +106,7 @@ if __name__ == "__main__":
         #plt.figure(figsize=(10, 5))
         input_stream = reader(port=args.port)
         msg_counter = 0
-
+        First = True
         for msg in input_stream:
             print(f"Acquisition #{msg_counter}")
             if False:
@@ -135,12 +136,14 @@ if __name__ == "__main__":
                 plt.pause(0.1)
                 plt.cla()
 
-            generate_audio(msg, f"micro-{sound_files[index][:-4]}")
-
-            msg_counter += 1
+            generate_audio(msg, f"{sound_files[index][:-4]}"+str(starting_time))
+            msg_counter +=1
+            if First:
+                index -= 1
+                First = False
+                msg_counter -=1
+                
             index += 1
             if index >= len(sound_files):
-                # Stop the script
-                print("End of the script")
                 break
-            playsound(sound_files[index])
+            playsound(sound_files[index],start_time = start)

@@ -49,10 +49,12 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-volatile int state;
+
 volatile uint16_t ADCBuffer[2*ADC_BUF_SIZE]; /* ADC group regular conversion data (array of data) */
 volatile uint16_t* ADCData1;
 volatile uint16_t* ADCData2;
+volatile int CONTINUOUS_ACK;
+volatile int POWER_THRESHOLD;
 
 char hex_encoded_buffer[4*ADC_BUF_SIZE+1];
 /* USER CODE END PV */
@@ -69,34 +71,39 @@ uint32_t get_signal_power(uint16_t *buffer, size_t len);
 /* USER CODE BEGIN 0 */
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-  if (GPIO_Pin == B1_Pin) {
-		state = 1-state;
-	}
-	if (state == 1){
-		printf("Is listening.\n");
-		HAL_TIM_Base_Start(&htim3);
-		HAL_ADC_Start_DMA(&hadc1, ADCData1, ADC_BUF_SIZE*2);
-		state = 0;
+	if (GPIO_Pin == B1_Pin) {
+    printf("Is listening.\n");
+    CONTINUOUS_ACK = 1;
+    
 	}
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc){
-  // buffer is full
   HAL_TIM_Base_Stop(&htim3);
   HAL_ADC_Stop_DMA(&hadc1);
-	printf("Stop, sending the buffer.\n");
-  print_buffer(ADCData1);  
 
+	if(POWER_THRESHOLD){
+    printf("Sending the buffer \r\n");
+    print_buffer(ADCData1);
+    
+	}else{
+    printf("Did you send a sound ?\r\n");
+    HAL_TIM_Base_Start(&htim3);
+    HAL_ADC_Start_DMA(&hadc1, ADCData1, 2*ADC_BUF_SIZE);
+	}
 }
 
-// void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc){
-//   // If half of the buffer is filled
-	
-// }
+
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc){
+	uint32_t power = get_signal_power(ADCData1, ADC_BUF_SIZE);
+  printf("Power: %d\r\n", power);
+  if (power>100){
+    POWER_THRESHOLD = 1;
+  }
+}
 
 void hex_encode(char* s, const uint8_t* buf, size_t len) {
-  /* Encode buffer in hexadecimal format */
-    s[2*len] = '\0'; // A string terminated by a zero char.
+    s[2*len] = '\0';
     for (size_t i=0; i<len; i++) {
         s[i*2] = "0123456789abcdef"[buf[i] >> 4];
         s[i*2+1] = "0123456789abcdef"[buf[i] & 0xF];
@@ -104,13 +111,11 @@ void hex_encode(char* s, const uint8_t* buf, size_t len) {
 }
 
 void print_buffer(uint16_t *buffer) {
-  /* Print buffer in hexadecimal format*/
 	hex_encode(hex_encoded_buffer, (uint8_t*)buffer, 2*ADC_BUF_SIZE);
 	printf("SND:HEX:%s\r\n", hex_encoded_buffer);
 }
 
 uint32_t get_signal_power(uint16_t *buffer, size_t len){
-  /* Compute signal power */
 	uint64_t sum = 0;
 	uint64_t sum2 = 0;
 	for (size_t i=0; i<len; i++) {
@@ -157,18 +162,27 @@ int main(void)
   /* USER CODE BEGIN 2 */
   RetargetInit(&hlpuart1);
 
-  state = 0;
+  CONTINUOUS_ACK = 0;
+  POWER_THRESHOLD = 0;
   ADCData1 = &ADCBuffer[0];
   ADCData2 = &ADCBuffer[ADC_BUF_SIZE];
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1) {
-    __WFI(); // Wait for interrupt
+  while (1){
+    if(0) __WFI(); // Wait for interrupt
+    else {
+      HAL_TIM_Base_Start(&htim3);
+      HAL_ADC_Start_DMA(&hadc1, ADCData1, 2*ADC_BUF_SIZE);
+      CONTINUOUS_ACK = 0;
+    }
+  
+    
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
   }
   /* USER CODE END 3 */
 }
