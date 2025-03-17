@@ -10,6 +10,7 @@ version = "0.1.0"
 dependencies = [
     "pyserial>=3.5",
     "soundfile>=0.12.1",
+    "keras>=3.9.0",
 ]
 
 [tool.ruff]
