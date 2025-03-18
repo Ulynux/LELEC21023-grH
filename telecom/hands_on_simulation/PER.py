@@ -21,8 +21,9 @@ def extract_data(file_path):
     except Exception as e:
         print(f"Erreur lors de la lecture du fichier : {e}")
 
-# Exemple d'utilisation
-file_path = 'telecom/Data.txt'  # Remplace par le chemin réel de ton fichier
+
+file_path = 'Data.txt'
+  # Remplace par le chemin réel de ton fichier
 data_exp = extract_data(file_path)
 
 cfo = []

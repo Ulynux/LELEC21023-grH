@@ -41,7 +41,7 @@ class Chain:
     # Lowpass filter parameters
     numtaps: int = 100
     #cutoff: float = BIT_RATE * osr_rx / 2.0001  # or 2*BIT_RATE,...
-    cutoff = 130000
+    cutoff = 100000
 
     # Viterbi encoder parameters
     R1 = np.array([2,1,3,0])
@@ -424,3 +424,5 @@ class BasicChain(Chain):
         
         u_hat = np.reshape(u_hat_b,(u_hat_b.size,))
         return u_hat
+"""
+    
