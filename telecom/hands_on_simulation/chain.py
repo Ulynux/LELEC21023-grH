@@ -17,15 +17,15 @@ class Chain:
     freq_dev: float = BIT_RATE / 2 * 2
 
     osr_tx: int = 64
-    osr_rx: int = 16
+    osr_rx: int = 8
 
     preamble: np.ndarray = PREAMBLE
     sync_word: np.ndarray = SYNC_WORD
 
-    payload_len: int = 80  # Number of bits per packet
+    payload_len: int = 200  # Number of bits per packet
 
     # Simulation parameters
-    n_packets: int = 10  # Number of sent packets
+    n_packets: int = 100  # Number of sent packets
 
     # Channel parameters
     sto_val: float = 0
@@ -44,14 +44,17 @@ class Chain:
     cutoff = 130000
 
     # Viterbi encoder parameters
-    R1 = np.array([0,1,3,2])
-    R0 = np.array([0,2,3,1])
-    out_R1 = np.array([[0,0],[1,1],[1,0],[0,1]])
-    out_R0 = np.array([[0,0],[1,1],[0,1],[1,0]])
-    symb_R1 = 
+    R1 = np.array([2,1,3,0])
+    R0 = np.array([0,3,1,2])
+    out_R1 = np.array([[1,1],[1,0],[1,1],[1,0]])
+    out_R0 = np.array([[0,0],[0,1],[0,0],[0,1]])
+    symb_R1 = np.array([1.0 + 1.0j, 1.0 + 0.0j, 1.0 + 1.0j, 1.0 + 0.0j])
+    symb_R0 = np.array([0.0 + 0.0j, 0.0 + 1.0j, 0.0 + 0.0j, 0.0 + 1.0j])
     len_b = 100
 
     # Tx methods
+
+    bypass_viterbi: bool = True
 
     def conv_encoder(self, u):
         """
@@ -206,7 +209,7 @@ class BasicChain(Chain):
 
     cfo_val, sto_val = np.nan, np.nan  # CFO and STO are random
     
-    bypass_preamble_detect = False
+    bypass_preamble_detect = True
 
     def preamble_detect(self, y):
         """
@@ -222,7 +225,7 @@ class BasicChain(Chain):
 
         return None
 
-    bypass_cfo_estimation = False
+    bypass_cfo_estimation = True
 
     def cfo_estimation(self, y):
         """
@@ -244,7 +247,7 @@ class BasicChain(Chain):
 
         return cfo_est
 
-    bypass_sto_estimation = False
+    bypass_sto_estimation = True
 
     def sto_estimation(self, y):
         """
@@ -270,28 +273,28 @@ class BasicChain(Chain):
         phase_derivative_2 = np.abs(phase_derivative_1[1:] - phase_derivative_1[:-1])
 
         
-        plt.figure()
-        plt.grid('true')
-        plt.plot(phase_function[:1000], label='phase_function')
-        plt.plot(smooth[:1000], label='smooth')
-        plt.title('Phase function and its smoothed version')
-        plt.legend()
-        plt.show()
+        # plt.figure()
+        # plt.grid('true')
+        # plt.plot(phase_function[:1000], label='phase_function')
+        # plt.plot(smooth[:1000], label='smooth')
+        # plt.title('Phase function and its smoothed version')
+        # plt.legend()
+        # plt.show()
 
-        plt.figure()
-        plt.grid('true')
-        plt.plot(phase_derivative_1[:1000], label='phase_derivative_1')
-        plt.plot(der_1[:1000], label='der_1_smooth')
-        plt.title('First derivative of phase function and its smoothed version')
-        plt.legend()
-        plt.show()
+        # plt.figure()
+        # plt.grid('true')
+        # plt.plot(phase_derivative_1[:1000], label='phase_derivative_1')
+        # plt.plot(der_1[:1000], label='der_1_smooth')
+        # plt.title('First derivative of phase function and its smoothed version')
+        # plt.legend()
+        # plt.show()
 
-        plt.figure()
-        plt.grid('true')
-        plt.plot(phase_derivative_2[:1000], label='phase_derivative_2')
-        plt.plot(der_2[:1000], label='der_2_smooth')
-        plt.title('Second derivative of phase function and its smoothed version')
-        plt.legend()
+        # plt.figure()
+        # plt.grid('true')
+        # plt.plot(phase_derivative_2[:1000], label='phase_derivative_2')
+        # plt.plot(der_2[:1000], label='der_2_smooth')
+        # plt.title('Second derivative of phase function and its smoothed version')
+        # plt.legend()
 
     
 
@@ -335,17 +338,26 @@ class BasicChain(Chain):
 
         return bits_hat
 
+    bypass_viterbi = False
+
     def viterbi_decoder(self, x_tilde):
 
         # Viterbi decoder parameters
         R1 = self.R1
         R0 = self.R0
-        symb_R1 = self.out_R1
-        symb_R0 = self.out_R0
+        symb_R1 = self.symb_R1
+        symb_R0 = self.symb_R0
         len_b = self.len_b
 
         def dist(a,b):
-            return np.abs(a-b)**2
+            distance = np.abs(a-b)
+            # distance = np.abs(np.real(a)-np.real(b)) + np.abs(np.imag(a)-np.imag(b))
+            return distance
+        
+        # Reshape of the received sequence to have u and c
+        u_hat = x_tilde[:len(x_tilde)//2]
+        c_hat = x_tilde[len(x_tilde)//2:]
+        x_tilde = u_hat + 1j*c_hat
         
         N_b = int(len(x_tilde)/len_b)
         

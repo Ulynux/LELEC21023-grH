@@ -7,8 +7,8 @@ from scipy.signal import savgol_filter
 import PER as per
 
 
-plots_folder = "telecom/plots/"
-test_name = "h_osr"
+plots_folder = "telecom/plots/viterbi/"
+test_name = "h_viterbi"
 
 
 def add_delay(chain: Chain, x: np.ndarray, tau: float):
@@ -82,12 +82,15 @@ def run_sim(chain: Chain):
     for n in range(chain.n_packets):
         # Random generation of payload bits
         bits = rng.integers(2, size=chain.payload_len)
+        payload = bits
 
         # Viterbi encoding
-        bits = chain.conv_encoder(bits)
+        if chain.bypass_viterbi == False:
+            u, c = chain.conv_encoder(payload)
+            payload = np.concatenate((u, c))
 
         # Transmitted signal
-        x_pay = chain.modulate(bits)  # Modulated signal with payload
+        x_pay = chain.modulate(payload)  # Modulated signal with payload
         x = np.concatenate((x_noise, x_pr, x_sync, x_pay, np.zeros(chain.osr_tx)))
 
         # Channel application (without noise addition): delay and frequency offset
@@ -211,11 +214,17 @@ def run_sim(chain: Chain):
                     start_frame : start_frame + chain.payload_len
                 ]  # Demodulated payload bits
 
-                ## Viterbi decoding
-                bits_hat_pay = chain.viterbi_decoder(bits_hat_pay)
-
+                # Viterbi decoding
+                if chain.bypass_viterbi == False:
+                    bits_hat_pay = bits_hat[
+                        start_frame : start_frame + chain.payload_len * 2
+                    ]
+                
                 ## Computing performance metrics
-                if len(bits) == len(bits_hat_pay) and not preamble_error:
+                if len(payload) == len(bits_hat_pay) and not preamble_error:
+                    if chain.bypass_viterbi == False:
+                        bits_hat_pay = chain.viterbi_decoder(bits_hat_pay)
+
                     errors = bits ^ bits_hat_pay
 
                 else:  # if the number of demodulated symbols is incorrect
@@ -373,7 +382,6 @@ def run_sim(chain: Chain):
     plt.legend()
     if savefig: plt.savefig(plots_folder+"Preamble_detection.png")
 
-    """
     # RMSE CFO
     plt.figure()
     plt.semilogy(SNRs_dB, RMSE_cfo, "-s")
