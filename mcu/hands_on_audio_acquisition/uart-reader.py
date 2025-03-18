@@ -24,7 +24,10 @@ starting_time = 0
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sound_files_path =  str(current_dir) + '/../../classification/src/classification/datasets/soundfiles'
 audio_file = str(current_dir) + '/audio_files'
-sound_files = [f for f in os.listdir(sound_files_path) if f.endswith('.wav') and 'firew' in f]
+# sound_files = [f for f in os.listdir(sound_files_path) if f.endswith('.wav') and 'fire' in f and not 'works' in f]
+sound_files = [f for f in os.listdir(sound_files_path) if f.endswith('.wav') and 'gun' in f ]
+
+print(sound_files)
 sound_files = sorted(sound_files)
 ###################################
 
