@@ -22,7 +22,7 @@ def extract_data(file_path):
         print(f"Erreur lors de la lecture du fichier : {e}")
 
 
-file_path = 'Data.txt'
+file_path = 'telecom/Data.txt'
   # Remplace par le chemin réel de ton fichier
 data_exp = extract_data(file_path)
 

@@ -301,7 +301,7 @@ def run_sim(chain: Chain):
     ax2.grid(True)
     ax1.set_xlim(0,160000)
     ax2.set_xlim(0,160000)
-    plt.savefig("plots/FIR.png")
+    plt.savefig(plots_folder+"FIR.png")
 
     # Bit error rate
     fig, ax = plt.subplots(constrained_layout=True)
@@ -333,7 +333,7 @@ def run_sim(chain: Chain):
         ax2.set_xlim(ax.get_xlim())
         ax2.xaxis.label.set_color("b")
         ax2.tick_params(axis="x", colors="b")
-        plt.savefig('plots/SNRe')
+        plt.savefig(plots_folder+'SNRe')
 
 
     # Packet error rate
@@ -366,7 +366,7 @@ def run_sim(chain: Chain):
         ax2.set_xlim(ax.get_xlim())
         ax2.xaxis.label.set_color("b")
         ax2.tick_params(axis="x", colors="b")
-    plt.savefig("plots/PER_out_from_file.png")
+    plt.savefig(plots_folder+"PER_out_from_file.png")
 
     # Preamble metrics
     plt.figure()
@@ -378,7 +378,7 @@ def run_sim(chain: Chain):
     plt.ylim([-1, 101])
     plt.grid()
     plt.legend()
-    plt.savefig("plots/Preamble_detection.png")
+    plt.savefig(plots_folder+"Preamble_detection.png")
 
     # RMSE CFO
     plt.figure()
@@ -387,10 +387,10 @@ def run_sim(chain: Chain):
     plt.ylabel("RMSE [-]")
     plt.xlabel("SNR [dB]")
     plt.grid()
-    plt.savefig("plots/RMSE_CFO.png")
+    plt.savefig(plots_folder+"RMSE_CFO.png")
     # Assuming SNRs_dB and RMSE_cfo are your data arrays
     data = np.column_stack((SNRs_dB, RMSE_cfo))
-    np.savetxt('plots/RMSE_CFO_data.csv', data, delimiter=',', header='SNR_dB,RMSE_cfo', comments='')
+    np.savetxt(plots_folder+'RMSE_CFO_data.csv', data, delimiter=',', header='SNR_dB,RMSE_cfo', comments='')
 
     # RMSE STO
     plt.figure()
@@ -399,7 +399,7 @@ def run_sim(chain: Chain):
     plt.ylabel("RMSE [-]")
     plt.xlabel("SNR [dB]")
     plt.grid()
-    plt.savefig("plots/RMSE_STO.png")
+    plt.savefig(plots_folder+"RMSE_STO.png")
     """
     # Save simulation outputs (for later post-processing, building new figures,...)
     test_name = "test"
@@ -470,7 +470,7 @@ def run_sim(chain: Chain):
     plt.ylabel("RMSE [-]")
     plt.xlabel("SNR [dB]")
     plt.grid()
-    plt.savefig("plots/RMSE_CFO_from_file.png")
+    plt.savefig(plots_folder+"RMSE_CFO_from_file.png")
 
 
     plt.figure()
@@ -479,8 +479,8 @@ def run_sim(chain: Chain):
     plt.ylabel("RMSE [-]")
     plt.xlabel("SNR [dB]")
     plt.grid()
-    plt.savefig("plots/RMSE_STO_from_file.png")
-"""
+    plt.savefig(plots_folder+"RMSE_STO_from_file.png")
+
 
 if __name__ == "__main__":
     from chain import BasicChain
