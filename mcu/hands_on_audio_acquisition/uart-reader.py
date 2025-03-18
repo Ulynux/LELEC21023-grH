@@ -28,7 +28,7 @@ sound_files = [f for f in os.listdir(sound_files_path) if f.endswith('.wav') and
 # sound_files = [f for f in os.listdir(sound_files_path) if f.endswith('.wav') and 'gun' in f ]
 
 print(sound_files)
-sound_files = sorted(sound_files)
+sound_files = sorted(sound_files)[19:]
 ###################################
 
 def playsound(sound_file,start_time = 0.0):
