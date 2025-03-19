@@ -47,9 +47,12 @@ class Dataset:
         print(files)
 
         self.files = files
+        print(self.files)
         self.nclass = len(files)
-        self.naudio = len(files[list(files.keys())[0]])
-        self.size = self.nclass * self.naudio
+        print(self.nclass)
+        self.naudio = {cls: len(file_list) for cls, file_list in files.items()}
+        print(self.naudio)
+        self.size = self.nclass * sum(self.naudio.values())
 
     def __len__(self) -> int:
         """
