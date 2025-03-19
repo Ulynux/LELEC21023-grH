@@ -16,7 +16,8 @@ def get_cls_from_path(file: Path) -> str:
     :param file: The file path.
     :return: The class name.
     """
-    return file.stem.split("_", maxsplit=1)[0]
+    cls = file.stem.split("_", maxsplit=1)[0].split("-", maxsplit=1)[0]
+    return cls
 
 
 class Dataset:
@@ -37,10 +38,13 @@ class Dataset:
             `'*'` to include all formats.
         """
         files = {}
-
+        # print(folder, format)
         for file in sorted(folder.glob("**/*." + format)):
             cls = get_cls_from_path(file)
-            files.setdefault(cls, []).append(file)
+
+            if cls != "background":
+                files.setdefault(cls, []).append(file)
+        print(files)
 
         self.files = files
         self.nclass = len(files)
