@@ -105,6 +105,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 		HAL_TIM_Base_Stop(&htim3);
 		HAL_ADC_Stop_DMA(&hadc1);
 		print_buffer(mel_vectors_flat, N_MELVECS * MELVEC_LENGTH);
+		HAL_ADC_Start_DMA(&hadc1, (uint32_t *) ADCBuffer, 2 * SAMPLES_PER_MELVEC);
+		HAL_TIM_Base_Start(&htim3);
 		cur_melvec = 0;
 	}
 	bounce = 0;

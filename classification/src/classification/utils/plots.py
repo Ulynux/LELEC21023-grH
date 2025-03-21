@@ -17,20 +17,12 @@ Synthesis of the functions in :
 # -----------------------------------------------------------------------------
 
 
-def show_confusion_matrix(y_predict, y_true, classnames, title=""):
+def show_confusion_matrix(y_predict, y_true, classnames, title="", filename="confusion_matrix.pdf"):
     """
     From target labels and prediction arrays, sort them appropriately and plot confusion matrix.
     The arrays can contain either ints or str quantities, as long as classnames contains all the elements present in them.
     """
-    # # Reorder the prediction array
-    # labels = np.zeros_like(y_predict)
-    # for i in np.arange(len(classnames)):
-    #     mask = [None]*len(y_predict)
-    #     for j in np.arange(len(mask)):
-    #         mask[j] = (y_predict[j] == classnames[i])
-    #     labels[mask] = mode(y_true2[mask])[0]
-
-    plt.figure(figsize=(3, 3))
+    plt.figure(figsize=(6, 6))
     confmat = confusion_matrix(y_true, y_predict)
     heatmap(
         confmat.T,
@@ -45,11 +37,12 @@ def show_confusion_matrix(y_predict, y_true, classnames, title=""):
     plt.xlabel("True label")
     plt.ylabel("Predicted label")
     plt.title(title)
+    plt.savefig(filename, format='pdf')
     plt.show()
     return None
 
 
-def plot_audio(audio, audio_down, fs=44100, fs_down=11025):
+def plot_audio(audio, audio_down, fs=44100, fs_down=11025, filename="audio_plot.pdf"):
     """
     Plot the temporal and spectral representations of the original audio signal and its downsampled version
     """
@@ -84,6 +77,7 @@ def plot_audio(audio, audio_down, fs=44100, fs_down=11025):
     ax2.set_xlabel("Frequency [Hz]")
     ax2.set_ylabel("Amplitude [-]")
     ax2.set_title("Modulus of FFT")
+    plt.savefig(filename, format='pdf')
     plt.show()
 
     plt.figure(figsize=(12, 4))
@@ -94,6 +88,7 @@ def plot_audio(audio, audio_down, fs=44100, fs_down=11025):
     plt.ylabel("Amplitude [-]")
     plt.title("Zoom on Temporal signal")
     plt.xlim([1, 1.0025])
+    plt.savefig("audio_zoom_plot.pdf", format='pdf')
 
 
 def plot_specgram(
@@ -107,6 +102,7 @@ def plot_specgram(
     cb=True,
     tf=None,
     invert=True,
+    filename="specgram_plot.pdf"
 ):
     """
     Plot a spectrogram (2D matrix) in a chosen axis of a figure.
@@ -144,11 +140,12 @@ def plot_specgram(
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title)
+    plt.savefig(filename, format='pdf')
     return None
 
 
 def plot_decision_boundaries(
-    X, y, model, ax=None, legend="", title="", s=20, N=40, cm="brg", edgc="k"
+    X, y, model, ax=None, legend="", title="", s=20, N=40, cm="brg", edgc="k", filename="decision_boundaries.pdf"
 ):
     """
     Plot decision boundaries of a classifier in 2D, and display true labels.
@@ -171,3 +168,4 @@ def plot_decision_boundaries(
     ax.set_ylabel("$x_2$")
     handles, labels = scatterd.legend_elements(prop="colors")
     ax.legend(handles, legend)
+    plt.savefig(filename, format='pdf')

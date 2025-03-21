@@ -187,7 +187,7 @@ class AudioUtil:
         return (sig, sr)
 
     def add_bg(
-        audio, dataset, num_sources=1, max_ms=5000, amplitude_limit=0.1
+        audio, dataset, num_sources=2, max_ms=5000, amplitude_limit=0.1
     ) -> Tuple[ndarray, int]:
         """
         Adds up sounds uniformly chosen at random to audio.
@@ -218,6 +218,38 @@ class AudioUtil:
 
             # Ajouter le bruit au signal principal
             sig = sig + bg_sig[:len(sig)]  # Assurer la compatibilité des longueurs
+
+        sig = np.clip(sig, -1, 1)
+
+        return sig, sr
+    
+    def add_background_noise(audio, SNR = 20) -> Tuple[ndarray, int]:
+        """
+        Adds background noise from background.wav to audio.
+        
+        :param audio: The audio signal as a tuple (signal, sample_rate).
+        :param amplitude_limit: The maximum amplitude of the added noise.
+
+        :return: The audio signal with added noise as a tuple (signal, sample_rate).
+        """
+
+        sig, sr = audio
+        bg_sig, _ = AudioUtil.open("background.wav")
+
+        # Energies of the signals
+        sig_energy = np.mean(sig**2)
+        bg_energy = np.mean(bg_sig**2)
+
+        length = len(sig)
+
+        # Select a random part of the background noise
+        start_index = random.randint(0, len(bg_sig) - length)
+        bg_sig = bg_sig[start_index:start_index + length]
+        
+        # Add the background noise to the signal with the desired SNR
+        factor = np.sqrt(sig_energy / (bg_energy * 10**(SNR/10)))
+        bg_sig = bg_sig * factor
+        sig = sig + bg_sig
 
         sig = np.clip(sig, -1, 1)
 

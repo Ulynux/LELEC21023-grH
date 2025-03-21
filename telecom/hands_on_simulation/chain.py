@@ -22,10 +22,14 @@ class Chain:
     preamble: np.ndarray = PREAMBLE
     sync_word: np.ndarray = SYNC_WORD
 
+<<<<<<< HEAD
     payload_len: int = 8000  # Number of bits per packet
+=======
+    payload_len: int = 200  # Number of bits per packet
+>>>>>>> 6c6c1a72f98781b83d1232c8a2d210556a62a486
 
     # Simulation parameters
-    n_packets: int = 10  # Number of sent packets
+    n_packets: int = 100  # Number of sent packets
 
     # Channel parameters
     sto_val: float = 0
@@ -44,14 +48,17 @@ class Chain:
     cutoff = 100000
 
     # Viterbi encoder parameters
-    R1 = np.array([0,1,3,2])
-    R0 = np.array([0,2,3,1])
-    out_R1 = np.array([[0,0],[1,1],[1,0],[0,1]])
-    out_R0 = np.array([[0,0],[1,1],[0,1],[1,0]])
-    
+    R1 = np.array([2,1,3,0])
+    R0 = np.array([0,3,1,2])
+    out_R1 = np.array([[1,1],[1,0],[1,1],[1,0]])
+    out_R0 = np.array([[0,0],[0,1],[0,0],[0,1]])
+    symb_R1 = np.array([1.0 + 1.0j, 1.0 + 0.0j, 1.0 + 1.0j, 1.0 + 0.0j])
+    symb_R0 = np.array([0.0 + 0.0j, 0.0 + 1.0j, 0.0 + 0.0j, 0.0 + 1.0j])
     len_b = 100
 
     # Tx methods
+
+    bypass_viterbi: bool = True
 
     def conv_encoder(self, u):
         """
@@ -269,7 +276,32 @@ class BasicChain(Chain):
         phase_derivative_1 = phase_function[1:] - phase_function[:-1]
         phase_derivative_2 = np.abs(phase_derivative_1[1:] - phase_derivative_1[:-1])
 
+        
+        # plt.figure()
+        # plt.grid('true')
+        # plt.plot(phase_function[:1000], label='phase_function')
+        # plt.plot(smooth[:1000], label='smooth')
+        # plt.title('Phase function and its smoothed version')
+        # plt.legend()
+        # plt.show()
+
+        # plt.figure()
+        # plt.grid('true')
+        # plt.plot(phase_derivative_1[:1000], label='phase_derivative_1')
+        # plt.plot(der_1[:1000], label='der_1_smooth')
+        # plt.title('First derivative of phase function and its smoothed version')
+        # plt.legend()
+        # plt.show()
+
+        # plt.figure()
+        # plt.grid('true')
+        # plt.plot(phase_derivative_2[:1000], label='phase_derivative_2')
+        # plt.plot(der_2[:1000], label='der_2_smooth')
+        # plt.title('Second derivative of phase function and its smoothed version')
+        # plt.legend()
+
     
+
         sum_der_saved = -np.inf
         save_i = 0
         for i in range(0, R):
@@ -389,18 +421,27 @@ class BasicChain(Chain):
         """
 
         return bits_hat
-"""
+
+    bypass_viterbi = False
+
     def viterbi_decoder(self, x_tilde):
 
         # Viterbi decoder parameters
         R1 = self.R1
         R0 = self.R0
-        symb_R1 = self.out_R1
-        symb_R0 = self.out_R0
+        symb_R1 = self.symb_R1
+        symb_R0 = self.symb_R0
         len_b = self.len_b
 
         def dist(a,b):
-            return np.abs(a-b)**2
+            distance = np.abs(a-b)
+            # distance = np.abs(np.real(a)-np.real(b)) + np.abs(np.imag(a)-np.imag(b))
+            return distance
+        
+        # Reshape of the received sequence to have u and c
+        u_hat = x_tilde[:len(x_tilde)//2]
+        c_hat = x_tilde[len(x_tilde)//2:]
+        x_tilde = u_hat + 1j*c_hat
         
         N_b = int(len(x_tilde)/len_b)
         
@@ -467,5 +508,5 @@ class BasicChain(Chain):
         
         u_hat = np.reshape(u_hat_b,(u_hat_b.size,))
         return u_hat
-"""
+
     

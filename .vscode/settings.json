@@ -1,3 +1,6 @@
 {
-    "cmake.sourceDirectory": "/home/ulysse/Documents/LELEC21023-grH/telecom/hands_on_measurements/gr-fsk/python"
+    "cmake.sourceDirectory": "/home/ulysse/Documents/LELEC21023-grH/telecom/hands_on_measurements/gr-fsk/python",
+    "files.associations": {
+        "numeric": "c"
+    }
 }

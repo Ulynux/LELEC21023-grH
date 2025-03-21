@@ -9,6 +9,10 @@ import csv
 import os
 
 
+plots_folder = "telecom/plots/viterbi/"
+test_name = "h_viterbi"
+
+
 def add_delay(chain: Chain, x: np.ndarray, tau: float):
     """
     Apply the channel between TX and RX, handling the different oversampling factors
@@ -81,9 +85,15 @@ def run_sim(chain: Chain):
     for n in range(chain.n_packets):
         # Random generation of payload bits
         bits = rng.integers(2, size=chain.payload_len)
+        payload = bits
+
+        # Viterbi encoding
+        if chain.bypass_viterbi == False:
+            u, c = chain.conv_encoder(payload)
+            payload = np.concatenate((u, c))
 
         # Transmitted signal
-        x_pay = chain.modulate(bits)  # Modulated signal with payload
+        x_pay = chain.modulate(payload)  # Modulated signal with payload
         x = np.concatenate((x_noise, x_pr, x_sync, x_pay, np.zeros(chain.osr_tx)))
 
         # Channel application (without noise addition): delay and frequency offset
@@ -210,8 +220,17 @@ def run_sim(chain: Chain):
                     start_frame : start_frame + chain.payload_len
                 ]  # Demodulated payload bits
 
+                # Viterbi decoding
+                if chain.bypass_viterbi == False:
+                    bits_hat_pay = bits_hat[
+                        start_frame : start_frame + chain.payload_len * 2
+                    ]
+                
                 ## Computing performance metrics
-                if len(bits) == len(bits_hat_pay) and not preamble_error:
+                if len(payload) == len(bits_hat_pay) and not preamble_error:
+                    if chain.bypass_viterbi == False:
+                        bits_hat_pay = chain.viterbi_decoder(bits_hat_pay)
+
                     errors = bits ^ bits_hat_pay
 
                 else:  # if the number of demodulated symbols is incorrect
@@ -278,8 +297,18 @@ def run_sim(chain: Chain):
     #f = fs * 0.5 / np.pi
     
 
+<<<<<<< HEAD
 
 
+=======
+    angles = np.unwrap(np.angle(h))
+    ax2.plot(f, angles, "g")
+    ax2.set_ylabel("Angle ", color="g")
+    ax2.grid(True)
+    ax1.set_xlim(0,160000)
+    ax2.set_xlim(0,160000)
+    plt.savefig(plots_folder+"FIR.png")
+>>>>>>> 6c6c1a72f98781b83d1232c8a2d210556a62a486
 
     # Bit error rate
     fig, ax = plt.subplots(constrained_layout=True)
@@ -311,7 +340,7 @@ def run_sim(chain: Chain):
         ax2.set_xlim(ax.get_xlim())
         ax2.xaxis.label.set_color("b")
         ax2.tick_params(axis="x", colors="b")
-        plt.savefig('plots/SNRe')
+        plt.savefig(plots_folder+'SNRe')
 
 
     # Packet error rate
@@ -348,7 +377,7 @@ def run_sim(chain: Chain):
         ax2.set_xlim(ax.get_xlim())
         ax2.xaxis.label.set_color("b")
         ax2.tick_params(axis="x", colors="b")
-    plt.savefig("plots/PER_out_from_file.png")
+    plt.savefig(plots_folder+"PER_out_from_file.png")
 
     # Preamble metrics
     plt.figure()
@@ -360,9 +389,8 @@ def run_sim(chain: Chain):
     plt.ylim([-1, 101])
     plt.grid()
     plt.legend()
-    plt.savefig("plots/Preamble_detection.png")
+    plt.savefig(plots_folder+"Preamble_detection.png")
 
-    """
     # RMSE CFO
     plt.figure()
     plt.semilogy(SNRs_dB, RMSE_cfo, "-s")
@@ -370,10 +398,10 @@ def run_sim(chain: Chain):
     plt.ylabel("RMSE [-]")
     plt.xlabel("SNR [dB]")
     plt.grid()
-    plt.savefig("plots/RMSE_CFO.png")
+    plt.savefig(plots_folder+"RMSE_CFO.png")
     # Assuming SNRs_dB and RMSE_cfo are your data arrays
     data = np.column_stack((SNRs_dB, RMSE_cfo))
-    np.savetxt('plots/RMSE_CFO_data.csv', data, delimiter=',', header='SNR_dB,RMSE_cfo', comments='')
+    np.savetxt(plots_folder+'RMSE_CFO_data.csv', data, delimiter=',', header='SNR_dB,RMSE_cfo', comments='')
 
     # RMSE STO
     plt.figure()
@@ -382,7 +410,7 @@ def run_sim(chain: Chain):
     plt.ylabel("RMSE [-]")
     plt.xlabel("SNR [dB]")
     plt.grid()
-    plt.savefig("plots/RMSE_STO.png")
+    plt.savefig(plots_folder+"RMSE_STO.png")
     """
     # Save simulation outputs (for later post-processing, building new figures,...)
     test_name = "test"
@@ -453,7 +481,7 @@ def run_sim(chain: Chain):
     plt.ylabel("RMSE [-]")
     plt.xlabel("SNR [dB]")
     plt.grid()
-    plt.savefig("plots/RMSE_CFO_from_file.png")
+    plt.savefig(plots_folder+"RMSE_CFO_from_file.png")
 
 
     plt.figure()
@@ -462,8 +490,8 @@ def run_sim(chain: Chain):
     plt.ylabel("RMSE [-]")
     plt.xlabel("SNR [dB]")
     plt.grid()
-    plt.savefig("plots/RMSE_STO_from_file.png")
-"""
+    plt.savefig(plots_folder+"RMSE_STO_from_file.png")
+
 
 if __name__ == "__main__":
     from chain import BasicChain
