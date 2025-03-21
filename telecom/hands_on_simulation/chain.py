@@ -17,12 +17,12 @@ class Chain:
     freq_dev: float = BIT_RATE / 2 * 2
 
     osr_tx: int = 64
-    osr_rx: int = 16
+    osr_rx: int = 8
 
     preamble: np.ndarray = PREAMBLE
     sync_word: np.ndarray = SYNC_WORD
 
-    payload_len: int = 80  # Number of bits per packet
+    payload_len: int = 8000  # Number of bits per packet
 
     # Simulation parameters
     n_packets: int = 10  # Number of sent packets
@@ -294,19 +294,99 @@ class BasicChain(Chain):
         y = np.resize(y, (nb_syms, R))
         
         # Generate the reference waveforms used for the correlation
-        phi = 2 * np.pi * fd * (np.arange(R) / R) / B
+
+        phi = 2 * np.pi * (fd) * (np.arange(R) / R) / B
+
+
+
         ref_wave_1 = np.exp(1j * phi)
         ref_wave_0 = np.exp(-1j * phi)
 
+        
+        ref_00 = np.concatenate((ref_wave_0,ref_wave_0))
+        ref_01 = np.concatenate((ref_wave_0,ref_wave_1))
+        ref_10 = np.concatenate((ref_wave_1,ref_wave_0))
+        ref_11 = np.concatenate((ref_wave_1,ref_wave_1))
+        """
+        plt.figure()
+
+        plt.subplot(2,2,1)
+        plt.plot(np.arange(2*len(ref_wave_0)),np.angle(ref_00))
+        plt.grid(True)
+        plt.xlabel("Phi")
+        plt.ylabel("waveform")
+
+        plt.subplot(2,2,2)
+        plt.plot(np.arange(2*len(ref_wave_0)),np.angle(ref_01))
+        plt.grid(True)
+        plt.xlabel("Phi")
+        plt.ylabel("waveform")
+
+        plt.subplot(2,2,3)
+        plt.plot(np.arange(2*len(ref_wave_0)),np.angle(ref_10))
+        plt.grid(True)
+        plt.xlabel("Phi")
+        plt.ylabel("waveform")
+
+        plt.subplot(2,2,4)
+        plt.plot(np.arange(2*len(ref_wave_0)),np.angle(ref_11))
+        plt.grid(True)
+        plt.xlabel("Phi")
+        plt.ylabel("waveform")
+
+        plt.show()
+        """
+
+        
+
+
         bits_hat = np.zeros(nb_syms, dtype=int)  # Default value, all bits=0. 
         
-        # Compute the correlations with the two reference waveforms (r0 and r1)
         for i in range(nb_syms):
+
             r0 = np.abs(np.sum(y[i] * np.conj(ref_wave_0)))
             r1 = np.abs(np.sum(y[i] * np.conj(ref_wave_1)))
-            
-            bits_hat[i] = 0 if np.abs(r0) > np.abs(r1) else 1  # Performs the decision based on r0 and r1
 
+            if r0 > r1:
+                bits_hat[i] = 0
+            else:
+                bits_hat[i] = 1
+        
+            
+
+        """
+        # Compute the correlations with the two reference waveforms (r0 and r1)
+        for i in range(0,len(y)-1,2):
+
+
+            y_concatenate = np.concatenate((y[i],y[i+1]))
+
+            r00 = np.abs(np.sum(y_concatenate * np.conj(ref_00)))
+            r01 = np.abs(np.sum(y_concatenate * np.conj(ref_01)))
+            r10 = np.abs(np.sum(y_concatenate * np.conj(ref_10)))
+            r11 = np.abs(np.sum(y_concatenate * np.conj(ref_11)))
+
+            
+            if(max(r00,r01,r10,r11) == r00):
+
+                bits_hat[i] = 0
+                bits_hat[i+1] = 0
+
+            elif(max(r00,r01,r10,r11) == r01):
+
+                bits_hat[i] = 0
+                bits_hat[i+1] = 1
+
+            elif(max(r00,r01,r10,r11) == r10):
+
+                bits_hat[i] = 1
+                bits_hat[i+1] = 0
+            
+            else:
+                    
+                    bits_hat[i] = 1
+                    bits_hat[i+1] = 1
+        """
 
         return bits_hat
 """

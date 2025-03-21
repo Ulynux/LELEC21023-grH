@@ -5,6 +5,8 @@ from scipy.signal import firwin, freqz
 from scipy.special import erfc
 from scipy.signal import savgol_filter
 import PER as per
+import csv
+import os
 
 
 def add_delay(chain: Chain, x: np.ndarray, tau: float):
@@ -51,6 +53,7 @@ def run_sim(chain: Chain):
     print("R = ",R)
     B = chain.bit_rate
     fs = B * R
+    cutoff = chain.cutoff
 
     # Error counters/metric initialisation
     bit_errors = np.zeros(len(SNRs_dB))
@@ -71,7 +74,7 @@ def run_sim(chain: Chain):
     )  # Padding some zeros before the packets
 
     # Lowpass filter taps
-    taps = firwin(chain.numtaps, 130000, fs=fs)
+    taps = firwin(chain.numtaps, cutoff, fs=fs)
     rng = np.random.default_rng()
 
     # For loop on the number of packets to send
@@ -109,7 +112,10 @@ def run_sim(chain: Chain):
         for k, SNR_dB in enumerate(SNRs_dB):
             # Add noise
             SNR = 10 ** (SNR_dB / 10.0)
+
+            #Avec/sans bruit
             y_noisy = y_cfo + w * np.sqrt(1 / SNR)
+
 
             # Low-pass filtering
             y_filt = np.convolve(y_noisy, taps, mode="same")
@@ -268,21 +274,12 @@ def run_sim(chain: Chain):
 
     fig, ax1 = plt.subplots()
     w, h = freqz(taps)
-    f = w * fs * 0.5 / np.pi
+    f = w * fs / (2 * np.pi)
+    #f = fs * 0.5 / np.pi
     
-    ax1.set_title("FIR response")
-    ax1.plot(f, 20 * np.log10(abs(h)), "b")
-    ax1.set_ylabel("Amplitude (dB)", color="b")
-    ax1.set_xlabel("Frequency (Hz)")
-    ax2 = ax1.twinx()
 
-    angles = np.unwrap(np.angle(h))
-    ax2.plot(f, angles, "g")
-    ax2.set_ylabel("Angle ", color="g")
-    ax2.grid(True)
-    ax1.set_xlim(0,160000)
-    ax2.set_xlim(0,160000)
-    plt.savefig("plots/FIR.png")
+
+
 
     # Bit error rate
     fig, ax = plt.subplots(constrained_layout=True)
@@ -321,6 +318,10 @@ def run_sim(chain: Chain):
     fig, ax = plt.subplots(constrained_layout=True)
     ax.plot(SNRs_dB + shift_SNR_out, PER, "-s", label="Simulation")
     ax.plot(per.SNR_aver +shift_SNR_filter ,per.PACKET_ERROR,"-s",label="Measurements")
+
+    print("PER ",PER)
+    print("SNR ",SNRs_dB + shift_SNR_out - shift_SNR_filter)
+
 
     #ax.plot(SNR_th, 1 - (1 - BER_th_BPSK) ** chain.payload_len, label="AWGN Th. BPSK")
     ax.set_ylabel("PER")

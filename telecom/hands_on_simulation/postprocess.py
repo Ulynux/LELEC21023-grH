@@ -7,29 +7,19 @@ import PER as per
 
 
 plots_folder = "telecom/plots/"
-test_name = ["h_old", "h1", "h2", "h3", "h4"]
+test_name = ["M8", "M16", "M32", "M64", "M128"]
 
+R = [8, 16, 32, 64, 128]
 
-# Variables needed
-
-# Chain
 chain = Chain()
+"""
+SNRs_dB = chain.snr_range
 R = chain.osr_rx
+print("R = ",R)
 B = chain.bit_rate
 fs = B * R
-# Lowpass filter taps
+
 taps = firwin(chain.numtaps, 130000, fs=fs)
-
-# Theoretical curves - normalization
-Cu = np.correlate(taps, taps, mode="full")  # such that Cu[len(taps)-1] = 1
-sum_Cu = 0
-for r in range(0, R):
-    for rt in range(0, R):
-        sum_Cu += Cu[len(taps) - 1 + r - rt]
-shift_SNR_out = 10 * np.log10(R**2 / sum_Cu)  # 10*np.log10(chain.osr_rx)
-shift_SNR_filter = 10 * np.log10(1 / np.sum(np.abs(taps) ** 2))
-
-
 # Read files:
 SNRs_dB = []
 SNRs_dB_shifted = []
@@ -39,22 +29,11 @@ RMSE_cfo = []
 RMSE_sto = []
 preamble_mis = []
 preamble_false = []
-
-for name in test_name:
-    data = np.loadtxt(f"telecom/plots/{name}.csv", delimiter="\t")
-    SNRs_dB.append(data[:, 0])
-    SNRs_dB_shifted.append(data[:, 1])
-    BER.append(data[:, 2])
-    PER.append(data[:, 3])
-    RMSE_cfo.append(data[:, 4])
-    RMSE_sto.append(data[:, 5])
-    preamble_mis.append(data[:, 6])
-    preamble_false.append(data[:, 7])
+"""
 
 
-savefig = False
 
-
+"""
 def plots():
     fig, ax = plt.subplots(constrained_layout=True)
     for i in range(len(test_name)):
@@ -111,9 +90,10 @@ def plots():
     plt.ylabel("RMSE [-]")
     plt.xlabel("SNR [dB]")
     plt.grid()
-    if savefig: plt.savefig(plots_folder+"RMSE_STO_from_file.png")
+    if savefig: plt.savefig(plots_folder+"RMSE_STO_from_file.png")"
+"""
 
-
+"""
 def modulation_index():
 
     fig, ax = plt.subplots(constrained_layout=True)
@@ -158,78 +138,101 @@ def modulation_index():
     plt.xlabel("SNR [dB]")
     plt.grid()
     plt.legend()
-    plt.savefig("telecom/plots/STO_comparison.png")
+    plt.savefig("telecom/plots/STO_comparison.png")"
+"""
 
-import matplotlib.pyplot as plt
-import numpy as np
-SNR = [-2.78502413, -1.78502413, -0.78502413, 0.21497587, 1.21497587, 2.21497587, 
-       3.21497587, 4.21497587, 5.21497587, 6.21497587, 7.21497587, 8.21497587, 
-       9.21497587, 10.21497587, 11.21497587, 12.21497587, 13.21497587, 14.21497587, 
-       15.21497587, 16.21497587, 17.21497587, 18.21497587, 19.21497587, 20.21497587, 
-       21.21497587, 22.21497587, 23.21497587, 24.21497587, 25.21497587, 26.21497587, 
-       27.21497587, 28.21497587, 29.21497587, 30.21497587, 31.21497587]
+#ecris une fonction plus les data de 90000Hz, 100000Hz, 110000Hz, 120000Hz, 130000Hz
 
-BER_130000 = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.27625, 0.0675, 0.03, 
-              0.02625, 0.025, 0.0175, 0.01625, 0., 0., 0., 0., 0., 
-              0., 0., 0., 0., 0., 0., 0., 0., 0., 
-              0., 0., 0., 0., 0., 0., 0., 0.]
+def plot_cutoff_frequency():
 
-BER_120000 = [0.5, 0.5, 0.5, 0.5, 0.5, 0.36125, 0.12625, 0.0825, 0.04125, 
-              0.03125, 0.00625, 0.0025, 0., 0., 0., 0., 0., 0., 
-              0., 0., 0., 0., 0., 0., 0., 0., 0., 
-              0., 0., 0., 0., 0., 0., 0., 0.]
+    # Lowpass filter taps
+    
 
-BER_110000 = [0.5, 0.5, 0.5, 0.5, 0.5, 0.345, 0.13, 0.12125, 0.0825, 
-              0.04625, 0.08, 0.02625, 0., 0., 0., 0., 0., 0., 
-              0., 0., 0., 0., 0., 0., 0., 0., 0., 
-              0., 0., 0., 0., 0., 0., 0., 0.]
+    fig, ax = plt.subplots(constrained_layout=True)
 
-BER_100000 = [0.5, 0.5, 0.5, 0.5, 0.5, 0.15125, 0.1025, 0.06375, 0.02875, 
-              0.0025, 0.00125, 0.00125, 0., 0., 0., 0., 0., 0., 
-              0., 0., 0., 0., 0., 0., 0., 0., 0., 
-              0., 0., 0., 0., 0., 0., 0., 0.]
+    for i in range(len(test_name)):
 
-BER_90000 = [0.5, 0.5, 0.5, 0.5, 0.5, 0.25875, 0.1575, 0.10625, 0.05375, 
-             0.10125, 0.02375, 0., 0., 0., 0., 0., 0., 0., 
-             0., 0., 0., 0., 0., 0., 0., 0., 0., 
-             0., 0., 0., 0., 0., 0., 0., 0.]
+        filename = f"/home/matthieu/MASTER1/Q2/LELEC21023-grH/telecom/plots/{test_name[i]}.csv"
 
-BER_80000 = [0.5, 0.5, 0.5, 0.5, 0.395, 0.32625, 0.22375, 0.12, 0.11125, 
-             0.005, 0.00125, 0., 0., 0., 0., 0., 0., 0., 
-             0., 0., 0., 0., 0., 0.05, 0.05, 0.1, 0.15, 
-             0.15, 0.15, 0.1, 0.15, 0.15, 0.15, 0.15, 0.15]
+        data = np.genfromtxt(filename, delimiter=",", skip_header=1)   
 
-BER_70000 = [0.5, 0.5, 0.5, 0.4375, 0.32625, 0.18125, 0.08625, 0.075, 0.05625, 
-             0.05125, 0.02625, 0.07625, 0.0725, 0.0675, 0.21, 0.26, 0.25875, 0.3, 
-             0.3, 0.35, 0.35, 0.35, 0.35, 0.35, 0.35, 0.35, 0.35, 
-             0.35, 0.35, 0.35, 0.35, 0.35, 0.4, 0.4, 0.4]
+        taps = firwin(chain.numtaps, fcutoff[i], fs=fs)
 
-BER_60000 = [0.5, 0.5, 0.4625, 0.39375, 0.2275, 0.18, 0.1625, 0.1175, 0.18125, 
-             0.2225, 0.20375, 0.2275, 0.21, 0.32125, 0.35125, 0.4, 0.5, 0.5, 
-             0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
-             0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+        # Theoretical curves - normalization
+        Cu = np.correlate(taps, taps, mode="full")
+        sum_Cu = 0
+        for r in range(0, R):
+            for rt in range(0, R):
+                sum_Cu += Cu[len(taps) - 1 + r - rt]
+        shift_SNR_out = 10 * np.log10(R**2 / sum_Cu)
+        shift_SNR_filter = 10 * np.log10(1 / np.sum(np.abs(taps) ** 2))
 
-BER_50000 = [0.5, 0.5, 0.48375, 0.4275, 0.3975, 0.415, 0.46, 0.48375, 0.5, 
-             0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
-             0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 
-             0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-# Tracer les courbes BER
-plt.figure(figsize=(10, 6))
+        SNR = data[:, 0]
+        PER = data[:, 1]
 
-plt.plot(SNR, BER_130000, label="BER 130k", marker='o')
-plt.plot(SNR, BER_120000, label="BER 120k", marker='s')
-plt.plot(SNR, BER_110000, label="BER 110k", marker='^')
-plt.plot(SNR, BER_100000, label="BER 100k", marker='x')
-plt.plot(SNR, BER_90000, label="BER 90k", marker='D')
+        plt.plot(SNR -shift_SNR_filter + shift_SNR_out, PER, "-s", label=f"{test_name[i]} Hz")
+    plt.xlabel("SNR$_{o}$ [dB]")
+    plt.yscale("log")
+    plt.ylim((10e-3, 1))
+    plt.xlim((5, 30))
+    plt.grid(True)
+    plt.title("Average Bit Error Rate")
+    plt.legend()
+    plt.savefig("plots/BER_cutoff_frequency.png")
+    plt.show()
+
+def plot_oversampling_factor():
+
+    PER_8 = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.8, 0.2, 0.0, 0.0, 0.0,
+         0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    print(len(PER_8))
 
 
-plt.yscale('log')
-plt.xlabel('SNR (dB)')
-plt.ylabel('BER (Log Scale)')
-plt.xlim(-3,15)
-plt.title('BER en fonction de SNR pour différents taux')
-plt.legend()
-plt.grid(True)
-plt.savefig("telecom/plots/BER_differents_cutoff.png")
-plt.show()
+    SNR = [-3.08066884, -2.08066884, -1.08066884, -0.08066884, 0.91933116, 1.91933116,
+        2.91933116, 3.91933116, 4.91933116, 5.91933116, 6.91933116, 7.91933116,
+        8.91933116, 9.91933116, 10.91933116, 11.91933116, 12.91933116, 13.91933116,
+        14.91933116, 15.91933116, 16.91933116, 17.91933116, 18.91933116, 19.91933116,
+        20.91933116, 21.91933116, 22.91933116, 23.91933116, 24.91933116, 25.91933116,
+        26.91933116, 27.91933116, 28.91933116, 29.91933116, 30.91933116]
+
+    print(len(SNR))
+
+
+    PER_16 = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
+        0.6, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+    PER_32 = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+       0.0, 0.0, 0.0, 0.0, 0.0]
+
+    PER_64 = [1.0, 1.0, 1.0, 1.0, 1.0, 0.4, 0.2, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+       0.0, 0.0, 0.0, 0.0, 0.0]
+
+
+    #plot les resultats
+
+    plt.figure()
+    plt.plot(SNR, PER_8, "-s", label="8")
+    plt.plot(SNR, PER_16, "-s", label="16")
+    plt.plot(SNR, PER_32, "-s", label="32")
+    plt.plot(SNR, PER_64, "-s", label="64")
+    plt.title("PER")
+    plt.ylabel("PER")
+    plt.xlabel("SNR [dB]")
+    plt.grid()
+    plt.legend()
+    plt.yscale("log")
+    plt.savefig("plots/PER_oversampling_factor.png")
+    plt.show()
+ 
+
+    
+
+
+
+plot_oversampling_factor()
+
 
