@@ -54,10 +54,9 @@ def main(
     This way, you will directly receive the authentified packets from STDIN
     (standard input, i.e., the terminal).
     """
-    with open('classification/data/models/modeltest.pickle', 'rb') as file:
-        model_knn = pickle.load(file)
-    with open('classification/data/models/pca.pickle', 'rb') as file:
-        model_pca = pickle.load(file)
+    with open('classification/data/models/best_rf_model.pickle', 'rb') as file:
+        model_rf = pickle.load(file)
+
    
 
     for payload in _input:
@@ -68,29 +67,24 @@ def main(
             logger.info(f"Parsed payload into Mel vectors: {melvec}")
             memory = []
 
-            if model_knn and model_pca:
+            if model_rf :
                 melvec = melvec/np.linalg.norm(melvec)
                 melvec = melvec.reshape(1, -1)
-                melvec_reduced = model_pca.transform(melvec)
-                proba_knn = model_knn.predict_proba(melvec_reduced)
-                if len(memory) > 5:
+                proba_knn = model_rf.predict_proba(melvec)
+                if len(memory) > 2:
                     memory.pop(0)
 
-                # Convert memory to numpy array
                 memory_array = np.array(memory)
 
-                # Naive method
                 memory.append(proba_knn)
 
-                # Convert memory to numpy array
                 memory_array = np.array(memory)
 
-                # Majority voting
                 majority_class_index = np.bincount(np.argmax(memory_array, axis=2).flatten()).argmax()
-                majority_class = model_knn.classes_[majority_class_index]
-                if majority_class == "birds" or majority_class == "handsaw" or majority_class == "helicopter":
+                majority_class = model_rf.classes_[majority_class_index]
+                if majority_class == "gun" :
                     majority_class = "gunshot"
-                if memory_array.size > 4:
+                if memory_array.size > 1:
                     logger.info(f"Predictions: {majority_class}")
                     
                     answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{majority_class}", timeout=1)
@@ -98,6 +92,6 @@ def main(
                     json_answer = json.loads(answer.text)
                     print(json_answer)
                     memory.clear()
-                    wait_iterations = 3
+                    wait_iterations = 1
                     for _ in range(wait_iterations):
                         next(_input)
