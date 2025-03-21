@@ -406,6 +406,8 @@ class Feature_vector_DS:
                 aud = AudioUtil.add_noise(aud, sigma=0.0284)
             if "scaling" in self.data_aug:
                 aud = AudioUtil.scaling(aud, scaling_limit=5)
+            if "background_noise" in self.data_aug:
+                aud = AudioUtil.add_background_noise("classification/src/classification/datasets/soundfilesbackground.wav", SNR = 20)
 
         # aud = AudioUtil.normalize(aud, target_dB=10)
         aud = (aud[0] / np.max(np.abs(aud[0])), aud[1])
