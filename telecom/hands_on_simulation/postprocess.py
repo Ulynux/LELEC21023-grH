@@ -12,7 +12,7 @@ test_name = ["M8", "M16", "M32", "M64", "M128"]
 R = [8, 16, 32, 64, 128]
 
 chain = Chain()
-"""
+
 SNRs_dB = chain.snr_range
 R = chain.osr_rx
 print("R = ",R)
@@ -20,6 +20,7 @@ B = chain.bit_rate
 fs = B * R
 
 taps = firwin(chain.numtaps, 130000, fs=fs)
+fcutoff = [90000, 100000, 110000, 120000, 130000]
 # Read files:
 SNRs_dB = []
 SNRs_dB_shifted = []
@@ -29,11 +30,11 @@ RMSE_cfo = []
 RMSE_sto = []
 preamble_mis = []
 preamble_false = []
-"""
 
 
+savefig = True
 
-"""
+
 def plots():
     fig, ax = plt.subplots(constrained_layout=True)
     for i in range(len(test_name)):
@@ -90,10 +91,10 @@ def plots():
     plt.ylabel("RMSE [-]")
     plt.xlabel("SNR [dB]")
     plt.grid()
-    if savefig: plt.savefig(plots_folder+"RMSE_STO_from_file.png")"
-"""
+    if savefig: plt.savefig(plots_folder+"RMSE_STO_from_file.png")
 
-"""
+
+
 def modulation_index():
 
     fig, ax = plt.subplots(constrained_layout=True)
@@ -138,8 +139,8 @@ def modulation_index():
     plt.xlabel("SNR [dB]")
     plt.grid()
     plt.legend()
-    plt.savefig("telecom/plots/STO_comparison.png")"
-"""
+    plt.savefig("telecom/plots/STO_comparison.png")
+
 
 #ecris une fonction plus les data de 90000Hz, 100000Hz, 110000Hz, 120000Hz, 130000Hz
 
@@ -171,6 +172,7 @@ def plot_cutoff_frequency():
         PER = data[:, 1]
 
         plt.plot(SNR -shift_SNR_filter + shift_SNR_out, PER, "-s", label=f"{test_name[i]} Hz")
+
     plt.xlabel("SNR$_{o}$ [dB]")
     plt.yscale("log")
     plt.ylim((10e-3, 1))
@@ -229,7 +231,6 @@ def plot_oversampling_factor():
     plt.show()
  
 
-    
 
 
 
