@@ -14,8 +14,7 @@ import pandas as pd
 import pickle
 from classification.utils.plots import plot_specgram
 import seaborn as sns
-model_knn = pickle.load(open('classification/data/models/modeltest.pickle', 'rb'))  # Write your path to the model here!
-model_pca = pickle.load(open('classification/data/models/pca.pickle', 'rb'))  # Write your path to the model here!
+model_knn = pickle.load(open('classification/data/models/best_rf_model.pickle', 'rb'))  # Write your path to the model here!
 
 PRINT_PREFIX = "DF:HEX:"
 FREQ_SAMPLING = 10200
@@ -76,7 +75,7 @@ if __name__ == "__main__":
     argParser.add_argument("-p", "--port", help="Port for serial communication")
     args = argParser.parse_args()
     print("uart-reader launched...\n")
-    CLASSNAMES = ["birds", "chainsaw", "fire", "handsaw","helicopter"]
+    CLASSNAMES = ["chainsaw", "fire", "fireworks","gunshot"]
     if args.port is None:
         print("No port specified, here is a list of serial communication port available")
         print("================")
@@ -87,17 +86,14 @@ if __name__ == "__main__":
         print("Launch this script with [-p PORT_REF] to access the communication port")
 
     else:
+        memory = []
         input_stream = reader(port=args.port)
         msg_counter = 0
-        memory = []
-        results = []
-        classs = "helicopter"
         for melvec in input_stream:
             melvec = melvec / np.linalg.norm(melvec)
             melvec = melvec.reshape(1, -1)
-            melvec_reduced = model_pca.transform(melvec)
-            proba_knn = model_knn.predict_proba(melvec_reduced)
-            prediction = model_knn.predict(melvec_reduced)
+            proba_knn = model_knn.predict_proba(melvec)
+            prediction = model_knn.predict(melvec)
 
             memory.append(proba_knn)
 
@@ -121,14 +117,6 @@ if __name__ == "__main__":
             likelihoods = np.sum(np.log(memory_array), axis=0)
             max_likelihood_class = np.argmax(likelihoods)
 
-            # Save results
-            results.append({
-                "naive_class": CLASSNAMES[naive_class],
-                "majority_class": CLASSNAMES[majority_class],
-                "avg_class": CLASSNAMES[avg_class],
-                "max_likelihood_class": CLASSNAMES[max_likelihood_class],
-                "true_class": str(classs)  # Set the true class to "birds"
-            })
 
             print(f"Naive class: {CLASSNAMES[naive_class]}")
             print(f"Majority voting class: {CLASSNAMES[majority_class]}")
@@ -137,13 +125,8 @@ if __name__ == "__main__":
 
             # Break after 101 seconds
             msg_counter += 1
-            print(msg_counter)
-            if msg_counter >= 25:
-                break
 
         # Convert results to DataFrame
-        results_df = pd.DataFrame(results)
-        results_df.to_csv("predictions_"+str(classs)+"_generalization_mic.csv", index=False)
         # Compute mean accuracy
         # mean_accuracy_naive = accuracy_score(results_df["true_class"], results_df["naive_class"])
         # mean_accuracy_majority = accuracy_score(results_df["true_class"], results_df["majority_class"])

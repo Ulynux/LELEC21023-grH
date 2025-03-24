@@ -13,13 +13,15 @@ from serial.tools import list_ports
 from classification.utils.plots import plot_specgram
 
 import pickle
-model_knn = pickle.load(open('classification/data/models/best_rf_model.pickle', 'rb')) # Write your path to the model here!
+model_rf = pickle.load(open('classification/data/models/best_rf_model.pickle', 'rb')) # Write your path to the model here!
+# model_pca = pickle.load(open('classification/data/models/pca_10_components.pickle', 'rb')) # Write your path to the model here!
+
 # model_knn = pickle.load(open('classification/data/models/modeltest.pickle', 'rb')) # Write your path to the model here!
 
 PRINT_PREFIX = "DF:HEX:"
 FREQ_SAMPLING = 10200
 MELVEC_LENGTH = 20
-N_MELVECS = 52
+N_MELVECS = 20
 
 dt = np.dtype(np.uint16).newbyteorder("<")
 
@@ -71,19 +73,14 @@ if __name__ == "__main__":
         input_stream = reader(port=args.port)
         msg_counter = 0
 
-        # print(input_stream)
-        all_classes = ["gunshot", "fireworks", "chainsaw", "crackling fire"]
-        classe = all_classes[0]
-        print("iciiii")
         for melvec in input_stream:
-            print("ic")
   
             # np.save("/home/ulysse/Documents/LELEC21023-grH/mcu/hands_on_feature_vectors/melspectrograms"+str(classe)+".npy", all_melvecs)
             # np.save("/home/ulysse/Documents/LELEC21023-grH/mcu/hands_on_feature_vectors/labels"+str(classe)+".npy", all_labels)
             melvec = melvec/np.linalg.norm(melvec)
             melvec = melvec.reshape(1, -1)
-            proba_knn = model_knn.predict_proba(melvec)
-            prediction = model_knn.predict(melvec)
+            proba_knn = model_rf.predict_proba(melvec)
+            prediction = model_rf.predict(melvec)
             msg_counter += 1
 
             print(f"MEL Spectrogram #{msg_counter}")
@@ -100,3 +97,9 @@ if __name__ == "__main__":
             # plt.pause(0.001)
             # plt.savefig(f"mcu/hands_on_feature_vectors/mel_spectrogram_fire10.png")
             # plt.clf()
+
+# firework-001
+# firework-011
+# firework-021
+# firework-031
+# firework-191
