@@ -22,11 +22,7 @@ class Chain:
     preamble: np.ndarray = PREAMBLE
     sync_word: np.ndarray = SYNC_WORD
 
-<<<<<<< HEAD
-    payload_len: int = 8000  # Number of bits per packet
-=======
     payload_len: int = 200  # Number of bits per packet
->>>>>>> 6c6c1a72f98781b83d1232c8a2d210556a62a486
 
     # Simulation parameters
     n_packets: int = 100  # Number of sent packets
@@ -276,32 +272,6 @@ class BasicChain(Chain):
         phase_derivative_1 = phase_function[1:] - phase_function[:-1]
         phase_derivative_2 = np.abs(phase_derivative_1[1:] - phase_derivative_1[:-1])
 
-        
-        # plt.figure()
-        # plt.grid('true')
-        # plt.plot(phase_function[:1000], label='phase_function')
-        # plt.plot(smooth[:1000], label='smooth')
-        # plt.title('Phase function and its smoothed version')
-        # plt.legend()
-        # plt.show()
-
-        # plt.figure()
-        # plt.grid('true')
-        # plt.plot(phase_derivative_1[:1000], label='phase_derivative_1')
-        # plt.plot(der_1[:1000], label='der_1_smooth')
-        # plt.title('First derivative of phase function and its smoothed version')
-        # plt.legend()
-        # plt.show()
-
-        # plt.figure()
-        # plt.grid('true')
-        # plt.plot(phase_derivative_2[:1000], label='phase_derivative_2')
-        # plt.plot(der_2[:1000], label='der_2_smooth')
-        # plt.title('Second derivative of phase function and its smoothed version')
-        # plt.legend()
-
-    
-
         sum_der_saved = -np.inf
         save_i = 0
         for i in range(0, R):
@@ -368,9 +338,6 @@ class BasicChain(Chain):
 
         plt.show()
         """
-
-        
-
 
         bits_hat = np.zeros(nb_syms, dtype=int)  # Default value, all bits=0. 
         

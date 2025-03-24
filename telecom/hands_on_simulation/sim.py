@@ -289,26 +289,9 @@ def run_sim(chain: Chain):
     print(SNRs_dB - shift_SNR_filter + shift_SNR_out)
     print(shift_SNR_out)
     print(shift_SNR_filter)
+
+
     ### Plot dashboard
-
-    fig, ax1 = plt.subplots()
-    w, h = freqz(taps)
-    f = w * fs / (2 * np.pi)
-    #f = fs * 0.5 / np.pi
-    
-
-<<<<<<< HEAD
-
-
-=======
-    angles = np.unwrap(np.angle(h))
-    ax2.plot(f, angles, "g")
-    ax2.set_ylabel("Angle ", color="g")
-    ax2.grid(True)
-    ax1.set_xlim(0,160000)
-    ax2.set_xlim(0,160000)
-    plt.savefig(plots_folder+"FIR.png")
->>>>>>> 6c6c1a72f98781b83d1232c8a2d210556a62a486
 
     # Bit error rate
     fig, ax = plt.subplots(constrained_layout=True)
@@ -411,7 +394,7 @@ def run_sim(chain: Chain):
     plt.xlabel("SNR [dB]")
     plt.grid()
     plt.savefig(plots_folder+"RMSE_STO.png")
-    """
+    
     # Save simulation outputs (for later post-processing, building new figures,...)
     test_name = "test"
     save_var = np.column_stack(
@@ -427,54 +410,8 @@ def run_sim(chain: Chain):
         )
     )
     np.savetxt(f"{test_name}.csv", save_var, delimiter="\t")
-    # Read file:
-    data = np.loadtxt(f"{test_name}.csv", delimiter="\t")
-    SNRs_dB = data[:, 0]
-    SNRs_dB_shifted = data[:, 1]
-    BER = data[:, 2]
-    PER = data[:, 3]
-    RMSE_cfo = data[:, 4]
-    RMSE_sto = data[:, 5]
-    preamble_mis = data[:, 6]
-    preamble_false = data[:, 7]
-
-    # Plot the data from the file
-    fig, ax = plt.subplots(constrained_layout=True)
-    ax.plot(SNRs_dB_shifted, BER, "-s", label="Simulation")
-    ax.set_ylabel("BER")
-    ax.set_xlabel("SNR$_{o}$ [dB]")
-    ax.set_yscale("log")
-    ax.set_ylim((1e-6, 1))
-    ax.set_xlim((0, 30))
-    ax.grid(True)
-    ax.set_title("Average Bit Error Rate")
-    ax.legend()
-    #plt.savefig("plots/BER_from_file.png")
-
-    fig, ax = plt.subplots(constrained_layout=True)
-    ax.plot(per.SNR_aver - shift_SNR_filter,per.PACKET_ERROR,label="Measurements")
-    ax.plot(SNRs_dB_shifted, PER, "-s", label="Simulation")
-    ax.set_ylabel("PER")
-    ax.set_xlabel("SNR$_{o}$ [dB]")
-    ax.set_yscale("log")
-    ax.set_ylim((1e-2, 1))
-    ax.set_xlim((0, 20))
-    ax.grid(True)
-    ax.set_title("Average Packet Error Rate")
-    ax.legend()
-    plt.savefig("plots/PER_from_file.png")
-
-    plt.figure()
-    plt.plot(SNRs_dB, preamble_mis * 100, "-s", label="Miss-detection")
-    plt.plot(SNRs_dB, preamble_false * 100, "-s", label="False-detection")
-    plt.title("Preamble detection error ")
-    plt.ylabel("[%]")
-    plt.xlabel("SNR [dB]")
-    plt.ylim([-1, 101])
-    plt.grid()
-    plt.legend()
-    plt.savefig("plots/Preamble_detection_from_file.png")
-"""
+    
+    
     plt.figure()
     plt.semilogy(SNRs_dB, RMSE_cfo, "-s")
     plt.title("RMSE CFO")
