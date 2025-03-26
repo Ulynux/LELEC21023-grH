@@ -68,6 +68,7 @@ class AudioUtil:
         sig, sr = audio
 
         num_samples = int(len(sig) * newsr / sr)
+        
 
         resig = scipy.signal.resample(sig, num_samples)
 
@@ -142,7 +143,7 @@ class AudioUtil:
         :param audio: The audio signal as a tuple (signal, sample_rate).
         :param sigma: Standard deviation of the gaussian noise.
         """
-        Version = False
+        Version = False # garder ça en false c'était pas bon l'ancienne version
         if Version:
             sig, sr = audio
             noise = np.random.normal(0, sigma, len(sig))
@@ -194,7 +195,7 @@ class AudioUtil:
         return (sig, sr)
 
     def add_bg(
-        audio, dataset, num_sources=2, max_ms=5000, amplitude_limit=0.1
+        audio, dataset, num_sources=2, max_ms=2500, amplitude_limit=0.1
     ) -> Tuple[ndarray, int]:
         """
         Adds up sounds uniformly chosen at random to audio.
@@ -358,7 +359,7 @@ class Feature_vector_DS:
         Nft=512,
         nmel=20,
         duration=500,
-        shift_pct=0.4,
+        shift_pct=0,
         normalize=False,
         data_aug=None,
         pca=None,
@@ -376,9 +377,7 @@ class Feature_vector_DS:
             self.data_aug_factor += len(self.data_aug)
         else:
             self.data_aug = [self.data_aug]
-        self.ncol = int(
-            self.duration * self.sr / (1e3 * self.Nft)
-        )  # number of columns in melspectrogram
+        self.ncol = int(self.duration * self.sr / (1e3 * self.Nft))  # number of columns in melspectrogram
         self.pca = pca
 
     def __len__(self) -> int:
@@ -470,7 +469,13 @@ class Feature_vector_DS:
         """
         self.data_aug = data_aug
         self.data_aug_factor = 1
+        if "time_shift" in self.data_aug:
+            self.time_shifts = np.arange(0.0, 0.95, 0.01).tolist()  # Define the time shift values
+            self.data_aug_factor += len(self.time_shifts) - 1  # Adjust the data augmentation factor
+        else:
+            self.time_shifts = None
+
         if isinstance(self.data_aug, list):
-            self.data_aug_factor += len(self.data_aug)
+            self.data_aug_factor += len(self.data_aug) - (1 if "time_shift" in self.data_aug else 0)
         else:
             self.data_aug = [self.data_aug]
