@@ -398,6 +398,7 @@ blocks:
     comment: ''
     crc_len: crc_len
     hdr_len: hdr_len
+    log_payload: '1'
     maxoutbuf: '0'
     minoutbuf: '0'
     payload_len: payload_len
@@ -415,6 +416,7 @@ blocks:
     alias: ''
     comment: ''
     drate: data_rate
+    enable_log: '1'
     fdev: fdev
     fsamp: samp_rate
     hdr_len: hdr_len
