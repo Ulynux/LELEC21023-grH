@@ -20,7 +20,7 @@ def extract_data(file_path):
         print(f"Erreur lors de la lecture du fichier : {e}")
 
 # Exemple d'utilisation
-file_path = '/home/matthieu/MASTER1/LELEC21023-grH/telecom/Data.txt'  # Remplace par le chemin réel de ton fichier
+file_path = 'telecom/Data.txt'  # Remplace par le chemin réel de ton fichier
 data_exp = extract_data(file_path)
 
 cfo = []
@@ -33,7 +33,7 @@ if data_exp:
     cfo, snr, txp, ber, invalid = zip(*data_exp)
     txp_count = dict(Counter(txp))
 
-print(txp_count)
+
 key = list(txp_count.keys())
 occurence = []
 for i in range(len(key)):
@@ -79,7 +79,7 @@ plt.yscale('log')
 plt.grid(True)
 plt.xlabel('SNR')
 plt.ylabel('PER')
-plt.savefig('/home/matthieu/MASTER1/LELEC21023-grH/telecom/test_packet.png')
+plt.savefig('telecom/test_packet.png')
 
 plt.show()
 

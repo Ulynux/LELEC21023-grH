@@ -14,7 +14,7 @@ class Chain:
 
     # Communication parameters
     bit_rate: float = BIT_RATE
-    freq_dev: float = BIT_RATE / 2 * 2
+    freq_dev: float = BIT_RATE / 2 *2
 
     osr_tx: int = 64
     osr_rx: int = 8

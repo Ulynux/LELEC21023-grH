@@ -12,6 +12,7 @@ import os
 plots_folder = "telecom/plots/viterbi/"
 test_name = "h_viterbi"
 
+print("freq dev",Chain.freq_dev)
 
 def add_delay(chain: Chain, x: np.ndarray, tau: float):
     """
@@ -428,6 +429,8 @@ def run_sim(chain: Chain):
     plt.xlabel("SNR [dB]")
     plt.grid()
     plt.savefig(plots_folder+"RMSE_STO_from_file.png")
+
+
 
 
 if __name__ == "__main__":
