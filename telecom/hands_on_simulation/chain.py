@@ -232,18 +232,27 @@ class BasicChain(Chain):
         Estimates CFO using Moose algorithm, on first samples of preamble.
         """
         R = self.osr_rx # Receiver oversampling factor
+        B = self.bit_rate # B=1/T
         
-        N = 4 # Block of 4 bits (instructions) / Block of 2 bits (respect condition |cfo| < B/2N with cfo_range = 10e4)
+        N = np.array([2, 4, 8]) # Block of 4 bits (instructions) / Block of 2 bits (respect condition |cfo| < B/2N with cfo_range = 10e4)
         Nt = N*R # Number of blocks used for CFO estimation
         T = 1/self.bit_rate  # B=1/T
-        
-        # Extract 2 blocks of size N*R at the start of y
-        block1 = y[:Nt]
-        block2 = y[Nt:2*Nt] 
-        alpha_hat = np.sum(block2 * np.conj(block1))
 
-        # Apply the Moose algorithm on these two blocks to estimate the CFO
-        cfo_est = (1/(2*np.pi*T*Nt/R)) * np.angle(alpha_hat)
+        y_copy = y.copy()
+        cfo_est = 0
+        
+        for i in range(len(N)):
+
+            # Extract 2 blocks of size N*R at the start of y
+            block1 = y[:Nt[i]]
+            block2 = y[Nt[i]:2*Nt[i]] 
+            alpha_hat = np.sum(block2 * np.conj(block1))
+
+            # Apply the Moose algorithm on these two blocks to estimate the CFO
+            cfo_est += (1/(2*np.pi*T*Nt[i]/R)) * np.angle(alpha_hat)
+
+            # Correct the signal with the estimated CFO
+            y = np.exp(-1j * 2 * np.pi * cfo_est * np.arange(len(y)) / (B*R)) * y_copy
 
         return cfo_est
 
