@@ -38,7 +38,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define ADC_BUF_SIZE 10000
+#define ADC_BUF_SIZE 25000
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -49,10 +49,12 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-volatile int state;
+
 volatile uint16_t ADCBuffer[2*ADC_BUF_SIZE]; /* ADC group regular conversion data (array of data) */
 volatile uint16_t* ADCData1;
 volatile uint16_t* ADCData2;
+volatile int CONTINUOUS_ACK;
+volatile int POWER_THRESHOLD;
 
 char hex_encoded_buffer[4*ADC_BUF_SIZE+1];
 /* USER CODE END PV */
@@ -67,25 +69,41 @@ uint32_t get_signal_power(uint16_t *buffer, size_t len);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == B1_Pin) {
-
-		HAL_TIM_Base_Start(&htim3);
-		HAL_ADC_Start_DMA(&hadc1, (uint32_t*)ADCBuffer, ADC_BUF_SIZE);
+    printf("Is listening.\n");
+    CONTINUOUS_ACK = 1;
     
 	}
 }
 
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc){
+  HAL_TIM_Base_Stop(&htim3);
+  HAL_ADC_Stop_DMA(&hadc1);
 
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
+	if(POWER_THRESHOLD){
+    printf("Sending the buffer \r\n");
+    print_buffer(ADCData1);
+    
+	}else{
+    printf("Did you send a sound ?\r\n");
+    HAL_TIM_Base_Start(&htim3);
+    HAL_ADC_Start_DMA(&hadc1, ADCData1, 2*ADC_BUF_SIZE);
+	}
+}
 
-  // HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-  print_buffer(ADCBuffer);
-  // HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc){
+	uint32_t power = get_signal_power(ADCData1, ADC_BUF_SIZE);
+  printf("Power: %d\r\n", power);
+  if (power>100){
+    POWER_THRESHOLD = 1;
+  }
 }
 
 void hex_encode(char* s, const uint8_t* buf, size_t len) {
-    s[2*len] = '\0'; // A string terminated by a zero char.
+    s[2*len] = '\0';
     for (size_t i=0; i<len; i++) {
         s[i*2] = "0123456789abcdef"[buf[i] >> 4];
         s[i*2+1] = "0123456789abcdef"[buf[i] & 0xF];
@@ -143,21 +161,28 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   RetargetInit(&hlpuart1);
-  printf("Hello world!\r\n");
-  state=0;
+
+  CONTINUOUS_ACK = 0;
+  POWER_THRESHOLD = 0;
   ADCData1 = &ADCBuffer[0];
   ADCData2 = &ADCBuffer[ADC_BUF_SIZE];
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-      __WFI();
-
+  while (1){
+    if(0) __WFI(); // Wait for interrupt
+    else {
+      HAL_TIM_Base_Start(&htim3);
+      HAL_ADC_Start_DMA(&hadc1, ADCData1, 2*ADC_BUF_SIZE);
+      CONTINUOUS_ACK = 0;
+    }
+  
+    
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
   }
   /* USER CODE END 3 */
 }
@@ -217,8 +242,9 @@ void SystemClock_Config(void)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
+  /* User can add his own implementation to report the HAL error return buttonPressed */
   __disable_irq();
+  printf("Error!\r\n");
   while (1)
   {
   }

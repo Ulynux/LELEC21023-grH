@@ -1,5 +1,7 @@
 from collections import Counter
 import matplotlib.pyplot as plt
+
+
 def extract_data(file_path):
     # Lire le fichier TXT et extraire les colonnes spécifiques
     try:
@@ -19,8 +21,9 @@ def extract_data(file_path):
     except Exception as e:
         print(f"Erreur lors de la lecture du fichier : {e}")
 
-# Exemple d'utilisation
-file_path = '/home/matthieu/MASTER1/Q2/LELEC21023-grH/telecom/Data.txt'  # Remplace par le chemin réel de ton fichier
+
+file_path = 'telecom/Data.txt'
+  # Remplace par le chemin réel de ton fichier
 data_exp = extract_data(file_path)
 
 cfo = []
@@ -77,20 +80,20 @@ for i in range(len(INVALID)):
     PACKET_ERROR.append(packet/100)
 
 
-plt.figure()
-plt.hist(cfo,bins = 20)
-plt.xlabel("CFO")
-plt.ylabel("OCCURENCe")
-plt.savefig('/home/matthieu/MASTER1/Q2/LELEC21023-grH/telecom/CFO.png')
+# plt.figure()
+# plt.hist(cfo,bins = 20)
+# plt.xlabel("CFO")
+# plt.ylabel("OCCURENCe")
+# plt.savefig('telecom/CFO.png')
 
 
-plt.figure()
-plt.plot(SNR_aver,PACKET_ERROR,'o',linestyle = '-')
-plt.yscale('log')
-plt.grid(True)
-plt.xlabel('SNR')
-plt.ylabel('PER')
-#plt.savefig('/home/matthieu/MASTER1/LELEC21023-grH/telecom/test_packet.png')
+# plt.figure()
+# plt.plot(SNR_aver,PACKET_ERROR,'o',linestyle = '-')
+# plt.yscale('log')
+# plt.grid(True)
+# plt.xlabel('SNR')
+# plt.ylabel('PER')
+# plt.savefig('telecom/test_packet.png')
 
-plt.show()
+# plt.show()
 
