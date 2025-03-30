@@ -84,7 +84,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 }
 
 static void acquire_and_send_packet() {
-	if (StartADCAcq(N_MELVECS) != HAL_OK) {
+	if (StartADCAcq(N_MELVECS) != HAL_OK) { // on démarre l'acquisition des données ADC en mode DMA
+    // Le DMA utilisé transférer des données directement entre des périphériques (comme un ADC, UART, SPI, etc.) et la RAM, 
+    // sans intervention du processeur (CPU). => Processeur libre pour d'autres tâches.
 		DEBUG_PRINT("Error while enabling the DMA\r\n");
 	}
 	while (!IsADCFinished()) {

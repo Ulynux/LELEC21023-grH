@@ -68,7 +68,6 @@ class AudioUtil:
         sig, sr = audio
 
         num_samples = int(len(sig) * newsr / sr)
-        
 
         resig = scipy.signal.resample(sig, num_samples)
 
@@ -359,7 +358,7 @@ class Feature_vector_DS:
         Nft=512,
         nmel=20,
         duration=500,
-        shift_pct=0,
+        shift_pct=0.4,
         normalize=False,
         data_aug=None,
         pca=None,
@@ -469,13 +468,7 @@ class Feature_vector_DS:
         """
         self.data_aug = data_aug
         self.data_aug_factor = 1
-        if "time_shift" in self.data_aug:
-            self.time_shifts = np.arange(0.0, 0.95, 0.01).tolist()  # Define the time shift values
-            self.data_aug_factor += len(self.time_shifts) - 1  # Adjust the data augmentation factor
-        else:
-            self.time_shifts = None
-
         if isinstance(self.data_aug, list):
-            self.data_aug_factor += len(self.data_aug) - (1 if "time_shift" in self.data_aug else 0)
+            self.data_aug_factor += len(self.data_aug)
         else:
             self.data_aug = [self.data_aug]

@@ -14,12 +14,14 @@ static volatile uint8_t ADCDataRdy[2] = {0, 0};
 
 static volatile uint8_t cur_melvec = 0;
 static q15_t mel_vectors[N_MELVECS][MELVEC_LENGTH];
-
+static q15_t power_threshold = 100;
 static uint32_t packet_cnt = 0;
 
 static volatile int32_t rem_n_bufs = 0;
 
 int StartADCAcq(int32_t n_bufs) {
+	// argument n_bufs = N_MELVECS = 20 = le nombre de buffers à acquérir
+	// 
 	rem_n_bufs = n_bufs;
 	cur_melvec = 0;
 	if (rem_n_bufs != 0) {
@@ -29,6 +31,17 @@ int StartADCAcq(int32_t n_bufs) {
 	}
 }
 
+static int power_threshold_reached() {
+	uint32_t power = get_signal_power((uint16_t *)ADCData[0], ADC_BUF_SIZE);
+	if (power > power_threshold) {
+		power_threshold = power;
+		DEBUG_PRINT("Enough power in the sound to compute it :) \r\n");
+
+		return 1;
+	}
+	DEBUG_PRINT("You're listening to noise/low amplitude sounds :( \r\n");
+	return 0;
+}
 int IsADCFinished(void) {
 	return (rem_n_bufs == 0);
 }
@@ -97,31 +110,37 @@ static void ADC_Callback(int buf_cplt) {
 		rem_n_bufs--;
 	}
 	if (rem_n_bufs == 0) {
-		StopADCAcq();
+		StopADCAcq(); // stop si on a fini d'acquérir les 20 buffers
 	} else if (ADCDataRdy[1-buf_cplt]) {
 		DEBUG_PRINT("Error: ADC Data buffer full\r\n");
-		Error_Handler();
+		Error_Handler(); // erreur si l'autre moitié n'a pas été
+		// traitée à temps
 	}
-	ADCDataRdy[buf_cplt] = 1;
-	//start_cycle_count();
-	Spectrogram_Format((q15_t *)ADCData[buf_cplt]);
-	Spectrogram_Compute((q15_t *)ADCData[buf_cplt], mel_vectors[cur_melvec]);
-	cur_melvec++;
-	//stop_cycle_count("spectrogram");
-	ADCDataRdy[buf_cplt] = 0;
+	// traitement des données si le demi buffer est complet et que le power_threshold est atteint
+	if (ADCDataRdy[buf_cplt] == 0 && power_threshold_reached()) {
+		ADCDataRdy[buf_cplt] = 1;
+		Spectrogram_Format((q15_t *)ADCData[buf_cplt]);
+		Spectrogram_Compute((q15_t *)ADCData[buf_cplt], mel_vectors[cur_melvec]);
+		cur_melvec++;
+	}
+	ADCDataRdy[buf_cplt] = 0; // Marque la moitié du buffer comme traitée
 
 	if (rem_n_bufs == 0) {
 //		print_spectrogram();
-		send_spectrogram();
+		send_spectrogram(); // envoie les données qd on a fini d'acquérir les 20 buffers
 	}
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
 	ADC_Callback(1);
+	// ADC_Callback(1) est appelé lorsque la conversion est complète
+	// (tous les échantillons ont été convertis)
 }
 
 void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc)
 {
+	// ADC_Callback(0) est appelé lorsque la moitié des échantillons a été convertie
+	// pour traiter les données du demi buffer
 	ADC_Callback(0);
 }
