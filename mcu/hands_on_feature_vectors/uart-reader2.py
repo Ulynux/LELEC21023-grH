@@ -14,8 +14,8 @@ import pandas as pd
 import pickle
 from classification.utils.plots import plot_specgram
 import seaborn as sns
-model_knn = pickle.load(open('classification/data/models/best_rf_model.pickle', 'rb'))  # Write your path to the model here!
-
+model_rf = pickle.load(open('classification/data/models/best_rf_model.pickle', 'rb'))  # Write your path to the model here!
+model_pca = pickle.load(open('classification/data/models/pca_25_components.pickle', 'rb'))  # Write your path to the model here!
 PRINT_PREFIX = "DF:HEX:"
 FREQ_SAMPLING = 10200
 MELVEC_LENGTH = 20
@@ -90,12 +90,24 @@ if __name__ == "__main__":
         input_stream = reader(port=args.port)
         msg_counter = 0
         for melvec in input_stream:
-            melvec = melvec / np.linalg.norm(melvec)
-            melvec = melvec.reshape(1, -1)
-            proba_knn = model_knn.predict_proba(melvec)
-            prediction = model_knn.predict(melvec)
+            melvec = melvec.copy()
+            melvec = melvec.astype(np.float64)
+            print(melvec)
 
-            memory.append(proba_knn)
+            # Normalize the melvec
+            melvec -= np.mean(melvec)
+            melvec = melvec / np.linalg.norm(melvec)
+
+            # Reshape melvec to 2D before PCA transformation
+            melvec = melvec.reshape(1, -1)
+            print(melvec.shape)
+            # Apply PCA transformation
+            melvec = model_pca.transform(melvec)
+
+            # Predict probabilities and class
+            proba_rf = model_rf.predict_proba(melvec)
+            prediction = model_rf.predict(melvec)
+            memory.append(proba_rf)
 
             if len(memory) > 5:
                 memory.pop(0)
@@ -149,4 +161,3 @@ if __name__ == "__main__":
         # show_confusion_matrix(results_df["majority_class"], results_df["true_class"], CLASSNAMES, title="Majority Voting")
         # show_confusion_matrix(results_df["avg_class"], results_df["true_class"], CLASSNAMES, title="Average Feature")
         # show_confusion_matrix(results_df["max_likelihood_class"], results_df["true_class"], CLASSNAMES, title="Maximum Likelihood")
-
