@@ -65,8 +65,8 @@ def main(
             for payload in _input:
                 print(f"Payload: {payload}")
                 if PRINT_PREFIX in payload:
-                    payload = payload[len(PRINT_PREFIX) :]
-                    
+                    payload = payload[len(PRINT_PREFIX):]
+
                     melvec = payload_to_melvecs(payload, melvec_length, n_melvecs)
                     logger.info(f"Parsed payload into Mel vectors: {melvec}")
 
@@ -76,9 +76,7 @@ def main(
                     melvec -= np.mean(melvec)
                     melvec = melvec / np.linalg.norm(melvec)
 
-                
                     melvec = melvec.reshape(1, -1)
-
                     melvec = model_pca.transform(melvec)
 
                     proba_rf = model_rf.predict_proba(melvec)
@@ -86,6 +84,7 @@ def main(
 
                     memory.append(proba_array)
 
+                    # Only predict after 5 inputs
                     if len(memory) >= 5:
                         memory_array = np.array(memory)
 
@@ -101,7 +100,6 @@ def main(
 
                         logger.info(f"Predictions: {majority_class}")
                         answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{majority_class}", timeout=1)
-
                         json_answer = json.loads(answer.text)
                         print(json_answer)
 
