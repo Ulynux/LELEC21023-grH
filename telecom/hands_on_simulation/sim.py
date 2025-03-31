@@ -9,8 +9,8 @@ import csv
 import os
 
 
-plots_folder = "telecom/plots/viterbi/"
-test_name = "h_viterbi"
+plots_folder = "telecom/optimisations/STO_derivative/"
+test_name = "h_derivative"
 
 
 def add_delay(chain: Chain, x: np.ndarray, tau: float):
