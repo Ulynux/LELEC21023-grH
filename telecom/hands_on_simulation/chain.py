@@ -21,8 +21,9 @@ class Chain:
 
     preamble: np.ndarray = PREAMBLE
     sync_word: np.ndarray = SYNC_WORD
+    order = 8
 
-    payload_len: int = 200  # Number of bits per packet
+    payload_len: int = 100  # Number of bits per packet
 
     # Simulation parameters
     n_packets: int = 100  # Number of sent packets
@@ -33,7 +34,7 @@ class Chain:
 
     cfo_val: float = 0
     cfo_range: float = (
-        1000  # defines the CFO range when random (in Hz) #(1000 in old repo)
+        5000  # defines the CFO range when random (in Hz) #(1000 in old repo)
     )
 
     snr_range: np.ndarray = np.arange(-10, 25)
@@ -209,7 +210,7 @@ class BasicChain(Chain):
 
     cfo_val, sto_val = np.nan, np.nan  # CFO and STO are random
     
-    bypass_preamble_detect = False
+    bypass_preamble_detect = True
 
     def preamble_detect(self, y):
         """
@@ -263,23 +264,83 @@ class BasicChain(Chain):
         Estimates symbol timing (fractional) based on phase shifts.
         """
         R = self.osr_rx  # Receiver oversampling factor
-
+        order = self.order # Order of the finite difference
         
 
         # Computation of derivatives of phase function
         phase_function = np.unwrap(np.angle(y))
-        smooth = savgol_filter(phase_function,15,2)
-
-        der_1 = smooth[1:] - smooth[:-1]
-        der_2 = np.abs(der_1[1:] - der_1[:-1])
-
-        
-
-        # Smooth the phase function using Savitzky-Golay filter
-
 
         phase_derivative_1 = phase_function[1:] - phase_function[:-1]
         phase_derivative_2 = np.abs(phase_derivative_1[1:] - phase_derivative_1[:-1])
+
+        def second_derivative(function, ord):
+            # Compute the central finite difference of with error term of order ord (2 or 4)
+            derivative = np.zeros(len(phase_function))
+            
+            if ord == 2:
+                # (U+h − 2U0 + U-h)/h^2
+                derivative[1:-1] = (function[2:] - 2 * function[1:-1] + function[:-2])
+
+            if ord == 4:
+                # (−U2h + 16Uh − 30U0 + 16U−h − U−2h)/12h^2
+                derivative[2:-2] = (-function[4:] + 16 * function[3:-1] - 30 * function[2:-2] + 16 * function[1:-3] - function[:-4])
+
+            if ord == 6:
+                # 2f(x−3h)−27f(x−2h)+270f(x−h)−490f(x)+270f(x+h)−27f(x+2h)+2f(x+3h)​/180h^2
+                derivative[3:-3] = (2*function[6:] - 27*function[5:-1] + 270*function[4:-2] - 490*function[3:-3] + 270*function[2:-4] - 27*function[1:-5] + 2*function[:-6])
+
+            if ord == 8:
+                # −9f(x−4h)+128f(x−3h)−1008f(x−2h)+8064f(x−h)−14350f(x)+8064f(x+h)−1008f(x+2h)+128f(x+3h)−9f(x+4h)​/5040h^2
+                derivative[4:-4] = (-9*function[8:] + 128*function[7:-1] - 1008*function[6:-2] + 8064*function[5:-3] - 14350*function[4:-4] + 8064*function[3:-5] - 1008*function[2:-6] + 128*function[1:-7] - 9*function[:-8])
+
+            return derivative
+         
+        def weno5_second_derivative(f, h):
+            """
+            Compute the second derivative using the WENO-5 scheme.
+            
+            Parameters:
+            f : numpy array
+                The function values at discrete points.
+            h : float
+                The uniform grid spacing.
+
+            Returns:
+            numpy array
+                The second derivative approximation.
+            """
+            n = len(f)
+            fxx = np.zeros(n)
+
+            # Small epsilon to prevent division by zero
+            eps = 1e-6  
+
+            for i in range(2, n - 2):  # Ensure we don't go out of bounds
+                # Compute smoothness indicators
+                beta0 = (13/12) * (f[i-2] - 2*f[i-1] + f[i])**2 + (1/4) * (f[i-2] - 4*f[i-1] + 3*f[i])**2
+                beta1 = (13/12) * (f[i-1] - 2*f[i] + f[i+1])**2 + (1/4) * (f[i-1] - f[i+1])**2
+                beta2 = (13/12) * (f[i] - 2*f[i+1] + f[i+2])**2 + (1/4) * (3*f[i] - 4*f[i+1] + f[i+2])**2
+
+                # Compute nonlinear weights
+                alpha0 = 1 / (eps + beta0)**2
+                alpha1 = 6 / (eps + beta1)**2
+                alpha2 = 3 / (eps + beta2)**2
+                w0 = alpha0 / (alpha0 + alpha1 + alpha2)
+                w1 = alpha1 / (alpha0 + alpha1 + alpha2)
+                w2 = alpha2 / (alpha0 + alpha1 + alpha2)
+
+                # Compute second derivative using WENO-5 weighting
+                fxx[i] = (
+                    w0 * (-f[i-2] + 16*f[i-1] - 30*f[i] + 16*f[i+1] - f[i+2]) / (12*h**2)
+                    + w1 * (-f[i-2] + 16*f[i-1] - 30*f[i] + 16*f[i+1] - f[i+2]) / (12*h**2)
+                    + w2 * (-f[i-2] + 16*f[i-1] - 30*f[i] + 16*f[i+1] - f[i+2]) / (12*h**2)
+                )
+
+            return fxx
+        
+        phase_function = savgol_filter(phase_function, 51, 3)
+        phase_derivative_2 = np.abs(second_derivative(phase_function, order))
+        # phase_derivative_2 = np.abs(weno5_second_derivative(phase_function, 1/R))
 
         sum_der_saved = -np.inf
         save_i = 0
@@ -290,7 +351,8 @@ class BasicChain(Chain):
                 sum_der_saved = sum_der
                 save_i = i
 
-        return np.mod(save_i + 1, R)
+        # return np.mod(save_i + 1, R)
+        return save_i
 
     def demodulate(self, y):
         """
@@ -398,7 +460,7 @@ class BasicChain(Chain):
 
         return bits_hat
 
-    bypass_viterbi = False
+    bypass_viterbi = True
 
     def viterbi_decoder(self, x_tilde):
 

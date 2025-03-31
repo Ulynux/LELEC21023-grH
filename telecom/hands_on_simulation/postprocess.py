@@ -21,6 +21,7 @@ fs = B * R
 
 taps = firwin(chain.numtaps, 130000, fs=fs)
 fcutoff = [90000, 100000, 110000, 120000, 130000]
+
 # Read files:
 SNRs_dB = []
 SNRs_dB_shifted = []
