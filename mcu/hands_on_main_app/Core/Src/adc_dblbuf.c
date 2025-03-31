@@ -31,6 +31,15 @@ int StartADCAcq(int32_t n_bufs) {
 	}
 }
 
+uint32_t get_signal_power(uint16_t *buffer, size_t len){
+	uint64_t sum = 0;
+	uint64_t sum2 = 0;
+	for (size_t i=0; i<len; i++) {
+		sum += (uint64_t) buffer[i];
+		sum2 += (uint64_t) buffer[i]*(uint64_t) buffer[i];
+	}
+	return (uint32_t)(sum2/len - sum*sum/len/len);
+}
 static int power_threshold_reached() {
 	uint32_t power = get_signal_power((uint16_t *)ADCData[0], ADC_BUF_SIZE);
 	if (power > power_threshold) {

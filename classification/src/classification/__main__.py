@@ -56,6 +56,8 @@ def main(
     """
     with open('classification/data/models/best_rf_model.pickle', 'rb') as file:
         model_rf = pickle.load(file)
+    with open('classification/data/models/pca_25_components.pickle', 'rb') as file:
+        model_pca = pickle.load(file)
 
    
 
@@ -68,15 +70,30 @@ def main(
             memory = []
 
             if model_rf :
-                melvec = melvec/np.linalg.norm(melvec)
+                melvec = melvec.copy()
+                melvec = melvec.astype(np.float64)
+                print(melvec)
+
+                # Normalize the melvec
+                melvec -= np.mean(melvec)
+                melvec = melvec / np.linalg.norm(melvec)
+
+                # Reshape melvec to 2D before PCA transformation
                 melvec = melvec.reshape(1, -1)
-                proba_knn = model_rf.predict_proba(melvec)
-                if len(memory) > 2:
+                print(melvec.shape)
+                # Apply PCA transformation
+                melvec = model_pca.transform(melvec)
+
+                # Predict probabilities and class
+                proba_rf = model_rf.predict_proba(melvec)
+                prediction = model_rf.predict(melvec)
+                memory.append(proba_rf)
+                if len(memory) > 5:
                     memory.pop(0)
 
                 memory_array = np.array(memory)
 
-                memory.append(proba_knn)
+                memory.append(proba_rf)
 
                 memory_array = np.array(memory)
 
@@ -92,6 +109,6 @@ def main(
                     json_answer = json.loads(answer.text)
                     print(json_answer)
                     memory.clear()
-                    wait_iterations = 1
+                    wait_iterations = np.random.randint(1, 3)
                     for _ in range(wait_iterations):
                         next(_input)
