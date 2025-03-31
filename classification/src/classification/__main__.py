@@ -16,6 +16,7 @@ hostname = "http://lelec210x.sipr.ucl.ac.be"
 key = "t-meiXk3RHRYwfdeGoM8fObRRnggVsjrv6KToE5r" #################################
 load_dotenv()
 
+CLASSNAMES = ["chainsaw", "fire", "fireworks","gunshot"]
 
 @click.command()
 @click.option(
@@ -56,42 +57,54 @@ def main(
     """
     with open('classification/data/models/best_rf_model.pickle', 'rb') as file:
         model_rf = pickle.load(file)
+        with open('classification/data/models/pca_25_components.pickle', 'rb') as file:
+            model_pca = pickle.load(file)
 
    
-
-    for payload in _input:
-        if PRINT_PREFIX in payload:
-            payload = payload[len(PRINT_PREFIX) :]
-
-            melvec = payload_to_melvecs(payload, melvec_length, n_melvecs)
-            logger.info(f"Parsed payload into Mel vectors: {melvec}")
             memory = []
-
-            if model_rf :
-                melvec = melvec/np.linalg.norm(melvec)
-                melvec = melvec.reshape(1, -1)
-                proba_knn = model_rf.predict_proba(melvec)
-                if len(memory) > 2:
-                    memory.pop(0)
-
-                memory_array = np.array(memory)
-
-                memory.append(proba_knn)
-
-                memory_array = np.array(memory)
-
-                majority_class_index = np.bincount(np.argmax(memory_array, axis=2).flatten()).argmax()
-                majority_class = model_rf.classes_[majority_class_index]
-                if majority_class == "gun" :
-                    majority_class = "gunshot"
-                if memory_array.size > 1:
-                    logger.info(f"Predictions: {majority_class}")
+            for payload in _input:
+                print(f"Payload: {payload}")
+                if PRINT_PREFIX in payload:
+                    payload = payload[len(PRINT_PREFIX) :]
                     
-                    answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{majority_class}", timeout=1)
-                    
-                    json_answer = json.loads(answer.text)
-                    print(json_answer)
-                    memory.clear()
-                    wait_iterations = 1
-                    for _ in range(wait_iterations):
-                        next(_input)
+                    melvec = payload_to_melvecs(payload, melvec_length, n_melvecs)
+                    logger.info(f"Parsed payload into Mel vectors: {melvec}")
+
+                    melvec = melvec.copy()
+                    melvec = melvec.astype(np.float64)
+
+                    melvec -= np.mean(melvec)
+                    melvec = melvec / np.linalg.norm(melvec)
+
+                
+                    melvec = melvec.reshape(1, -1)
+
+                    melvec = model_pca.transform(melvec)
+
+                    proba_rf = model_rf.predict_proba(melvec)
+                    proba_array = np.array(proba_rf)
+
+                    memory.append(proba_array)
+
+                    if len(memory) >= 5:
+                        memory_array = np.array(memory)
+
+                        majority_class_index = np.bincount(np.argmax(memory_array, axis=2).flatten()).argmax()
+                        majority_class = model_rf.classes_[majority_class_index]
+
+                        print(f"Majority voting class after 5 inputs: {CLASSNAMES[majority_class]}")
+
+                        memory = []
+
+                        if majority_class == "gun":
+                            majority_class = "gunshot"
+
+                        logger.info(f"Predictions: {majority_class}")
+                        answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{majority_class}", timeout=1)
+
+                        json_answer = json.loads(answer.text)
+                        print(json_answer)
+
+                        wait_iterations = np.random.randint(1, 3)
+                        for _ in range(wait_iterations):
+                            next(_input)

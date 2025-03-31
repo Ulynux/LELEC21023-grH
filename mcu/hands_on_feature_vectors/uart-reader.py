@@ -13,13 +13,13 @@ from serial.tools import list_ports
 from classification.utils.plots import plot_specgram
 
 import pickle
-model_knn = pickle.load(open('classification/data/models/best_rf_model.pickle', 'rb')) # Write your path to the model here!
 # model_knn = pickle.load(open('classification/data/models/modeltest.pickle', 'rb')) # Write your path to the model here!
+# model_pca = pickle.load(open('classification/data/models/pca.pickle', 'rb')) # Write your path to the model here!
 
 PRINT_PREFIX = "DF:HEX:"
 FREQ_SAMPLING = 10200
 MELVEC_LENGTH = 20
-N_MELVECS = 52
+N_MELVECS = 20
 
 dt = np.dtype(np.uint16).newbyteorder("<")
 
@@ -70,24 +70,22 @@ if __name__ == "__main__":
     else:
         input_stream = reader(port=args.port)
         msg_counter = 0
-
+        all_melvecs = []  # Keep a global list of melvecs
+        all_labels = []  # Keep a global list of labels
         # print(input_stream)
-        all_classes = ["gunshot", "fireworks", "chainsaw", "crackling fire"]
+        all_classes = ["gun", "fireworks", "chainsaw", "crackling fire"]
         classe = all_classes[0]
-        print("iciiii")
         for melvec in input_stream:
-            print("ic")
-  
-            # np.save("/home/ulysse/Documents/LELEC21023-grH/mcu/hands_on_feature_vectors/melspectrograms"+str(classe)+".npy", all_melvecs)
-            # np.save("/home/ulysse/Documents/LELEC21023-grH/mcu/hands_on_feature_vectors/labels"+str(classe)+".npy", all_labels)
-            melvec = melvec/np.linalg.norm(melvec)
-            melvec = melvec.reshape(1, -1)
-            proba_knn = model_knn.predict_proba(melvec)
-            prediction = model_knn.predict(melvec)
+            
+            # melvec = melvec/np.linalg.norm(melvec)
+            # melvec = melvec.reshape(1, -1)
+            # melvec_reduced = model_pca.transform(melvec)
+            # proba_knn = model_knn.predict_proba(melvec_reduced)
+            # prediction = model_knn.predict(melvec_reduced)
             msg_counter += 1
 
             print(f"MEL Spectrogram #{msg_counter}")
-            print(prediction, proba_knn)
+
             # plt.figure()
             # plot_specgram(
             #     melvec.reshape((N_MELVECS, MELVEC_LENGTH)).T,
@@ -99,4 +97,4 @@ if __name__ == "__main__":
             # # plt.draw()
             # plt.pause(0.001)
             # plt.savefig(f"mcu/hands_on_feature_vectors/mel_spectrogram_fire10.png")
-            # plt.clf()
+            # # plt.clf()

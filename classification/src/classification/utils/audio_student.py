@@ -104,7 +104,7 @@ class AudioUtil:
 
         return (sig, sr)
 
-    def time_shift(audio, shift_limit=0.4) -> Tuple[ndarray, int]:
+    def time_shift(audio, shift_limit=0.3) -> Tuple[ndarray, int]:
         """
         Shifts the signal to the left or right by some percent. Values at the end are 'wrapped around' to the start of the transformed signal.
 
@@ -142,17 +142,24 @@ class AudioUtil:
         :param audio: The audio signal as a tuple (signal, sample_rate).
         :param sigma: Standard deviation of the gaussian noise.
         """
-        sig, sr = audio
-
-        noise = np.random.normal(0, sigma, len(sig))
-        
-        sig += noise
-        
-        sig = np.clip(sig, -1, 1)
-        
-        sig,sr = audio
-
-
+        Version = False # garder ça en false c'était pas bon l'ancienne version
+        if Version:
+            sig, sr = audio
+            noise = np.random.normal(0, sigma, len(sig))
+            sig += noise
+            sig = np.clip(sig, -1, 1)
+            sig,sr = audio
+        else :
+            sig, sr = audio
+            desired_snr_db = 20
+            signal_power = np.mean(sig**2)  # Assuming 'sig' is your signal
+            noise_power = signal_power / (10**(desired_snr_db / 10))
+            noise_std_dev = np.sqrt(noise_power)
+            
+            noise = np.random.normal(0, noise_std_dev, len(sig))
+            sig += noise
+            sig = np.clip(sig, -1, 1)
+            sig,sr = audio
         return audio
 
     def echo(audio, nechos=2) -> Tuple[ndarray, int]:
@@ -187,7 +194,7 @@ class AudioUtil:
         return (sig, sr)
 
     def add_bg(
-        audio, dataset, num_sources=2, max_ms=5000, amplitude_limit=0.1
+        audio, dataset, num_sources=2, max_ms=2500, amplitude_limit=0.1
     ) -> Tuple[ndarray, int]:
         """
         Adds up sounds uniformly chosen at random to audio.
@@ -234,7 +241,7 @@ class AudioUtil:
         """
 
         sig, sr = audio
-        bg_sig, _ = AudioUtil.open("background.wav")
+        bg_sig, _ = AudioUtil.open("src/classification/datasets/soundfiles/background.wav")
 
         # Energies of the signals
         sig_energy = np.mean(sig**2)
@@ -369,9 +376,7 @@ class Feature_vector_DS:
             self.data_aug_factor += len(self.data_aug)
         else:
             self.data_aug = [self.data_aug]
-        self.ncol = int(
-            self.duration * self.sr / (1e3 * self.Nft)
-        )  # number of columns in melspectrogram
+        self.ncol = int(self.duration * self.sr / (1e3 * self.Nft))  # number of columns in melspectrogram
         self.pca = pca
 
     def __len__(self) -> int:
@@ -407,7 +412,7 @@ class Feature_vector_DS:
             if "scaling" in self.data_aug:
                 aud = AudioUtil.scaling(aud, scaling_limit=5)
             if "background_noise" in self.data_aug:
-                aud = AudioUtil.add_background_noise("classification/src/classification/datasets/soundfilesbackground.wav", SNR = 20)
+                aud = AudioUtil.add_background_noise(aud, SNR = 20)
 
         # aud = AudioUtil.normalize(aud, target_dB=10)
         aud = (aud[0] / np.max(np.abs(aud[0])), aud[1])

@@ -23,9 +23,10 @@ def plot_freq(sig_list, label_list, fs, os=1, f_lim=None ):
     ax[0].set_ylim([-100, 10])
     ax[0].set_ylabel("Modulus (dB)")
     ax[0].set_ylim(-120, 20)
+    
     if f_lim is not None:
-        ax[0].set_xlim(-f_lim/1000, f_lim/1000)
-        ax[1].set_xlim(-f_lim/1000, f_lim/1000)
+        ax[0].set_xlim(0, f_lim/1000)
+        ax[1].set_xlim(0, f_lim/1000)
     ax[1].set_ylabel("Phase (deg)")
     ax[1].set_xlabel("Frequency [kHz]")
     plt.legend()
