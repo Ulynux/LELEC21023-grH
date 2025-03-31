@@ -24,6 +24,6 @@
 - [x] First optimization of the clock of our MCU (3MHz)
 - [-] Use the low power mode run and the low power mode sleep but need to reduce the sammpling frequency to max 8 kHz (pour le rapport)
 - [x] Use the AES accelerator
-- [ ] Optimize the fast mult function in spectrogram.c
-- [ ] Jumper 1.8 V
-- [ ] Panneau solaire
+- [ ] Optimize the fast mult function in spectrogram.c (Pas obligatoire pour S11)
+- [ ] Jumper 1.8 V (S11)
+- [ ] Panneau solaire (S11)
