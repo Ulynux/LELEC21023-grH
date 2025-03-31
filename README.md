@@ -15,10 +15,13 @@
 - [x] Looking for another classifier (either CNN or RF)
 - [x] Parametrize PCA so that we know that it has learned the right number of axis where we project PC
 - [x] Finally parametrize the chosen classifier with Grid search
-- [x] Bench the performances onto a new dataset and look at generalization 
+- [x] Bench the performances onto a new dataset and look at generalization
+- [ ] background class (beware to the SNR)
+- [ ] Looking for CNN
 
 ## Signal Processing
-- [ ] PCA should be the main tool we use firstly
+- [ ] Moving Average
+- [ ] H(f) micro
 
 ## MCU
 - [x] First optimization of the clock of our MCU (3MHz)
