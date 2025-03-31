@@ -28,5 +28,5 @@
 - [-] Use the low power mode run and the low power mode sleep but need to reduce the sammpling frequency to max 8 kHz (pour le rapport)
 - [x] Use the AES accelerator
 - [ ] Optimize the fast mult function in spectrogram.c (Pas obligatoire pour S11)
-- [ ] Jumper 1.8 V (S11)
+- [ ] Jumper 1.8 V à demander au tuteur si c'est aussi possible de faire pour le MCU et pas juste pour le AFE (S11)
 - [ ] Panneau solaire (S11)
