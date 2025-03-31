@@ -5,7 +5,7 @@ from plot_utils import *
 # Parameters
 B   = 50e3
 OSR = 8
-cutoff  = 150e3
+cutoff  = 100e3
 numtaps = 31
 
 # Filter taps
