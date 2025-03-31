@@ -14,7 +14,7 @@ class Chain:
 
     # Communication parameters
     bit_rate: float = BIT_RATE
-    freq_dev: float = BIT_RATE / 2 *2
+    freq_dev: float = BIT_RATE / 2 * 2
 
     osr_tx: int = 64
     osr_rx: int = 8
@@ -26,15 +26,15 @@ class Chain:
     payload_len: int = 100  # Number of bits per packet
 
     # Simulation parameters
-    n_packets: int = 100  # Number of sent packets
+    n_packets: int = 800  # Number of sent packets
 
     # Channel parameters
-    sto_val: float = 0
+    sto_val: float = np.nan
     sto_range: float = 10 / BIT_RATE  # defines the delay range when random
 
-    cfo_val: float = 0
+    cfo_val: float = np.nan
     cfo_range: float = (
-        5000  # defines the CFO range when random (in Hz) #(1000 in old repo)
+        10000  # defines the CFO range when random (in Hz) #(1000 in old repo)
     )
 
     snr_range: np.ndarray = np.arange(-10, 25)
@@ -257,7 +257,7 @@ class BasicChain(Chain):
 
         return cfo_est
 
-    bypass_sto_estimation = False
+    bypass_sto_estimation = True
 
     def sto_estimation(self, y):
         """
@@ -370,45 +370,8 @@ class BasicChain(Chain):
 
         phi = 2 * np.pi * (fd) * (np.arange(R) / R) / B
 
-
-
         ref_wave_1 = np.exp(1j * phi)
         ref_wave_0 = np.exp(-1j * phi)
-
-        
-        ref_00 = np.concatenate((ref_wave_0,ref_wave_0))
-        ref_01 = np.concatenate((ref_wave_0,ref_wave_1))
-        ref_10 = np.concatenate((ref_wave_1,ref_wave_0))
-        ref_11 = np.concatenate((ref_wave_1,ref_wave_1))
-        """
-        plt.figure()
-
-        plt.subplot(2,2,1)
-        plt.plot(np.arange(2*len(ref_wave_0)),np.angle(ref_00))
-        plt.grid(True)
-        plt.xlabel("Phi")
-        plt.ylabel("waveform")
-
-        plt.subplot(2,2,2)
-        plt.plot(np.arange(2*len(ref_wave_0)),np.angle(ref_01))
-        plt.grid(True)
-        plt.xlabel("Phi")
-        plt.ylabel("waveform")
-
-        plt.subplot(2,2,3)
-        plt.plot(np.arange(2*len(ref_wave_0)),np.angle(ref_10))
-        plt.grid(True)
-        plt.xlabel("Phi")
-        plt.ylabel("waveform")
-
-        plt.subplot(2,2,4)
-        plt.plot(np.arange(2*len(ref_wave_0)),np.angle(ref_11))
-        plt.grid(True)
-        plt.xlabel("Phi")
-        plt.ylabel("waveform")
-
-        plt.show()
-        """
 
         bits_hat = np.zeros(nb_syms, dtype=int)  # Default value, all bits=0. 
         
@@ -421,42 +384,6 @@ class BasicChain(Chain):
                 bits_hat[i] = 0
             else:
                 bits_hat[i] = 1
-        
-            
-
-        """
-        # Compute the correlations with the two reference waveforms (r0 and r1)
-        for i in range(0,len(y)-1,2):
-
-
-            y_concatenate = np.concatenate((y[i],y[i+1]))
-
-            r00 = np.abs(np.sum(y_concatenate * np.conj(ref_00)))
-            r01 = np.abs(np.sum(y_concatenate * np.conj(ref_01)))
-            r10 = np.abs(np.sum(y_concatenate * np.conj(ref_10)))
-            r11 = np.abs(np.sum(y_concatenate * np.conj(ref_11)))
-
-            
-            if(max(r00,r01,r10,r11) == r00):
-
-                bits_hat[i] = 0
-                bits_hat[i+1] = 0
-
-            elif(max(r00,r01,r10,r11) == r01):
-
-                bits_hat[i] = 0
-                bits_hat[i+1] = 1
-
-            elif(max(r00,r01,r10,r11) == r10):
-
-                bits_hat[i] = 1
-                bits_hat[i+1] = 0
-            
-            else:
-                    
-                    bits_hat[i] = 1
-                    bits_hat[i+1] = 1
-        """
 
         return bits_hat
 
