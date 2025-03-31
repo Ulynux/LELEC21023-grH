@@ -72,38 +72,39 @@ def main(
 
                     melvec = melvec.copy()
                     melvec = melvec.astype(np.float64)
-                    print(melvec)
 
                     melvec -= np.mean(melvec)
                     melvec = melvec / np.linalg.norm(melvec)
 
-                    # Reshape melvec to 2D before PCA transformation
+                
                     melvec = melvec.reshape(1, -1)
-                    print(melvec.shape)
 
                     melvec = model_pca.transform(melvec)
 
-                    # Predict probabilities and class
                     proba_rf = model_rf.predict_proba(melvec)
-                    proba_array = np.array(proba_rf) 
-                    
-                    majority_class_index = np.bincount(np.argmax(proba_array, axis=2).flatten()).argmax()
-                    majority_class = model_rf.classes_[majority_class_index]
-                    
-                    print(f"Majority voting class: {CLASSNAMES[majority_class]}")
-                    memory.append(CLASSNAMES[majority_class])
+                    proba_array = np.array(proba_rf)
 
-                    if majority_class == "gun" :
-                        majority_class = "gunshot"
-                    if len(memory) > 4:
+                    memory.append(proba_array)
+
+                    if len(memory) >= 5:
+                        memory_array = np.array(memory)
+
+                        majority_class_index = np.bincount(np.argmax(memory_array, axis=2).flatten()).argmax()
+                        majority_class = model_rf.classes_[majority_class_index]
+
+                        print(f"Majority voting class after 5 inputs: {CLASSNAMES[majority_class]}")
+
+                        memory = []
+
+                        if majority_class == "gun":
+                            majority_class = "gunshot"
+
                         logger.info(f"Predictions: {majority_class}")
-                        majority_class_index = np.bincount(np.argmax(np.array(memory), axis=2).flatten()).argmax()
-                        
                         answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{majority_class}", timeout=1)
-                        
+
                         json_answer = json.loads(answer.text)
                         print(json_answer)
+
                         wait_iterations = np.random.randint(1, 3)
-                        memory = []
                         for _ in range(wait_iterations):
                             next(_input)
