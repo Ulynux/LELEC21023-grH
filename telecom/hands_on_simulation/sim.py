@@ -9,8 +9,8 @@ import csv
 import os
 
 
-plots_folder = "telecom/optimisations/STO_derivative/"
-test_name = "h_derivative"
+plots_folder = "telecom/optimisations/CFO_iterative/"
+test_name = "CFO_iterative"
 
 print("freq dev",Chain.freq_dev)
 
@@ -397,7 +397,6 @@ def run_sim(chain: Chain):
     plt.savefig(plots_folder+"RMSE_STO.png")
     
     # Save simulation outputs (for later post-processing, building new figures,...)
-    test_name = "test"
     save_var = np.column_stack(
         (
             SNRs_dB,
