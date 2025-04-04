@@ -21,12 +21,11 @@ class Chain:
 
     preamble: np.ndarray = PREAMBLE
     sync_word: np.ndarray = SYNC_WORD
-    order = 8
-
+    order = 2
     payload_len: int = 100  # Number of bits per packet
 
     # Simulation parameters
-    n_packets: int = 800  # Number of sent packets
+    n_packets: int = 1000  # Number of sent packets
 
     # Channel parameters
     sto_val: float = np.nan
@@ -226,7 +225,7 @@ class BasicChain(Chain):
 
         return None
 
-    bypass_cfo_estimation = False
+    bypass_cfo_estimation = True
 
     def cfo_estimation(self, y):
         """
@@ -257,7 +256,7 @@ class BasicChain(Chain):
 
         return cfo_est
 
-    bypass_sto_estimation = True
+    bypass_sto_estimation = False
 
     def sto_estimation(self, y):
         """
@@ -295,48 +294,48 @@ class BasicChain(Chain):
 
             return derivative
          
-        def weno5_second_derivative(f, h):
-            """
-            Compute the second derivative using the WENO-5 scheme.
+        # def weno5_second_derivative(f, h):
+        #     """
+        #     Compute the second derivative using the WENO-5 scheme.
             
-            Parameters:
-            f : numpy array
-                The function values at discrete points.
-            h : float
-                The uniform grid spacing.
+        #     Parameters:
+        #     f : numpy array
+        #         The function values at discrete points.
+        #     h : float
+        #         The uniform grid spacing.
 
-            Returns:
-            numpy array
-                The second derivative approximation.
-            """
-            n = len(f)
-            fxx = np.zeros(n)
+        #     Returns:
+        #     numpy array
+        #         The second derivative approximation.
+        #     """
+        #     n = len(f)
+        #     fxx = np.zeros(n)
 
-            # Small epsilon to prevent division by zero
-            eps = 1e-6  
+        #     # Small epsilon to prevent division by zero
+        #     eps = 1e-6  
 
-            for i in range(2, n - 2):  # Ensure we don't go out of bounds
-                # Compute smoothness indicators
-                beta0 = (13/12) * (f[i-2] - 2*f[i-1] + f[i])**2 + (1/4) * (f[i-2] - 4*f[i-1] + 3*f[i])**2
-                beta1 = (13/12) * (f[i-1] - 2*f[i] + f[i+1])**2 + (1/4) * (f[i-1] - f[i+1])**2
-                beta2 = (13/12) * (f[i] - 2*f[i+1] + f[i+2])**2 + (1/4) * (3*f[i] - 4*f[i+1] + f[i+2])**2
+        #     for i in range(2, n - 2):  # Ensure we don't go out of bounds
+        #         # Compute smoothness indicators
+        #         beta0 = (13/12) * (f[i-2] - 2*f[i-1] + f[i])**2 + (1/4) * (f[i-2] - 4*f[i-1] + 3*f[i])**2
+        #         beta1 = (13/12) * (f[i-1] - 2*f[i] + f[i+1])**2 + (1/4) * (f[i-1] - f[i+1])**2
+        #         beta2 = (13/12) * (f[i] - 2*f[i+1] + f[i+2])**2 + (1/4) * (3*f[i] - 4*f[i+1] + f[i+2])**2
 
-                # Compute nonlinear weights
-                alpha0 = 1 / (eps + beta0)**2
-                alpha1 = 6 / (eps + beta1)**2
-                alpha2 = 3 / (eps + beta2)**2
-                w0 = alpha0 / (alpha0 + alpha1 + alpha2)
-                w1 = alpha1 / (alpha0 + alpha1 + alpha2)
-                w2 = alpha2 / (alpha0 + alpha1 + alpha2)
+        #         # Compute nonlinear weights
+        #         alpha0 = 1 / (eps + beta0)**2
+        #         alpha1 = 6 / (eps + beta1)**2
+        #         alpha2 = 3 / (eps + beta2)**2
+        #         w0 = alpha0 / (alpha0 + alpha1 + alpha2)
+        #         w1 = alpha1 / (alpha0 + alpha1 + alpha2)
+        #         w2 = alpha2 / (alpha0 + alpha1 + alpha2)
 
-                # Compute second derivative using WENO-5 weighting
-                fxx[i] = (
-                    w0 * (-f[i-2] + 16*f[i-1] - 30*f[i] + 16*f[i+1] - f[i+2]) / (12*h**2)
-                    + w1 * (-f[i-2] + 16*f[i-1] - 30*f[i] + 16*f[i+1] - f[i+2]) / (12*h**2)
-                    + w2 * (-f[i-2] + 16*f[i-1] - 30*f[i] + 16*f[i+1] - f[i+2]) / (12*h**2)
-                )
+        #         # Compute second derivative using WENO-5 weighting
+        #         fxx[i] = (
+        #             w0 * (-f[i-2] + 16*f[i-1] - 30*f[i] + 16*f[i+1] - f[i+2]) / (12*h**2)
+        #             + w1 * (-f[i-2] + 16*f[i-1] - 30*f[i] + 16*f[i+1] - f[i+2]) / (12*h**2)
+        #             + w2 * (-f[i-2] + 16*f[i-1] - 30*f[i] + 16*f[i+1] - f[i+2]) / (12*h**2)
+        #         )
 
-            return fxx
+        #     return fxx
         
         phase_function = savgol_filter(phase_function, 51, 3)
         phase_derivative_2 = np.abs(second_derivative(phase_function, order))
