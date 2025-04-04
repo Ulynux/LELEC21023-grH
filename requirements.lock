@@ -304,6 +304,9 @@ numpy==2.0.2
     # via soxr
     # via tensorboard
     # via tensorflow
+    # via xgboost
+nvidia-nccl-cu12==2.26.2
+    # via xgboost
 opt-einsum==3.4.0
     # via tensorflow
 optree==0.14.1
@@ -434,6 +437,7 @@ scipy==1.13.1
     # via librosa
     # via mcu
     # via scikit-learn
+    # via xgboost
 seaborn==0.13.2
     # via classification
 send2trash==1.8.3
@@ -557,6 +561,7 @@ wsproto==1.2.0
     # via simple-websocket
 wtforms==3.1.2
     # via flask-wtf
+xgboost==2.1.4
 zipp==3.20.1
     # via importlib-metadata
     # via importlib-resources
