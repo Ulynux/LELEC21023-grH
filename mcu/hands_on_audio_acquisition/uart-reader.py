@@ -19,12 +19,12 @@ FREQ_SAMPLING = 10200
 VAL_MAX_ADC = 4096
 VDD = 1.8
 start = 2.5
-starting_time = 1
+starting_time = "0_jack"
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 sound_files_path =  str(current_dir) + '/../../classification/src/classification/datasets/soundfiles'
 audio_file = str(current_dir) + '/audio_files'
-sound_files = [f for f in os.listdir(sound_files_path) if f.endswith('.wav') and 'fire' in f and not 'works' in f]
+sound_files = [f for f in os.listdir(sound_files_path) if f.endswith('.wav') and 'chainsaw' in f]
 # sound_files = [f for f in os.listdir(sound_files_path) if f.endswith('.wav') and 'gun' in f ]
 
 print(sound_files)
@@ -139,7 +139,7 @@ if __name__ == "__main__":
                 plt.pause(0.1)
                 plt.cla()
 
-            generate_audio(msg, f"{sound_files[index][:-4]}"+str(starting_time))
+            generate_audio(msg, f"{sound_files[index][:-4]}"+ starting_time)
             msg_counter +=1
             if First:
                 index -= 1
