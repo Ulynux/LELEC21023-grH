@@ -9,8 +9,8 @@ import csv
 import os
 
 
-plots_folder = "telecom/optimisations/CFO_iterative/"
-test_name = "CFO_iterative"
+plots_folder = "telecom/optimisations/STO_derivative/"
+test_name = "h_STO"
 
 print("freq dev",Chain.freq_dev)
 
@@ -411,25 +411,6 @@ def run_sim(chain: Chain):
     )
     np.savetxt(f"{test_name}.csv", save_var, delimiter="\t")
     
-    
-    plt.figure()
-    plt.semilogy(SNRs_dB, RMSE_cfo, "-s")
-    plt.title("RMSE CFO")
-    plt.ylabel("RMSE [-]")
-    plt.xlabel("SNR [dB]")
-    plt.grid()
-    plt.savefig(plots_folder+"RMSE_CFO_from_file.png")
-
-
-    plt.figure()
-    plt.semilogy(SNRs_dB, RMSE_sto, "-s")
-    plt.title("RMSE STO")
-    plt.ylabel("RMSE [-]")
-    plt.xlabel("SNR [dB]")
-    plt.grid()
-    plt.savefig(plots_folder+"RMSE_STO_from_file.png")
-
-
 
 
 if __name__ == "__main__":
