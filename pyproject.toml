@@ -12,6 +12,7 @@ dependencies = [
     "soundfile>=0.12.1",
     "keras>=3.9.0",
     "xgboost>=2.1.4",
+    "scikeras>=0.13.0",
 ]
 
 [tool.ruff]

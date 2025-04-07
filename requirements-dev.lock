@@ -243,6 +243,7 @@ jupyterlab-server==2.27.3
     # via notebook
 keras==3.9.0
     # via mcu
+    # via scikeras
     # via tensorflow
 kiwisolver==1.4.5
     # via matplotlib
@@ -450,8 +451,10 @@ rich==13.8.0
 rpds-py==0.20.0
     # via jsonschema
     # via referencing
+scikeras==0.13.0
 scikit-learn==1.5.1
     # via librosa
+    # via scikeras
 scipy==1.13.1
     # via classification
     # via librosa
