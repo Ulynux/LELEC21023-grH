@@ -25,7 +25,7 @@ class Chain:
     payload_len: int = 100  # Number of bits per packet
 
     # Simulation parameters
-    n_packets: int = 1000  # Number of sent packets
+    n_packets: int = 100  # Number of sent packets
 
     # Channel parameters
     sto_val: float = np.nan
@@ -238,6 +238,7 @@ class BasicChain(Chain):
         Nt = N*R # Number of blocks used for CFO estimation
         T = 1/self.bit_rate  # B=1/T
 
+        y = y.copy()
         y_copy = y.copy()
         cfo_est = 0
         

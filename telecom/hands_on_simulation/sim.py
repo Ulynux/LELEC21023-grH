@@ -9,8 +9,8 @@ import csv
 import os
 
 
-plots_folder = "telecom/optimisations/CFO_iterative/iter3/"
-test_name = "h_iter3"
+plots_folder = "telecom/optimisations/Savgol/No_savgol/"
+test_name = "h_no_savgol"
 
 print("freq dev",Chain.freq_dev)
 
