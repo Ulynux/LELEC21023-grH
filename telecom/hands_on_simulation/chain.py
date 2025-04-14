@@ -225,7 +225,7 @@ class BasicChain(Chain):
 
         return None
 
-    bypass_cfo_estimation = True
+    bypass_cfo_estimation = False
 
     def cfo_estimation(self, y):
         """
