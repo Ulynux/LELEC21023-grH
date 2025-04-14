@@ -23,7 +23,6 @@
 // In non-continuous mode, we send a single packet on button press.
 #define CONTINUOUS_ACQ 1
 
-
 // Spectrogram parameters
 #define SAMPLES_PER_MELVEC 512
 #define MELVEC_LENGTH 20

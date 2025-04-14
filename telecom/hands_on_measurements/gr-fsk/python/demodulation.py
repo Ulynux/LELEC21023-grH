@@ -24,6 +24,96 @@ import numpy as np
 from gnuradio import gr
 
 
+"""
+    
+def viterbi_decoder(x_tilde):
+
+    R1 = np.array([2,1,3,0])
+    R0 = np.array([0,3,1,2])
+    out_R1 = np.array([[1,1],[1,0],[1,1],[1,0]])
+    out_R0 = np.array([[0,0],[0,1],[0,0],[0,1]])
+    symb_R1 = np.array([1.0 + 1.0j, 1.0 + 0.0j, 1.0 + 1.0j, 1.0 + 0.0j])
+    symb_R0 = np.array([0.0 + 0.0j, 0.0 + 1.0j, 0.0 + 0.0j, 0.0 + 1.0j])
+    len_b = 128
+
+    def dist(a,b):
+        distance = np.abs(a-b)
+        # distance = np.abs(np.real(a)-np.real(b)) + np.abs(np.imag(a)-np.imag(b))
+        return distance
+    
+    # Reshape of the received sequence to have u and c
+    u_hat = x_tilde[:len(x_tilde)//2]
+    c_hat = x_tilde[len(x_tilde)//2:]
+    x_tilde = u_hat + 1j*c_hat
+    
+    N_b = int(len(x_tilde)/len_b)
+    print("shape ",x_tilde.shape)
+    
+    x_tilde_b = np.reshape(x_tilde,(N_b,len_b))
+    u_hat_b = np.zeros(x_tilde_b.shape,dtype=np.int32)
+    
+    nb_states = len(R1)
+
+    for i in range(N_b):           
+        x_tilde_i  = x_tilde_b[i,:]
+        u_hat_i = u_hat_b[i,:]
+        
+        bits = np.zeros((nb_states,len_b))
+        weights = np.inf*np.ones((nb_states,))
+        weights[0] = 0
+        
+        new_states = np.zeros((2,nb_states))
+        new_weights = np.zeros((2,nb_states))
+        new_bits = np.zeros((2,nb_states,len_b))  
+        
+        for j in range(len_b):
+            for k in range(nb_states):
+                new_states[1,k] = R1[k]
+                new_states[0,k] = R0[k]
+                new_weights[1,k] = weights[k] + dist(x_tilde_i[j],symb_R1[k])
+                new_weights[0,k] = weights[k] + dist(x_tilde_i[j],symb_R0[k])       
+                new_bits[1,k,:] = bits[k,:]
+                new_bits[0,k,:] = bits[k,:]
+                new_bits[1,k,j] = 1
+                
+            for k in range(nb_states):
+                idx_0_filled = False
+                for l in range(nb_states):
+                    if new_states[0,l] == k:
+                        if idx_0_filled:
+                            idx_10 = 0
+                            idx_11 = l
+                        else:
+                            idx_00 = 0
+                            idx_01 = l 
+                            idx_0_filled = True
+                            
+                    if new_states[1,l] == k:
+                        if idx_0_filled:
+                            idx_10 = 1
+                            idx_11 = l
+                        else:
+                            idx_00 = 1
+                            idx_01 = l 
+                            idx_0_filled = True
+                
+                if new_weights[idx_00,idx_01] <= new_weights[idx_10,idx_11]:
+                    weights[k] = new_weights[idx_00,idx_01]
+                    bits[k,:] = new_bits[idx_00,idx_01,:]
+                else:
+                    weights[k] = new_weights[idx_10,idx_11]
+                    bits[k,:] = new_bits[idx_10,idx_11,:]
+
+        final_weight = np.inf
+        for k in range(nb_states):
+            if weights[k] < final_weight:
+                final_weight = weights[k]
+                u_hat_i[:] = bits[k,:]
+    
+    u_hat = np.reshape(u_hat_b,(u_hat_b.size,))
+    return u_hat
+"""
+
 def demodulate(y, B, R, Fdev):
     """
     Non-coherent demodulator.
@@ -45,6 +135,8 @@ def demodulate(y, B, R, Fdev):
 
     # Perform the decision based on r0 and r1
     bits_hat = np.where(r0 > r1, 0, 1)
+
+    #bits_hat = viterbi_decoder(bits_hat)
 
     return bits_hat
 
@@ -122,3 +214,4 @@ class demodulation(gr.basic_block):
         output_items[0][: len(b)] = b
 
         return len(b)
+

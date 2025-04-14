@@ -1,10 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from chain_opti import Chain
+from chain import Chain
 from scipy.signal import firwin, freqz
 from scipy.special import erfc
-from scipy.signal import savgol_filter
-import PER as per
 
 
 def add_delay(chain: Chain, x: np.ndarray, tau: float):
@@ -48,7 +46,6 @@ def run_sim(chain: Chain):
     """
     SNRs_dB = chain.snr_range
     R = chain.osr_rx
-    print("R = ",R)
     B = chain.bit_rate
     fs = B * R
 
@@ -66,14 +63,13 @@ def run_sim(chain: Chain):
     # Transmitted signals that are independent of the payload bits
     x_pr = chain.modulate(chain.preamble)  # Modulated signal containing preamble
     x_sync = chain.modulate(chain.sync_word)  # Modulated signal containing sync_word
-    """
     x_noise = np.zeros(
         chain.payload_len * chain.osr_tx
     )  # Padding some zeros before the packets
-    """
-    cutoff = chain.cutoff
+
     # Lowpass filter taps
-    taps = firwin(chain.numtaps, cutoff, fs=fs)
+    taps = firwin(chain.numtaps, chain.cutoff, fs=fs)
+
     rng = np.random.default_rng()
 
     # For loop on the number of packets to send
@@ -83,7 +79,7 @@ def run_sim(chain: Chain):
 
         # Transmitted signal
         x_pay = chain.modulate(bits)  # Modulated signal with payload
-        x = np.concatenate((x_pr, x_sync, x_pay, np.zeros(chain.osr_tx)))
+        x = np.concatenate((x_noise, x_pr, x_sync, x_pay, np.zeros(chain.osr_tx)))
 
         # Channel application (without noise addition): delay and frequency offset
         if np.isnan(chain.sto_val):  # STO should be random
@@ -111,7 +107,7 @@ def run_sim(chain: Chain):
         for k, SNR_dB in enumerate(SNRs_dB):
             # Add noise
             SNR = 10 ** (SNR_dB / 10.0)
-            y_noisy = y_cfo 
+            y_noisy = y_cfo + w * np.sqrt(1 / SNR)
 
             # Low-pass filtering
             y_filt = np.convolve(y_noisy, taps, mode="same")
@@ -243,7 +239,6 @@ def run_sim(chain: Chain):
             sum_Cu += Cu[len(taps) - 1 + r - rt]
     shift_SNR_out = 10 * np.log10(R**2 / sum_Cu)  # 10*np.log10(chain.osr_rx)
     shift_SNR_filter = 10 * np.log10(1 / np.sum(np.abs(taps) ** 2))
-    
 
     SNR_th = np.arange(SNRs_dB[0], SNRs_dB[-1] + shift_SNR_out)
     BER_th = 0.5 * erfc(np.sqrt(10 ** (SNR_th / 10.0) / 2))
@@ -271,24 +266,17 @@ def run_sim(chain: Chain):
     fig, ax1 = plt.subplots()
     w, h = freqz(taps)
     f = w * fs * 0.5 / np.pi
-    
     ax1.set_title("FIR response")
     ax1.plot(f, 20 * np.log10(abs(h)), "b")
     ax1.set_ylabel("Amplitude (dB)", color="b")
     ax1.set_xlabel("Frequency (Hz)")
     ax2 = ax1.twinx()
-
     angles = np.unwrap(np.angle(h))
     ax2.plot(f, angles, "g")
-    ax2.set_ylabel("Angle ", color="g")
+    ax2.set_ylabel("Angle (radians)", color="g")
     ax2.grid(True)
-    ax1.set_xlim(0,160000)
-    ax2.set_xlim(0,160000)
-    plt.savefig("telecom/hands_on_simulation/FIR.png")
-
-
-
-
+    ax2.axis("tight")
+    plt.show()
 
     # Bit error rate
     fig, ax = plt.subplots(constrained_layout=True)
@@ -309,7 +297,7 @@ def run_sim(chain: Chain):
     bool_2_axis = True
     if bool_2_axis:
         ax2 = ax.twiny()
-        #ax2.set_xticks(SNRs_dB + shift_SNR_out)
+        # ax2.set_xticks(SNRs_dB + shift_SNR_out)
         ax2.set_xticks(SNRs_dB - shift_SNR_filter + shift_SNR_out)
         ax2.set_xticklabels(SNRs_dB)
         ax2.xaxis.set_ticks_position("bottom")
@@ -320,25 +308,28 @@ def run_sim(chain: Chain):
         ax2.set_xlim(ax.get_xlim())
         ax2.xaxis.label.set_color("b")
         ax2.tick_params(axis="x", colors="b")
-        plt.savefig('telecom/hands_on_simulation/SNRe.png')
+    plt.savefig('telecom/hands_on_simulation/BER_130k.png')
+    #prendre le snr avt le filtre et sans SNR_out 
+    
 
-"""
     # Packet error rate
     fig, ax = plt.subplots(constrained_layout=True)
     ax.plot(SNRs_dB + shift_SNR_out, PER, "-s", label="Simulation")
-    ax.plot(per.SNR_aver +shift_SNR_filter ,per.PACKET_ERROR,"-s",label="Measurements")
-
-    #ax.plot(SNR_th, 1 - (1 - BER_th_BPSK) ** chain.payload_len, label="AWGN Th. BPSK")
+    ax.plot(SNR_th, 1 - (1 - BER_th) ** chain.payload_len, label="AWGN Th. FSK")
+    ax.plot(
+        SNR_th,
+        1 - (1 - BER_th_noncoh) ** chain.payload_len,
+        label="AWGN Th. FSK non-coh.",
+    )
+    ax.plot(SNR_th, 1 - (1 - BER_th_BPSK) ** chain.payload_len, label="AWGN Th. BPSK")
     ax.set_ylabel("PER")
     ax.set_xlabel("SNR$_{o}$ [dB]")
     ax.set_yscale("log")
-
-
+    ax.set_ylim((1e-6, 1))
+    ax.set_xlim((0, 30))
     ax.grid(True)
     ax.set_title("Average Packet Error Rate")
     ax.legend()
-
-
 
     # add second axis
     bool_2_axis = True
@@ -355,7 +346,6 @@ def run_sim(chain: Chain):
         ax2.set_xlim(ax.get_xlim())
         ax2.xaxis.label.set_color("b")
         ax2.tick_params(axis="x", colors="b")
-    plt.savefig("plots/PER_out_from_file.png")
 
     # Preamble metrics
     plt.figure()
@@ -367,28 +357,25 @@ def run_sim(chain: Chain):
     plt.ylim([-1, 101])
     plt.grid()
     plt.legend()
-    plt.savefig("plots/Preamble_detection.png")
+    plt.show()
 
     # RMSE CFO
-    plt.figure()
-    plt.semilogy(SNRs_dB, RMSE_cfo, "-s")
-    plt.title("RMSE CFO")
-    plt.ylabel("RMSE [-]")
-    plt.xlabel("SNR [dB]")
-    plt.grid()
-    plt.savefig("plots/RMSE_CFO.png")
-    # Assuming SNRs_dB and RMSE_cfo are your data arrays
-    data = np.column_stack((SNRs_dB, RMSE_cfo))
-    np.savetxt('plots/RMSE_CFO_data.csv', data, delimiter=',', header='SNR_dB,RMSE_cfo', comments='')
-
-    # RMSE STO
-    plt.figure()
-    plt.semilogy(SNRs_dB, RMSE_sto, "-s")
-    plt.title("RMSE STO")
-    plt.ylabel("RMSE [-]")
-    plt.xlabel("SNR [dB]")
-    plt.grid()
-    plt.savefig("plots/RMSE_STO.png")
+    #    plt.figure()
+    #    plt.semilogy(SNRs_dB, RMSE_cfo, "-s")
+    #    plt.title("RMSE CFO")
+    #    plt.ylabel("RMSE [-]")
+    #    plt.xlabel("SNR [dB]")
+    #    plt.grid()
+    #    plt.show()
+    #
+    #    # RMSE STO
+    #    plt.figure()
+    #    plt.semilogy(SNRs_dB, RMSE_sto, "-s")
+    #    plt.title("RMSE STO")
+    #    plt.ylabel("RMSE [-]")
+    #    plt.xlabel("SNR [dB]")
+    #    plt.grid()
+    #    plt.show()
 
     # Save simulation outputs (for later post-processing, building new figures,...)
     test_name = "test"
@@ -406,72 +393,13 @@ def run_sim(chain: Chain):
     )
     np.savetxt(f"{test_name}.csv", save_var, delimiter="\t")
     # Read file:
-    data = np.loadtxt(f"{test_name}.csv", delimiter="\t")
-    SNRs_dB = data[:, 0]
-    SNRs_dB_shifted = data[:, 1]
-    BER = data[:, 2]
-    PER = data[:, 3]
-    RMSE_cfo = data[:, 4]
-    RMSE_sto = data[:, 5]
-    preamble_mis = data[:, 6]
-    preamble_false = data[:, 7]
+    # data = np.loadtxt('test.csv')
+    # SNRs_dB = data[:,0]
+    # ...
 
-    # Plot the data from the file
-    fig, ax = plt.subplots(constrained_layout=True)
-    ax.plot(SNRs_dB_shifted, BER, "-s", label="Simulation")
-    ax.set_ylabel("BER")
-    ax.set_xlabel("SNR$_{o}$ [dB]")
-    ax.set_yscale("log")
-    ax.set_ylim((1e-6, 1))
-    ax.set_xlim((0, 30))
-    ax.grid(True)
-    ax.set_title("Average Bit Error Rate")
-    ax.legend()
-    #plt.savefig("plots/BER_from_file.png")
 
-    fig, ax = plt.subplots(constrained_layout=True)
-    ax.plot(per.SNR_aver - shift_SNR_filter,per.PACKET_ERROR,label="Measurements")
-    ax.plot(SNRs_dB_shifted, PER, "-s", label="Simulation")
-    ax.set_ylabel("PER")
-    ax.set_xlabel("SNR$_{o}$ [dB]")
-    ax.set_yscale("log")
-    ax.set_ylim((1e-2, 1))
-    ax.set_xlim((0, 20))
-    ax.grid(True)
-    ax.set_title("Average Packet Error Rate")
-    ax.legend()
-    plt.savefig("plots/PER_from_file.png")
-
-    plt.figure()
-    plt.plot(SNRs_dB, preamble_mis * 100, "-s", label="Miss-detection")
-    plt.plot(SNRs_dB, preamble_false * 100, "-s", label="False-detection")
-    plt.title("Preamble detection error ")
-    plt.ylabel("[%]")
-    plt.xlabel("SNR [dB]")
-    plt.ylim([-1, 101])
-    plt.grid()
-    plt.legend()
-    plt.savefig("plots/Preamble_detection_from_file.png")
-
-    plt.figure()
-    plt.semilogy(SNRs_dB, RMSE_cfo, "-s")
-    plt.title("RMSE CFO")
-    plt.ylabel("RMSE [-]")
-    plt.xlabel("SNR [dB]")
-    plt.grid()
-    plt.savefig("plots/RMSE_CFO_from_file.png")
-
-    plt.figure()
-    plt.semilogy(SNRs_dB, RMSE_sto, "-s")
-    plt.title("RMSE STO")
-    plt.ylabel("RMSE [-]")
-    plt.xlabel("SNR [dB]")
-    plt.grid()
-    plt.savefig("plots/RMSE_STO_from_file.png")
-
-"""
 if __name__ == "__main__":
-    from chain_opti import BasicChain
+    from chain import BasicChain
 
-    chain_opti = BasicChain()
-    run_sim(chain_opti)
+    chain = BasicChain()
+    run_sim(chain)

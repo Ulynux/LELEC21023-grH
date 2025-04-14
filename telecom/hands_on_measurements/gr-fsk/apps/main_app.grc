@@ -62,7 +62,7 @@ blocks:
     start: '1'
     step: '1'
     stop: '254'
-    value: '7'
+    value: '5'
     widget: counter_slider
   states:
     bus_sink: false
@@ -266,7 +266,7 @@ blocks:
     start: '0'
     step: '1'
     stop: '73'
-    value: '10'
+    value: '45'
     widget: counter_slider
   states:
     bus_sink: false
@@ -447,7 +447,7 @@ blocks:
     dacVal: '180'
     digital_bandw_ch0: samp_rate
     digital_bandw_ch1: samp_rate
-    dspcfg_PASSTHROUGH_LEN: '(packet_len+1)*8*int(samp_rate/data_rate)+int(samp_rate/data_rate) '
+    dspcfg_PASSTHROUGH_LEN: (packet_len+1)*int(samp_rate/data_rate)+int(samp_rate/data_rate)
     dspcfg_THRESHOLD: K_threshold
     dspcfg_preamble_en: Enable_detection
     filename: ''

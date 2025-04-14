@@ -90,8 +90,8 @@ def main(
 
                         majority_class_index = np.bincount(np.argmax(memory_array, axis=2).flatten()).argmax()
                         majority_class = model_rf.classes_[majority_class_index]
+                        print(f"Majority voting class after 5 inputs: {majority_class}")
 
-                        print(f"Majority voting class after 5 inputs: {CLASSNAMES[majority_class]}")
 
                         memory = []
 
