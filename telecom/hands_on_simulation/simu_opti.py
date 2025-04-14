@@ -71,8 +71,9 @@ def run_sim(chain: Chain):
         chain.payload_len * chain.osr_tx
     )  # Padding some zeros before the packets
     """
+    cutoff = chain.cutoff
     # Lowpass filter taps
-    taps = firwin(chain.numtaps, 130000, fs=fs)
+    taps = firwin(chain.numtaps, cutoff, fs=fs)
     rng = np.random.default_rng()
 
     # For loop on the number of packets to send
@@ -283,26 +284,12 @@ def run_sim(chain: Chain):
     ax2.grid(True)
     ax1.set_xlim(0,160000)
     ax2.set_xlim(0,160000)
-    plt.savefig("plots/FIR.png")
+    plt.savefig("telecom/hands_on_simulation/FIR.png")
 
 
-    y_sine = np.sin(2 * np.pi * 100 * np.arange(0, 1, 1 / fs))
-    smooth = savgol_filter(y_sine, 15, 3)
 
-    phase_derivative_1 = smooth[1:] - smooth[:-1]
-    p_d = phase_derivative_1[1:] - phase_derivative_1[:-1]
 
-    sine_d = y_sine[1:] - y_sine[:-1]
-    p_d_sine = sine_d[1:] - sine_d[:-1]
 
-    plt.figure()
-    plt.plot(p_d)
-    plt.plot(p_d_sine)
-    plt.grid(True)
-    plt.title("Phase derivative")
-    plt.show()
-
-"""
     # Bit error rate
     fig, ax = plt.subplots(constrained_layout=True)
     ax.plot(SNRs_dB + shift_SNR_out, BER, "-s", label="Simulation")
@@ -333,9 +320,9 @@ def run_sim(chain: Chain):
         ax2.set_xlim(ax.get_xlim())
         ax2.xaxis.label.set_color("b")
         ax2.tick_params(axis="x", colors="b")
-        plt.savefig('plots/SNRe')
+        plt.savefig('telecom/hands_on_simulation/SNRe.png')
 
-
+"""
     # Packet error rate
     fig, ax = plt.subplots(constrained_layout=True)
     ax.plot(SNRs_dB + shift_SNR_out, PER, "-s", label="Simulation")

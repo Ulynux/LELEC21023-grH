@@ -25,7 +25,7 @@ class Chain:
     payload_len: int = 100  # Number of bits per packet
 
     # Simulation parameters
-    n_packets: int = 1000  # Number of sent packets
+    n_packets: int = 100  # Number of sent packets
 
     # Channel parameters
     sto_val: float = np.nan
@@ -39,9 +39,9 @@ class Chain:
     snr_range: np.ndarray = np.arange(-10, 25)
 
     # Lowpass filter parameters
-    numtaps: int = 100
+    numtaps: int = 31
     #cutoff: float = BIT_RATE * osr_rx / 2.0001  # or 2*BIT_RATE,...
-    cutoff = 100000
+    cutoff = 130000
 
     # Viterbi encoder parameters
     R1 = np.array([2,1,3,0])
@@ -160,7 +160,7 @@ class Chain:
         return x
 
     # Rx methods
-    bypass_preamble_detect: bool = False
+    bypass_preamble_detect: bool = True
 
     def preamble_detect(self, y: np.array) -> Optional[int]:
         """
@@ -225,7 +225,7 @@ class BasicChain(Chain):
 
         return None
 
-    bypass_cfo_estimation = True
+    bypass_cfo_estimation = False
 
     def cfo_estimation(self, y):
         """
@@ -238,6 +238,7 @@ class BasicChain(Chain):
         Nt = N*R # Number of blocks used for CFO estimation
         T = 1/self.bit_rate  # B=1/T
 
+        y = y.copy()
         y_copy = y.copy()
         cfo_est = 0
         
@@ -337,8 +338,8 @@ class BasicChain(Chain):
 
         #     return fxx
         
-        phase_function = savgol_filter(phase_function, 51, 3)
-        phase_derivative_2 = np.abs(second_derivative(phase_function, order))
+        #phase_function = savgol_filter(phase_function, 51, 3)
+        #phase_derivative_2 = np.abs(second_derivative(phase_function, order))
         # phase_derivative_2 = np.abs(weno5_second_derivative(phase_function, 1/R))
 
         sum_der_saved = -np.inf

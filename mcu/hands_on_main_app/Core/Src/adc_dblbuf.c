@@ -68,6 +68,9 @@ static void encode_packet(uint8_t *packet, uint32_t* packet_cnt) {
 			(packet+PACKET_HEADER_LENGTH)[(i*MELVEC_LENGTH+j)*2+1] = mel_vectors[i][j] & 0xFF;
 		}
 	}
+	// Convolutional encoding
+	conv_encoder(packet+PACKET_HEADER_LENGTH, packet+PACKET_HEADER_LENGTH + PAYLOAD_LENGTH/2, N_MELVECS*MELVEC_LENGTH);
+
 	// Write header and tag into the packet.
 	make_packet(packet, PAYLOAD_LENGTH, 0, *packet_cnt);
 	*packet_cnt += 1;
