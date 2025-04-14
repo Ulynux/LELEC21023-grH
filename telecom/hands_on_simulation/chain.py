@@ -39,9 +39,9 @@ class Chain:
     snr_range: np.ndarray = np.arange(-10, 25)
 
     # Lowpass filter parameters
-    numtaps: int = 100
+    numtaps: int = 31
     #cutoff: float = BIT_RATE * osr_rx / 2.0001  # or 2*BIT_RATE,...
-    cutoff = 100000
+    cutoff = 130000
 
     # Viterbi encoder parameters
     R1 = np.array([2,1,3,0])
@@ -160,7 +160,7 @@ class Chain:
         return x
 
     # Rx methods
-    bypass_preamble_detect: bool = False
+    bypass_preamble_detect: bool = True
 
     def preamble_detect(self, y: np.array) -> Optional[int]:
         """
@@ -338,8 +338,8 @@ class BasicChain(Chain):
 
         #     return fxx
         
-        phase_function = savgol_filter(phase_function, 51, 3)
-        phase_derivative_2 = np.abs(second_derivative(phase_function, order))
+        #phase_function = savgol_filter(phase_function, 51, 3)
+        #phase_derivative_2 = np.abs(second_derivative(phase_function, order))
         # phase_derivative_2 = np.abs(weno5_second_derivative(phase_function, 1/R))
 
         sum_der_saved = -np.inf
