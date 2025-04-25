@@ -85,7 +85,8 @@ def main(
                         energy_flag = True
                         logger.info(f"Energy spike detected. Threshold: {threshold * moving_avg}")
                     else:
-                        moving_avg = tmp_moving_avg
+                        # moyenne des 2 moving average
+                        moving_avg = (moving_avg + tmp_moving_avg) / 2
 
                     if energy_flag: # Mtn que l'on est sur qu'il y a un signal, on peut faire la classification 
                                     # sans regarder à la valeur du moving average car on ne va pas regarder 

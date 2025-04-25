@@ -14,13 +14,15 @@ import pandas as pd
 import pickle
 from classification.utils.plots import plot_specgram
 import seaborn as sns
-model_rf = pickle.load(open('classification/data/models/best_rf_model.pickle', 'rb'))  # Write your path to the model here!
-model_pca = pickle.load(open('classification/data/models/pca_25_components.pickle', 'rb'))  # Write your path to the model here!
+from tensorflow.keras.models import load_model
+
+model_rf = load_model('classification/data/models/best_cnn_last.keras')  # Write your path to the model here!
 PRINT_PREFIX = "DF:HEX:"
 FREQ_SAMPLING = 10200
 MELVEC_LENGTH = 20
 N_MELVECS = 20
 
+CLASSNAMES = ["chainsaw", "fire", "fireworks","gunshot"]
 dt = np.dtype(np.uint16).newbyteorder("<")
 
 
@@ -39,7 +41,7 @@ def reader(port=None):
         line = ""
         while not line.endswith("\n"):
             line += ser.read_until(b"\n", size=2 * N_MELVECS * MELVEC_LENGTH).decode("ascii")
-            print(line)
+            # print(line)
         line = line.strip()
         buffer = parse_buffer(line)
         if buffer is not None:
@@ -86,78 +88,87 @@ if __name__ == "__main__":
         print("Launch this script with [-p PORT_REF] to access the communication port")
 
     else:
-        memory = []
         input_stream = reader(port=args.port)
         msg_counter = 0
+        moving_avg = 0
+        threshold = 5
+        energy_flag = False
+        memory = []
+        
         for melvec in input_stream:
+            print(msg_counter)
+            msg_counter += 1
             melvec = melvec.copy()
             melvec = melvec.astype(np.float64)
-            print(melvec)
 
-            # Normalize the melvec
-            melvec -= np.mean(melvec)
-            melvec = melvec / np.linalg.norm(melvec)
+            # melvec is a 20x20 array => compute the energy to see if there is a signal
+            tmp_moving_avg = np.convolve(melvec.reshape(-1), np.ones(400) / 400, mode='valid')[0] 
+            # convolve retourne un tableau de 1 valeur donc on prend le premier élément
 
-            # Reshape melvec to 2D before PCA transformation
-            melvec = melvec.reshape(1, -1)
-            print(melvec.shape)
-            # Apply PCA transformation
-            melvec = model_pca.transform(melvec)
+            if moving_avg == 0:
+                moving_avg = tmp_moving_avg
 
-            # Predict probabilities and class
-            proba_rf = model_rf.predict_proba(melvec)
-            prediction = model_rf.predict(melvec)
-            memory.append(proba_rf)
+            # Threshold ajustable mais 5 * le moving average parait OK
+            print(f"Moving average: {moving_avg}")
+            if tmp_moving_avg > threshold * moving_avg:
+                energy_flag = True
+                print(f"Energy spike detected. Threshold: {threshold * moving_avg}")
+            else:
+                # moyenne des 2 moving average
+                moving_avg = (moving_avg + tmp_moving_avg) / 2
 
-            if len(memory) > 5:
-                memory.pop(0)
+            if energy_flag: # Mtn que l'on est sur qu'il y a un signal, on peut faire la classification 
+                            # sans regarder à la valeur du moving average car on ne va pas regarder 
+                            # qu'après on a plus de signal et stopper la classif en plein milieu
+                            # de celle-ci et recommencer à chaque fois 
+                        
+                print(f"Starting classification")
+                
+                melvec -= np.mean(melvec)
+                melvec = melvec / np.linalg.norm(melvec)
 
-            # Convert memory to numpy array
-            memory_array = np.array(memory)
+                melvec = melvec.reshape(-1)
 
-            # Naive method
-            naive_class = np.argmax(np.mean(memory_array, axis=0))
+                proba_rf = model_rf.predict(melvec)  # Use predict instead of predict_proba
+                proba_array = np.array(proba_rf)
 
-            # Majority voting
-            majority_class = np.bincount(np.argmax(memory_array, axis=2).flatten()).argmax()
+                memory.append(proba_array)
 
-            # Average the feature representation
-            avg_feature = np.mean(memory_array, axis=0)
-            avg_class = np.argmax(avg_feature)
+                # Only predict after 5 inputs
+                if len(memory) >= 5:
+                    
+                    
+                    memory_array = np.array(memory)
 
-            # Maximum Likelihood
-            likelihoods = np.sum(np.log(memory_array), axis=0)
-            max_likelihood_class = np.argmax(likelihoods)
+                    log_likelihood = np.log(memory_array)
+                    log_likelihood_sum = np.sum(log_likelihood, axis=0)
 
+                    sorted_indices = np.argsort(log_likelihood_sum)[::-1]  # Sort in descending order
+                    most_likely_class_index = sorted_indices[0]
+                    second_most_likely_class_index = sorted_indices[1]
 
-            print(f"Naive class: {CLASSNAMES[naive_class]}")
-            print(f"Majority voting class: {CLASSNAMES[majority_class]}")
-            print(f"Average feature class: {CLASSNAMES[avg_class]}")
-            print(f"Maximum Likelihood class: {CLASSNAMES[max_likelihood_class]}")
+                    confidence = log_likelihood_sum[most_likely_class_index] - log_likelihood_sum[second_most_likely_class_index]
 
-            # Break after 101 seconds
-            msg_counter += 1
+                    # threshold sur la confiance de la prédiction
+                    
+                    confidence_threshold = 0.45  
+                    print(f"Majority voting class after 5 inputs: {majority_class}")
 
-        # Convert results to DataFrame
-        # Compute mean accuracy
-        # mean_accuracy_naive = accuracy_score(results_df["true_class"], results_df["naive_class"])
-        # mean_accuracy_majority = accuracy_score(results_df["true_class"], results_df["majority_class"])
-        # mean_accuracy_avg = accuracy_score(results_df["true_class"], results_df["avg_class"])
-        # mean_accuracy_max_likelihood = accuracy_score(results_df["true_class"], results_df["max_likelihood_class"])
-
-        # print(f"Mean accuracy (Naive): {mean_accuracy_naive}")
-        # print(f"Mean accuracy (Majority Voting): {mean_accuracy_majority}")
-        # print(f"Mean accuracy (Average Feature): {mean_accuracy_avg}")
-        # print(f"Mean accuracy (Maximum Likelihood): {mean_accuracy_max_likelihood}")
-
-        # # Compute confusion matrices
-        # confusion_matrix_naive = confusion_matrix(results_df["true_class"], results_df["naive_class"])
-        # confusion_matrix_majority = confusion_matrix(results_df["true_class"], results_df["majority_class"])
-        # confusion_matrix_avg = confusion_matrix(results_df["true_class"], results_df["avg_class"])
-        # confusion_matrix_max_likelihood = confusion_matrix(results_df["true_class"], results_df["max_likelihood_class"])
-
-        # # Show confusion matrices
-        # show_confusion_matrix(results_df["naive_class"], results_df["true_class"], CLASSNAMES, title="Naive Method")
-        # show_confusion_matrix(results_df["majority_class"], results_df["true_class"], CLASSNAMES, title="Majority Voting")
-        # show_confusion_matrix(results_df["avg_class"], results_df["true_class"], CLASSNAMES, title="Average Feature")
-        # show_confusion_matrix(results_df["max_likelihood_class"], results_df["true_class"], CLASSNAMES, title="Maximum Likelihood")
+                    # On revient à un état où on relance la classification depuis le début
+                    # => on clear la mémoire, et on relance le moving average mais on garde les valeurs 
+                    # du moving average précédent sinon on perds trop d'infos
+                                                
+                    energy_flag  = False
+                    memory = []
+                    
+                    if majority_class == "gun":
+                        majority_class = "gunshot"
+                    majority_class = CLASSNAMES[majority_class-1]
+                    
+                    if confidence >= confidence_threshold:
+                        print(f"Most likely class index: {most_likely_class_index}")
+                        print(f"Confidence: {confidence}")
+                                            
+                    else:
+                        print(f"Confidence too low ({confidence}). Not submitting the guess.")
+                    
