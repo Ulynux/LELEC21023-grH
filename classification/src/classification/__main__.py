@@ -55,54 +55,94 @@ def main(
     This way, you will directly receive the authentified packets from STDIN
     (standard input, i.e., the terminal).
     """
-    with open('classification/data/models/best_rf_model.pickle', 'rb') as file:
+    with open('classification/data/models/best_GB_model.pickle', 'rb') as file:
         model_rf = pickle.load(file)
-        with open('classification/data/models/pca_25_components.pickle', 'rb') as file:
+        with open('classification/data/models/pca_29_GB_components.pickle', 'rb') as file:
             model_pca = pickle.load(file)
 
-   
+            moving_avg = 0
+            threshold = 5
+            energy_flag = False
             memory = []
+            
             for payload in _input:
-                print(f"Payload: {payload}")
                 if PRINT_PREFIX in payload:
                     payload = payload[len(PRINT_PREFIX):]
 
                     melvec = payload_to_melvecs(payload, melvec_length, n_melvecs)
-                    logger.info(f"Parsed payload into Mel vectors: {melvec}")
-
                     melvec = melvec.copy()
                     melvec = melvec.astype(np.float64)
 
-                    melvec -= np.mean(melvec)
-                    melvec = melvec / np.linalg.norm(melvec)
+                    # melvec is a 20x20 array => compute the energy to see if there is a signal
+                    tmp_moving_avg = np.convolve(melvec.reshape(-1), np.ones(400) / 400, mode='valid')[0] 
+                    # convolve retourne un tableau de 1 valeur donc on prend le premier élément
 
-                    melvec = melvec.reshape(1, -1)
-                    melvec = model_pca.transform(melvec)
+                    if moving_avg == 0:
+                        moving_avg = tmp_moving_avg
 
-                    proba_rf = model_rf.predict_proba(melvec)
-                    proba_array = np.array(proba_rf)
+                    # Threshold ajustable mais 5 * le moving average parait OK
+                    if tmp_moving_avg > threshold * moving_avg:
+                        energy_flag = True
+                        logger.info(f"Energy spike detected. Threshold: {threshold * moving_avg}")
+                    else:
+                        # moyenne des 2 moving average
+                        moving_avg = (moving_avg + tmp_moving_avg) / 2
 
-                    memory.append(proba_array)
+                    if energy_flag: # Mtn que l'on est sur qu'il y a un signal, on peut faire la classification 
+                                    # sans regarder à la valeur du moving average car on ne va pas regarder 
+                                    # qu'après on a plus de signal et stopper la classif en plein milieu
+                                    # de celle-ci et recommencer à chaque fois 
+                                
+                        logger.info(f"Starting classification")
+                        
+                        melvec -= np.mean(melvec)
+                        melvec = melvec / np.linalg.norm(melvec)
 
-                    # Only predict after 5 inputs
-                    if len(memory) >= 5:
-                        memory_array = np.array(memory)
+                        melvec = melvec.reshape(-1)
+                        melvec = model_pca.transform(melvec)
 
-                        majority_class_index = np.bincount(np.argmax(memory_array, axis=2).flatten()).argmax()
-                        majority_class = model_rf.classes_[majority_class_index]
-                        print(f"Majority voting class after 5 inputs: {majority_class}")
+                        proba_rf = model_rf.predict_proba(melvec)
+                        proba_array = np.array(proba_rf)
 
+                        memory.append(proba_array)
 
-                        memory = []
+                        # Only predict after 5 inputs
+                        if len(memory) >= 5:
+                            
+                            
+                            memory_array = np.array(memory)
 
-                        if majority_class == "gun":
-                            majority_class = "gunshot"
+                            log_likelihood = np.log(memory_array)
+                            log_likelihood_sum = np.sum(log_likelihood, axis=0)
 
-                        logger.info(f"Predictions: {majority_class}")
-                        answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{majority_class}", timeout=1)
-                        json_answer = json.loads(answer.text)
-                        print(json_answer)
+                            sorted_indices = np.argsort(log_likelihood_sum)[::-1]  # Sort in descending order
+                            most_likely_class_index = sorted_indices[0]
+                            second_most_likely_class_index = sorted_indices[1]
 
-                        wait_iterations = np.random.randint(1, 3)
-                        for _ in range(wait_iterations):
-                            next(_input)
+                            confidence = log_likelihood_sum[most_likely_class_index] - log_likelihood_sum[second_most_likely_class_index]
+
+                            # threshold sur la confiance de la prédiction
+                            
+                            confidence_threshold = 0.45  
+                            print(f"Majority voting class after 5 inputs: {majority_class}")
+
+                            # On revient à un état où on relance la classification depuis le début
+                            # => on clear la mémoire, et on relance le moving average mais on garde les valeurs 
+                            # du moving average précédent sinon on perds trop d'infos
+                                                       
+                            energy_flag  = False
+                            memory = []
+                            
+                            if majority_class == "gun":
+                                majority_class = "gunshot"
+                            majority_class = CLASSNAMES[majority_class-1]
+                            
+                            if confidence >= confidence_threshold:
+                                logger.info(f"Most likely class index: {most_likely_class_index}")
+                                logger.info(f"Confidence: {confidence}")
+                                answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{majority_class}", timeout=1)
+                                json_answer = json.loads(answer.text)
+                                print(json_answer)                            
+                            else:
+                                logger.info(f"Confidence too low ({confidence}). Not submitting the guess.")
+                          
