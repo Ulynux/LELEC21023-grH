@@ -69,10 +69,15 @@ static void encode_packet(uint8_t *packet, uint32_t* packet_cnt) {
 		}
 	}
 	// Convolutional encoding
-	conv_encoder(packet+PACKET_HEADER_LENGTH, packet+PACKET_HEADER_LENGTH + PAYLOAD_LENGTH/2, N_MELVECS*MELVEC_LENGTH);
+
 
 	// Write header and tag into the packet.
+
+
 	make_packet(packet, PAYLOAD_LENGTH, 0, *packet_cnt);
+	conv_encoder(packet, packet + PACKET_LENGTH, PACKET_LENGTH);
+
+
 	*packet_cnt += 1;
 	if (*packet_cnt == 0) {
 		// Should not happen as packet_cnt is 32-bit and we send at most 1 packet per second.
@@ -82,14 +87,14 @@ static void encode_packet(uint8_t *packet, uint32_t* packet_cnt) {
 }
 
 static void send_spectrogram() {
-	uint8_t packet[PACKET_LENGTH];
+	uint8_t packet[PACKET_LENGTH*2];
 
 //	start_cycle_count();
 	encode_packet(packet, &packet_cnt);
 //	stop_cycle_count("Encode packet");
 
 //	start_cycle_count();
-	S2LP_Send(packet, PACKET_LENGTH);
+	S2LP_Send(packet, PACKET_LENGTH*2);
 //	stop_cycle_count("Send packet");
 
 //	print_encoded_packet(packet);

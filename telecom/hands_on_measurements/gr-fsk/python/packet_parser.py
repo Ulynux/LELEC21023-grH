@@ -87,7 +87,7 @@ def viterbi_decoder(x_tilde):
     out_R0 = np.array([[0,0],[0,1],[0,0],[0,1]])
     symb_R1 = np.array([1.0 + 1.0j, 1.0 + 0.0j, 1.0 + 1.0j, 1.0 + 0.0j])
     symb_R0 = np.array([0.0 + 0.0j, 0.0 + 1.0j, 0.0 + 0.0j, 0.0 + 1.0j])
-    len_b = 128
+    len_b = 1648
 
     def dist(a,b):
         distance = np.abs(a-b)
@@ -98,7 +98,6 @@ def viterbi_decoder(x_tilde):
     u_hat = x_tilde[:len(x_tilde)//2]
     c_hat = x_tilde[len(x_tilde)//2:]
     x_tilde = u_hat + 1j*c_hat
-    print(type(x_tilde))
     
     N_b = int(len(x_tilde)/len_b)
     
@@ -188,7 +187,7 @@ class packet_parser(gr.basic_block):
             self,
             name="packet_parser",
             in_sig=[np.uint8],
-            out_sig=[(np.uint8, self.payload_len)],
+            out_sig=[(np.uint8, self.payload_len//2)],
         )
         self.logger = logging.getLogger("parser")
 
@@ -199,6 +198,8 @@ class packet_parser(gr.basic_block):
             self.forecast = self.forecast_v38
         else:
             self.forecast = self.forecast_v310
+
+
 
     def forecast_v38(self, noutput_items, ninput_items_required):
         ninput_items_required[0] = self.packet_len + 1  # in bytes
@@ -236,19 +237,24 @@ class packet_parser(gr.basic_block):
 
         pkt_bytes = np.packbits(b_pkt)
 
+        payload_init = pkt_bytes[0 : self.payload_len]
 
-        payload = pkt_bytes[0 : self.payload_len]
-        print(f"payload: {payload.shape}")
-        payload_bits = np.unpackbits(payload)
+        payload_bits = np.unpackbits(payload_init)
         payload_bits = viterbi_decoder(payload_bits)
         payload = np.packbits(payload_bits)
 
-        crc = pkt_bytes[self.payload_len : self.payload_len + self.crc_len]
+        print("P2 ",payload[2])
+        print("P3 ",payload[3])
 
+        crc = pkt_bytes[self.payload_len : self.payload_len + self.crc_len]
+        print("pkt_bytes", len(pkt_bytes))
         output_items[0][0] = payload
+        print("Output length", len(output_items))
+        print("Output[0]", len(output_items[0]))
+        print("Output[0][0]", len(output_items[0][0]))
 
         crc_verif = crc_poly(
-            bytearray(payload),
+            bytearray(payload_init),
             8,
             0x07,
             crc=0xFF,
@@ -264,7 +270,7 @@ class packet_parser(gr.basic_block):
         if is_correct:
             if self.log_payload:
                 self.logger.info(f"packet successfully demodulated: {payload} (CRC: {crc})")
-            output_items[0][: self.payload_len] = payload
+            output_items[0][: self.payload_len//2] = payload
             self.logger.info(
                 f"{self.nb_packet} packets received with {self.nb_error} error(s)"
             )

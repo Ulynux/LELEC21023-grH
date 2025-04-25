@@ -234,12 +234,24 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: spectrogram_len+24
+    value: (spectrogram_len+24)*2
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
     coordinate: [1056, 20.0]
+    rotation: 0
+    state: true
+- name: payload_out
+  id: variable
+  parameters:
+    comment: ''
+    value: payload_len//2
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [880, 212.0]
     rotation: 0
     state: true
 - name: rx_gain
@@ -511,12 +523,12 @@ blocks:
     pass_tags: 'False'
     timeout: '100'
     type: byte
-    vlen: payload_len
+    vlen: payload_out
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1272, 396.0]
+    coordinate: [1296, 420.0]
     rotation: 0
     state: enabled
 
