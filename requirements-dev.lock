@@ -283,6 +283,8 @@ msgpack==1.0.8
     # via librosa
 namex==0.0.8
     # via keras
+narwhals==1.36.0
+    # via plotly
 nbclient==0.10.0
     # via nbconvert
 nbconvert==7.16.4
@@ -358,7 +360,7 @@ platformdirs==4.2.2
     # via jupyter-core
     # via pooch
     # via virtualenv
-plotly==5.24.1
+plotly==6.0.1
     # via mcu
 pluggy==1.5.0
     # via pytest
@@ -499,14 +501,13 @@ soxr==0.5.0
     # via librosa
 stack-data==0.6.3
     # via ipython
-tenacity==9.0.0
-    # via plotly
 tensorboard==2.19.0
     # via tensorflow
 tensorboard-data-server==0.7.2
     # via tensorboard
 tensorflow==2.19.0
     # via mcu
+    # via scikeras
 tensorflow-io-gcs-filesystem==0.37.1
     # via tensorflow
 termcolor==2.5.0
@@ -588,7 +589,7 @@ wsproto==1.2.0
 wtforms==3.1.2
     # via flask-wtf
 xgboost==2.1.4
-youtube-dl @ git+https://github.com/ytdl-org/youtube-dl.git@3eb8d22ddb8982ca4fb56bb7a8d6517538bf14c6
+youtube-dl @ git+https://github.com/ytdl-org/youtube-dl.git@c052a16f72af7dd7671d4dd62826de71cd99dfb6
 zipp==3.20.1
     # via importlib-metadata
     # via importlib-resources

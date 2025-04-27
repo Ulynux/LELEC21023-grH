@@ -12,7 +12,8 @@ dependencies = [
     "soundfile>=0.12.1",
     "keras>=3.9.0",
     "xgboost>=2.1.4",
-    "scikeras>=0.13.0",
+    "scikeras[tensorflow]>=0.13.0",
+    "plotly>=6.0.1",
 ]
 
 [tool.ruff]

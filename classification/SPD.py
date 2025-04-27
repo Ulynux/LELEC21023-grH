@@ -54,3 +54,70 @@ if confidence >= confidence_threshold:
     print("Submitting the guess...")
 else:
     print(f"Confidence too low ({confidence}). Not submitting the guess.")
+
+a = np.ones((400))
+b = a.reshape(-1,20,20,1)
+c = a.reshape(20,20,1)
+print(b.shape,c.shape)
+
+import random  # <-- add this!
+import pandas as pd
+import numpy as np
+
+# Fake Grid Search Results
+np.random.seed(42)
+random.seed(42)  # optional, to match numpy randomness
+param_combinations = 30
+
+results_df = pd.DataFrame({
+    'param_model__kernel_size': random.choices([(3,3), (5,5)], k=param_combinations),
+    'param_model__activation': random.choices(['relu', 'tanh'], k=param_combinations),
+    'param_model__optimizer': random.choices(['adam', 'sgd', 'rmsprop'], k=param_combinations),
+    'param_model__learning_rate': random.choices([0.001, 0.01], k=param_combinations),
+    'mean_test_score': np.random.uniform(0.7, 0.95, param_combinations)
+})
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Sort by mean_test_score
+top_results = results_df.sort_values(by='mean_test_score', ascending=False).head(10)
+
+plt.figure(figsize=(12, 6))
+sns.barplot(
+    x='mean_test_score', 
+    y=top_results.index, 
+    data=top_results, 
+    palette='viridis'
+)
+
+plt.xlabel('Mean Test Score (Accuracy)')
+plt.ylabel('Model Configurations')
+plt.title('Top 10 Grid Search Models')
+plt.grid(axis='x')
+plt.show()
+pivot_table = results_df.pivot_table(
+    values='mean_test_score',
+    index='param_model__optimizer',
+    columns='param_model__learning_rate'
+)
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(pivot_table, annot=True, fmt=".3f", cmap='coolwarm')
+plt.title('Optimizer vs Learning Rate (Mean Test Score)')
+plt.show()
+import plotly.express as px
+import plotly.graph_objects as go
+top_results = results_df.sort_values(by='mean_test_score', ascending=False).head(10)
+
+fig = px.bar(
+    top_results,
+    x='mean_test_score',
+    y=top_results.index,
+    orientation='h',
+    color='mean_test_score',
+    color_continuous_scale='viridis',
+    title='Top 10 Grid Search Models'
+)
+fig.update_layout(xaxis_title='Mean Test Score (Accuracy)', yaxis_title='Model Index')
+fig.show()
