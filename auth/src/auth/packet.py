@@ -67,6 +67,7 @@ class PacketUnwrapper:
             packet[:HEADER_LEN]
         )
         # Validate correct packet length w.r.t. payload
+
         if len(packet) != MIN_LEN + payload_length:
             raise InvalidPacket("Wrong payload length.")
         if self.authenticate:

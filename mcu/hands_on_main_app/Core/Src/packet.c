@@ -39,8 +39,7 @@ tag[o-800] = tag_hardware_full[o];
 
 void conv_encoder(const uint8_t *u, uint8_t *c, uint16_t len_u) {
     
-	uint16_t len_b = 100;
-	uint16_t nb_states = len_u / len_b;
+	uint16_t len_b = 206;
     uint16_t N_b = len_u / len_b;
     
     // Allocate memory for block decomposition
@@ -56,19 +55,19 @@ void conv_encoder(const uint8_t *u, uint8_t *c, uint16_t len_u) {
         int state = 0;
         for (int j = 0; j < len_b; j++) {
             int index = i * len_b + j;
-            if (u_b[index] == 1) {
-                c_b[index] = out_R1[state][1];
+            if (u_b[j] == 1) {
+                c_b[j] = out_R1[state][1];
                 state = R1[state];
             } else {
-                c_b[index] = out_R0[state][1];
+                c_b[j] = out_R0[state][1];
                 state = R0[state];
             }
         }
 		// Copy result to output
-		for (int j = 0; j < len_u; j++) {
+		for (int j = 0; j < len_b; j++) {
 			c[i * len_b + j] = c_b[j];
 		}
-    }        
+    }     
     
 }
 
