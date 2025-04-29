@@ -31,7 +31,7 @@ out_R1 = np.array([[1,1],[1,0],[1,1],[1,0]])
 out_R0 = np.array([[0,0],[0,1],[0,0],[0,1]])
 symb_R1 = np.array([1.0 + 1.0j, 1.0 + 0.0j, 1.0 + 1.0j, 1.0 + 0.0j])
 symb_R0 = np.array([0.0 + 0.0j, 0.0 + 1.0j, 0.0 + 0.0j, 0.0 + 1.0j])
-len_b = 100
+len_b = 1648
 
 
 def conv_encoder(u):
@@ -236,6 +236,7 @@ class packet_parser(gr.basic_block):
     """
     docstring for block packet_parser
     """
+    bool = True
 
     def __init__(self, hdr_len, payload_len, crc_len, address,log_payload):
         self.hdr_len = hdr_len
@@ -303,14 +304,18 @@ class packet_parser(gr.basic_block):
         pkt_bytes = np.packbits(b_pkt)
 
         payload_init = pkt_bytes[0 : self.payload_len]
+        
+        
 
         payload_bits = np.unpackbits(payload_init)
+        
         payload_bits = viterbi_decoder(payload_bits)
         payload = np.packbits(payload_bits)
 
         
-        packet_rencoded = conv_encoder(np.unpackbits(payload))
+        packet_rencoded = np.concatenate(conv_encoder(np.unpackbits(payload)))
         packet_rencoded = np.packbits(packet_rencoded)
+
 
 
         crc = pkt_bytes[self.payload_len : self.payload_len + self.crc_len]
