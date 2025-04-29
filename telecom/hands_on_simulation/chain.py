@@ -22,10 +22,10 @@ class Chain:
     preamble: np.ndarray = PREAMBLE
     sync_word: np.ndarray = SYNC_WORD
     order = 2
-    payload_len: int = 100  # Number of bits per packet
+    payload_len: int = 8  # Number of bits per packet
 
     # Simulation parameters
-    n_packets: int = 100  # Number of sent packets
+    n_packets: int = 10000  # Number of sent packets
 
     # Channel parameters
     sto_val: float = np.nan
@@ -41,7 +41,7 @@ class Chain:
     # Lowpass filter parameters
     numtaps: int = 31
     #cutoff: float = BIT_RATE * osr_rx / 2.0001  # or 2*BIT_RATE,...
-    cutoff = 130000
+    cutoff = 100000
 
     # Viterbi encoder parameters
     R1 = np.array([2,1,3,0])
@@ -50,7 +50,7 @@ class Chain:
     out_R0 = np.array([[0,0],[0,1],[0,0],[0,1]])
     symb_R1 = np.array([1.0 + 1.0j, 1.0 + 0.0j, 1.0 + 1.0j, 1.0 + 0.0j])
     symb_R0 = np.array([0.0 + 0.0j, 0.0 + 1.0j, 0.0 + 0.0j, 0.0 + 1.0j])
-    len_b = 100
+    len_b = 206*8
 
     # Tx methods
 
@@ -264,7 +264,7 @@ class BasicChain(Chain):
         Estimates symbol timing (fractional) based on phase shifts.
         """
         R = self.osr_rx  # Receiver oversampling factor
-        order = self.order # Order of the finite difference
+        order = 2# Order of the finite difference
         
 
         # Computation of derivatives of phase function
@@ -338,8 +338,8 @@ class BasicChain(Chain):
 
         #     return fxx
         
-        #phase_function = savgol_filter(phase_function, 51, 3)
-        #phase_derivative_2 = np.abs(second_derivative(phase_function, order))
+        phase_function = savgol_filter(phase_function, 51, 3)
+        phase_derivative_2 = np.abs(second_derivative(phase_function, order))
         # phase_derivative_2 = np.abs(weno5_second_derivative(phase_function, 1/R))
 
         sum_der_saved = -np.inf
