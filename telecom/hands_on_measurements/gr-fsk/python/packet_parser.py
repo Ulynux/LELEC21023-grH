@@ -31,7 +31,7 @@ out_R1 = np.array([[1,1],[1,0],[1,1],[1,0]])
 out_R0 = np.array([[0,0],[0,1],[0,0],[0,1]])
 symb_R1 = np.array([1.0 + 1.0j, 1.0 + 0.0j, 1.0 + 1.0j, 1.0 + 0.0j])
 symb_R0 = np.array([0.0 + 0.0j, 0.0 + 1.0j, 0.0 + 0.0j, 0.0 + 1.0j])
-len_b = 1648
+len_b = 8*206
 
 
 def conv_encoder(u):
