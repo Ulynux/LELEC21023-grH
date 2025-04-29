@@ -111,12 +111,12 @@ def main(
 
 
     moving_avg = 0
-    threshold = 1.7
+    threshold = 7.5
     energy_flag = False
     memory = []
     ## Using a queue to store avg of before 
     i = 0
-    long_sum = deque(maxlen=5)
+    long_sum = deque(maxlen=10)
     for payload in _input:
         if PRINT_PREFIX in payload:
             payload = payload[len(PRINT_PREFIX):]
@@ -125,18 +125,27 @@ def main(
             melvec = melvec.copy().astype(np.float64)
 
             # Compute the energy
-            tmp_moving_avg = np.convolve(melvec.reshape(-1), np.ones(400) / 400, mode='valid')[0]
+            short_sum_1 = np.convolve(melvec.reshape(-1)[:200], np.ones(200) / 200, mode='valid')[0]
+            short_sum_2 = np.convolve(melvec.reshape(-1)[200:], np.ones(200) / 200, mode='valid')[0]
 
-            long_sum.append(tmp_moving_avg)
-            moving_avg = np.mean(long_sum)  # Compute the actual moving average over the deque
-
-            # Threshold detection
-            if tmp_moving_avg >= threshold * moving_avg:
+            long_sum.append(short_sum_1)
+            
+            if moving_avg == 0:
+                moving_avg = short_sum_1  
+                          
+            if short_sum_1 >= threshold * moving_avg :
                 energy_flag = True
-                logger.info(f"Energy spike detected. Threshold: {5 * moving_avg}")
             else:
-                logger.info(f"moving_avg  : {moving_avg.round(5)}")
-                logger.info(tmp_moving_avg.round(5))
+                moving_avg = np.mean(long_sum)
+            
+            long_sum.append(short_sum_2)
+            
+            if not energy_flag:
+                if short_sum_2 >= threshold * moving_avg  :
+                    energy_flag = True
+                else:
+                    moving_avg = np.mean(long_sum)
+                    logger.info(f"moving_avg  : {moving_avg.round(5)}")
 
             if energy_flag: # Mtn que l'on est sur qu'il y a un signal, on peut faire la classification 
                             # sans regarder à la valeur du moving average car on ne va pas regarder 
