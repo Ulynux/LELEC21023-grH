@@ -22,10 +22,10 @@ class Chain:
     preamble: np.ndarray = PREAMBLE
     sync_word: np.ndarray = SYNC_WORD
     order = 2
-    payload_len: int = 8  # Number of bits per packet
+    payload_len: int = 824*8  # Number of bits per packet
 
     # Simulation parameters
-    n_packets: int = 10000  # Number of sent packets
+    n_packets: int = 100  # Number of sent packets
 
     # Channel parameters
     sto_val: float = np.nan
@@ -387,7 +387,7 @@ class BasicChain(Chain):
 
         return bits_hat
 
-    bypass_viterbi = True
+    bypass_viterbi = False
 
     def viterbi_decoder(self, x_tilde):
 

@@ -32,9 +32,8 @@ txp = []
 ber = []
 invalid = []
 
-if data_exp:
-    cfo, snr, txp, ber, invalid = zip(*data_exp)
-    txp_count = dict(Counter(txp))
+cfo, snr, txp, ber, invalid = zip(*data_exp)
+txp_count = dict(Counter(txp))
 
 
 key = list(txp_count.keys())

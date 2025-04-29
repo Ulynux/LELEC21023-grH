@@ -4,12 +4,12 @@ from chain import Chain
 from scipy.signal import firwin, freqz
 from scipy.special import erfc
 from scipy.signal import savgol_filter
-import PER as per
+
 import csv
 import os
 
 
-plots_folder = "telecom/optimisations/"
+plots_folder = "telecom/optimisations/Viterbi"
 test_name = "h_no_savgol"
 
 
@@ -323,13 +323,13 @@ def run_sim(chain: Chain):
         ax2.set_xlim(ax.get_xlim())
         ax2.xaxis.label.set_color("b")
         ax2.tick_params(axis="x", colors="b")
-        plt.savefig(plots_folder+'SNRe.pdf')
+        plt.savefig(plots_folder+'withViterbi.pdf')
 
 
     # Packet error rate
     fig, ax = plt.subplots(constrained_layout=True)
     ax.plot(SNRs_dB + shift_SNR_out, PER, "-s", label="Simulation")
-    ax.plot(per.SNR_aver +shift_SNR_filter ,per.PACKET_ERROR,"-s",label="Measurements")
+
 
 
 
@@ -359,7 +359,7 @@ def run_sim(chain: Chain):
         ax2.set_xlim(ax.get_xlim())
         ax2.xaxis.label.set_color("b")
         ax2.tick_params(axis="x", colors="b")
-    plt.savefig(plots_folder+"PER_SNRe.pdf")
+    plt.savefig(plots_folder+"withViterbi.pdf")
 
     # Preamble metrics
     plt.figure()
@@ -371,7 +371,7 @@ def run_sim(chain: Chain):
     plt.ylim([-1, 101])
     plt.grid()
     plt.legend()
-    plt.savefig(plots_folder+"Preamble_detection.png")
+    plt.savefig(plots_folder+"Preamble_detection_wViterbi.png")
 
     # RMSE CFO
     plt.figure()
@@ -383,7 +383,7 @@ def run_sim(chain: Chain):
     plt.savefig(plots_folder+"RMSE_CFO.png")
     # Assuming SNRs_dB and RMSE_cfo are your data arrays
     data = np.column_stack((SNRs_dB, RMSE_cfo))
-    np.savetxt(plots_folder+'RMSE_CFO_data.csv', data, delimiter=',', header='SNR_dB,RMSE_cfo', comments='')
+    np.savetxt(plots_folder+'RMSE_CFO_data_wViterbi.csv', data, delimiter=',', header='SNR_dB,RMSE_cfo', comments='')
 
     # RMSE STO
     plt.figure()
@@ -392,7 +392,7 @@ def run_sim(chain: Chain):
     plt.ylabel("RMSE [-]")
     plt.xlabel("SNR [dB]")
     plt.grid()
-    plt.savefig(plots_folder+"RMSE_STO.png")
+    plt.savefig(plots_folder+"RMSE_STO_wViterbi.png")
     
     # Save simulation outputs (for later post-processing, building new figures,...)
     save_var = np.column_stack(
