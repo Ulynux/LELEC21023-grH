@@ -9,10 +9,10 @@ import csv
 import os
 
 
-plots_folder = "telecom/optimisations/Savgol/No_savgol/"
+plots_folder = "telecom/optimisations/"
 test_name = "h_no_savgol"
 
-print("freq dev",Chain.freq_dev)
+
 
 def add_delay(chain: Chain, x: np.ndarray, tau: float):
     """
@@ -55,7 +55,6 @@ def run_sim(chain: Chain):
     """
     SNRs_dB = chain.snr_range
     R = chain.osr_rx
-    print("R = ",R)
     B = chain.bit_rate
     fs = B * R
     cutoff = chain.cutoff
@@ -324,7 +323,7 @@ def run_sim(chain: Chain):
         ax2.set_xlim(ax.get_xlim())
         ax2.xaxis.label.set_color("b")
         ax2.tick_params(axis="x", colors="b")
-        plt.savefig(plots_folder+'SNRe')
+        plt.savefig(plots_folder+'SNRe.pdf')
 
 
     # Packet error rate
@@ -332,8 +331,7 @@ def run_sim(chain: Chain):
     ax.plot(SNRs_dB + shift_SNR_out, PER, "-s", label="Simulation")
     ax.plot(per.SNR_aver +shift_SNR_filter ,per.PACKET_ERROR,"-s",label="Measurements")
 
-    print("PER ",PER)
-    print("SNR ",SNRs_dB + shift_SNR_out - shift_SNR_filter)
+
 
 
     #ax.plot(SNR_th, 1 - (1 - BER_th_BPSK) ** chain.payload_len, label="AWGN Th. BPSK")
@@ -361,7 +359,7 @@ def run_sim(chain: Chain):
         ax2.set_xlim(ax.get_xlim())
         ax2.xaxis.label.set_color("b")
         ax2.tick_params(axis="x", colors="b")
-    plt.savefig(plots_folder+"PER_out_from_file.png")
+    plt.savefig(plots_folder+"PER_SNRe.pdf")
 
     # Preamble metrics
     plt.figure()
