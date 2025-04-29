@@ -317,7 +317,7 @@ class packet_parser(gr.basic_block):
         packet_rencoded = np.packbits(packet_rencoded)
 
 
-
+        # PUSH ULYSSE
         crc = pkt_bytes[self.payload_len : self.payload_len + self.crc_len]
 
         output_items[0][0] = payload
