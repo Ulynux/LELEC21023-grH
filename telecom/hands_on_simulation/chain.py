@@ -22,10 +22,10 @@ class Chain:
     preamble: np.ndarray = PREAMBLE
     sync_word: np.ndarray = SYNC_WORD
     order = 2
-    payload_len: int = 100  # Number of bits per packet
+    payload_len: int = 824  # Number of bits per packet
 
     # Simulation parameters
-    n_packets: int = 100  # Number of sent packets
+    n_packets: int = 1000  # Number of sent packets
 
     # Channel parameters
     sto_val: float = np.nan
@@ -50,7 +50,7 @@ class Chain:
     out_R0 = np.array([[0,0],[0,1],[0,0],[0,1]])
     symb_R1 = np.array([1.0 + 1.0j, 1.0 + 0.0j, 1.0 + 1.0j, 1.0 + 0.0j])
     symb_R0 = np.array([0.0 + 0.0j, 0.0 + 1.0j, 0.0 + 0.0j, 0.0 + 1.0j])
-    len_b = 100
+    len_b = 206*8
 
     # Tx methods
 
