@@ -149,7 +149,7 @@ def main(
                 melvec = melvec / np.linalg.norm(melvec)
 
                 # melvec = melvec.reshape(1,-1)
-                melvec = melvec.reshape((1, 20, 20, -1))
+                melvec = melvec.reshape((-1, 20, 20, 1))
                 
                 # fig, ax = plt.subplots()
                 # plot_specgram(
