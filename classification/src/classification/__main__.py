@@ -59,15 +59,19 @@ def main(
         model_rf = pickle.load(file)
         with open('classification/data/models/pca_29_GB_components.pickle', 'rb') as file:
             model_pca = pickle.load(file)
+            
 
             moving_avg = 0
             threshold = 5
             energy_flag = False
             memory = []
             
+            
             for payload in _input:
+
                 if PRINT_PREFIX in payload:
                     payload = payload[len(PRINT_PREFIX):]
+                    
 
                     melvec = payload_to_melvecs(payload, melvec_length, n_melvecs)
                     melvec = melvec.copy()
@@ -81,7 +85,7 @@ def main(
                         moving_avg = tmp_moving_avg
 
                     # Threshold ajustable mais 5 * le moving average parait OK
-                    if tmp_moving_avg > threshold * moving_avg:
+                    if tmp_moving_avg > 0:
                         energy_flag = True
                         logger.info(f"Energy spike detected. Threshold: {threshold * moving_avg}")
                     else:
@@ -97,8 +101,9 @@ def main(
                         
                         melvec -= np.mean(melvec)
                         melvec = melvec / np.linalg.norm(melvec)
-
-                        melvec = melvec.reshape(-1)
+                        
+                        melvec = melvec.reshape(1,-1)
+                        
                         melvec = model_pca.transform(melvec)
 
                         proba_rf = model_rf.predict_proba(melvec)
@@ -111,20 +116,21 @@ def main(
                             
                             
                             memory_array = np.array(memory)
-
+                            """
                             log_likelihood = np.log(memory_array)
                             log_likelihood_sum = np.sum(log_likelihood, axis=0)
 
                             sorted_indices = np.argsort(log_likelihood_sum)[::-1]  # Sort in descending order
                             most_likely_class_index = sorted_indices[0]
                             second_most_likely_class_index = sorted_indices[1]
+                            """
 
-                            confidence = log_likelihood_sum[most_likely_class_index] - log_likelihood_sum[second_most_likely_class_index]
+                            confidence = 0
 
                             # threshold sur la confiance de la prédiction
                             
                             confidence_threshold = 0.45  
-                            print(f"Majority voting class after 5 inputs: {majority_class}")
+
 
                             # On revient à un état où on relance la classification depuis le début
                             # => on clear la mémoire, et on relance le moving average mais on garde les valeurs 
@@ -135,14 +141,13 @@ def main(
                             
                             if majority_class == "gun":
                                 majority_class = "gunshot"
-                            majority_class = CLASSNAMES[majority_class-1]
-                            
-                            if confidence >= confidence_threshold:
-                                logger.info(f"Most likely class index: {most_likely_class_index}")
-                                logger.info(f"Confidence: {confidence}")
-                                answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{majority_class}", timeout=1)
-                                json_answer = json.loads(answer.text)
-                                print(json_answer)                            
-                            else:
-                                logger.info(f"Confidence too low ({confidence}). Not submitting the guess.")
+
+                            # if confidence >= 0:
+                            logger.info(f"Most likely class index: {majority_class}")
+                            logger.info(f"Confidence: {confidence}")
+                                # answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{majority_class}", timeout=1)
+                                # json_answer = json.loads(answer.text)
+                            #     print(json_answer)                            
+                            # else:
+                            #     logger.info(f"Confidence too low ({confidence}). Not submitting the guess.")
                           

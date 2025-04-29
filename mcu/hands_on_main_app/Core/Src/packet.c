@@ -9,6 +9,7 @@
 #include "utils.h"
 #include "aes.h"
 #include "stm32l4xx_hal_cryp.h"
+#include <stdint.h>
 
 const uint8_t AES_Key[16] = {
 0x00,0x00,0x00,0x00,
@@ -18,8 +19,8 @@ const uint8_t AES_Key[16] = {
 
 const uint8_t R1[4] = {2, 1, 3, 0};
 const uint8_t R0[4] = {0, 3, 1, 2};
-const uint8_t *out_R1[4][2] = {{1, 1}, {1, 0}, {1, 1}, {1, 0}};
-const uint8_t *out_R0[4][2] = {{0, 0}, {0, 1}, {0, 0}, {0, 1}};
+const uint8_t out_R1[4][2] = {{1, 1}, {1, 0}, {1, 1}, {1, 0}};
+const uint8_t out_R0[4][2] = {{0, 0}, {0, 1}, {0, 0}, {0, 1}};
 
 
 void tag_cbc_mac(uint8_t *tag, const uint8_t *msg, size_t msg_len) {
@@ -37,14 +38,15 @@ tag[o-800] = tag_hardware_full[o];
 //printf("\n");
 }
 
+
 void conv_encoder(const uint8_t *u, uint8_t *c, uint16_t len_u) {
     
-	uint16_t len_b = 206;
+	uint16_t len_b = 100;
     uint16_t N_b = len_u / len_b;
     
     // Allocate memory for block decomposition
-    uint8_t *u_b[len_b];
-    uint8_t *c_b[len_b];
+    uint8_t u_b[len_b];
+    uint8_t c_b[len_b];
     
     // Block convolutional encoding
     for (int i = 0; i < N_b; i++) {
@@ -55,13 +57,21 @@ void conv_encoder(const uint8_t *u, uint8_t *c, uint16_t len_u) {
         int state = 0;
         for (int j = 0; j < len_b; j++) {
             int index = i * len_b + j;
-            if (u_b[j] == 1) {
-                c_b[j] = out_R1[state][1];
-                state = R1[state];
-            } else {
-                c_b[j] = out_R0[state][1];
-                state = R0[state];
+
+            c_b[j] = 0;
+            for (int k = 0; k < 8; k++) {
+                uint8_t u_bit = (u_b[j] >> (7 - k)) & 0x01;
+                uint8_t c_bit;
+                if (u_bit == 1) {
+                    c_bit = out_R1[state][1];
+                    state = R1[state];
+                } else {
+                    c_bit = out_R0[state][1];
+                    state = R0[state];
+                }
+                c_b[j] |= (c_bit << (7 - k));
             }
+            
         }
 		// Copy result to output
 		for (int j = 0; j < len_b; j++) {

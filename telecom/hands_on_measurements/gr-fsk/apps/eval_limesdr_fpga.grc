@@ -177,6 +177,30 @@ blocks:
     coordinate: [800, 20.0]
     rotation: 0
     state: true
+- name: melvec_length
+  id: variable
+  parameters:
+    comment: ''
+    value: '20'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [792, 220.0]
+    rotation: 0
+    state: true
+- name: n_melvecs
+  id: variable
+  parameters:
+    comment: ''
+    value: '20'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [792, 156.0]
+    rotation: 0
+    state: true
 - name: noiseQuery
   id: variable_qtgui_push_button
   parameters:
@@ -210,12 +234,24 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: '100'
+    value: 100*2
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
     coordinate: [1056, 20.0]
+    rotation: 0
+    state: true
+- name: payload_out
+  id: variable
+  parameters:
+    comment: ''
+    value: payload_len//2
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [888, 28.0]
     rotation: 0
     state: true
 - name: rx_gain
@@ -270,7 +306,7 @@ blocks:
     gui_hint: ''
     label: TX power used (no impact, just for logging)
     type: int
-    value: '0'
+    value: '-30'
   states:
     bus_sink: false
     bus_source: false
@@ -411,7 +447,7 @@ blocks:
     dacVal: '180'
     digital_bandw_ch0: samp_rate
     digital_bandw_ch1: samp_rate
-    dspcfg_PASSTHROUGH_LEN: (packet_len+1)*8*int(samp_rate/data_rate)+int(samp_rate/data_rate)
+    dspcfg_PASSTHROUGH_LEN: (packet_len+1)*int(samp_rate/data_rate)+int(samp_rate/data_rate)
     dspcfg_THRESHOLD: K_threshold
     dspcfg_preamble_en: Enable_detection
     filename: ''
@@ -475,7 +511,7 @@ blocks:
     pass_tags: 'False'
     timeout: '100'
     type: byte
-    vlen: payload_len
+    vlen: payload_out
   states:
     bus_sink: false
     bus_source: false

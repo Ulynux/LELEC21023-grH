@@ -25,6 +25,80 @@ from gnuradio import gr
 
 from .utils import logging, measurements_logger
 
+R1 = np.array([2,1,3,0])
+R0 = np.array([0,3,1,2])
+out_R1 = np.array([[1,1],[1,0],[1,1],[1,0]])
+out_R0 = np.array([[0,0],[0,1],[0,0],[0,1]])
+symb_R1 = np.array([1.0 + 1.0j, 1.0 + 0.0j, 1.0 + 1.0j, 1.0 + 0.0j])
+symb_R0 = np.array([0.0 + 0.0j, 0.0 + 1.0j, 0.0 + 0.0j, 0.0 + 1.0j])
+len_b = 100
+
+
+def conv_encoder(u):
+    """
+    This function encodes the bit stream <u> with a convolutional encoder 
+    whose trellis is described by <R1>, <R0>, <out_R1> and <out_R0>, producing 
+    a bit stream <c>. The encoding process works on blocks of <len_b> bits, 
+    each block being encoded seprately.
+    
+    In the below function, the block separation has already been handled. You
+    need to fill in the numpy array <c_i> which is the non-systematic part of the 
+    coded sequence corresponding to the input block <u_i>.    
+
+    Parameters
+    ----------
+    u : 1D numpy array
+        Input sequence.
+    R1 : 1D numpy array
+        Trellis decomposition - transitions if 1.
+    R0 : 1D numpy array
+        Trellis decomposition - transitions of 0.
+    out_R1 : 2D numpy array
+        Trellis decomposition - output bits corresponding to transitions with 1.
+    out_R0 : 2D numpy array
+        Trellis decomposition - output bits corresponding to transitions with 1.
+    len_b : int
+        Length of each block. We assume that N_b = len(u)/len_b is an integer!
+
+    Returns
+    -------
+    u : 1D numpy array
+        Systematic part of the coded sequence (i.e. the input bit stream).
+    c : 1D numpy array
+        Non-systematic part of the coded sequence.
+    """
+    # Viterbi encoder parameters
+
+
+    # number of states in the trellis
+    nb_states = len(R1)
+    
+    ## Block decomposition for the non-systematic output
+    N_b = int(len(u)/len_b)
+    
+    u_b = np.reshape(u,(N_b,len_b))
+    c_b = np.zeros(u_b.shape,dtype=np.int32)
+    
+    # block convolutional encoder (non-systematic output)
+    for i in range(0,N_b): 
+        # input of block i
+        u_i = u_b[i,:]
+        # non systematic output of block i (TO FILL!)
+        c_i = c_b[i,:] 
+        state = 0
+        for j in range(0,len_b):
+            if u_i[j] == 1:
+                c_i[j] = out_R1[state,1]
+                state = R1[state]
+
+            else:
+                c_i[j] = out_R0[state,1]
+                state = R0[state]
+                            
+    # non-systematic output
+    c = np.reshape(c_b,u.shape)
+    
+    return (u,c)
 
 def reflect_data(x, width):
     # See: https://stackoverflow.com/a/20918545
@@ -79,15 +153,6 @@ def crc_poly(data, n, poly, crc=0, ref_in=False, ref_out=False, xor_out=0):
 
 def viterbi_decoder(x_tilde):
 
-
-
-    R1 = np.array([2,1,3,0])
-    R0 = np.array([0,3,1,2])
-    out_R1 = np.array([[1,1],[1,0],[1,1],[1,0]])
-    out_R0 = np.array([[0,0],[0,1],[0,0],[0,1]])
-    symb_R1 = np.array([1.0 + 1.0j, 1.0 + 0.0j, 1.0 + 1.0j, 1.0 + 0.0j])
-    symb_R0 = np.array([0.0 + 0.0j, 0.0 + 1.0j, 0.0 + 0.0j, 0.0 + 1.0j])
-    len_b = 1648
 
     def dist(a,b):
         distance = np.abs(a-b)
@@ -243,18 +308,17 @@ class packet_parser(gr.basic_block):
         payload_bits = viterbi_decoder(payload_bits)
         payload = np.packbits(payload_bits)
 
-        print("P2 ",payload[2])
-        print("P3 ",payload[3])
+        
+        packet_rencoded = conv_encoder(np.unpackbits(payload))
+        packet_rencoded = np.packbits(packet_rencoded)
+
 
         crc = pkt_bytes[self.payload_len : self.payload_len + self.crc_len]
-        print("pkt_bytes", len(pkt_bytes))
+
         output_items[0][0] = payload
-        print("Output length", len(output_items))
-        print("Output[0]", len(output_items[0]))
-        print("Output[0][0]", len(output_items[0][0]))
 
         crc_verif = crc_poly(
-            bytearray(payload_init),
+            bytearray(packet_rencoded),
             8,
             0x07,
             crc=0xFF,

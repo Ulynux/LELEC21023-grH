@@ -39,7 +39,7 @@ def reader(port=None):
         line = ""
         while not line.endswith("\n"):
             line += ser.read_until(b"\n", size=2 * N_MELVECS * MELVEC_LENGTH).decode(
-                "ascii"
+                "utf-8",errors="ignore"
             )
             # print(line)
         line = line.strip()

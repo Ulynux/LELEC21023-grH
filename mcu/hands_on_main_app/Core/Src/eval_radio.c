@@ -9,14 +9,23 @@
 #include "s2lp.h"
 
 
+
+
+
+
 void eval_radio(void)
 {
 	DEBUG_PRINT("[DBG] Radio evaluation mode\r\n");
 
-	uint8_t buf[PAYLOAD_LEN];
-	for (uint16_t i=0; i < PAYLOAD_LEN; i++) {
+	uint8_t buf[PAYLOAD_LEN*2];
+	for (uint16_t i=0; i < PAYLOAD_LEN*2; i+=2) {
 		buf[i] = (uint8_t) (i & 0xFF);
 	}
+	conv_encoder(buf, buf+PAYLOAD_LEN, PAYLOAD_LEN);
+	for (int n = 0; n < PAYLOAD_LEN*2; n++){
+		printf("%u ", buf[n]);
+	}
+	printf("\r\n");
 
 	for (int32_t lvl = MIN_PA_LEVEL; lvl <= MAX_PA_LEVEL; lvl++) {
 		btn_press = 0;
@@ -29,7 +38,8 @@ void eval_radio(void)
 		DEBUG_PRINT("=== Configured PA level to %ld dBm, sending %d packets at this level\r\n", lvl, N_PACKETS);
 
 		for (uint16_t i=0; i < N_PACKETS; i++) {
-			HAL_StatusTypeDef err = S2LP_Send(buf, PAYLOAD_LEN);
+			
+			HAL_StatusTypeDef err = S2LP_Send(buf, PAYLOAD_LEN*2);
 			if (err) {
 				Error_Handler();
 			}

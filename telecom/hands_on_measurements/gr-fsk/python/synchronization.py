@@ -19,7 +19,7 @@
 #
 
 from distutils.version import LooseVersion
-
+from scipy.signal import savgol_filter
 import numpy as np
 import pmt
 from gnuradio import gr
@@ -29,41 +29,88 @@ from .utils import logging, measurements_logger
 
 def cfo_estimation(y, B, R, Fdev):
     """
-    Estimate CFO using Moose algorithm, on first samples of preamble
-    """        
-    N = 2  # block of 4 bits (instructions)
-    Nt = N*R # Number of blocks used for CFO estimation    
+    Estimates CFO using Moose algorithm, on first samples of preamble.
+    """
+
     
-    # TO DO: extract 2 blocks of size N*R at the start of y
-    block1 = y[:Nt]
-    block2 = y[Nt:2*Nt] 
-    alpha_hat = np.sum(block2 * np.conj(block1))
-    # TO DO: apply the Moose algorithm on these two blocks to estimate the CFO
+    N = np.array([2, 4, 8]) # Block of 4 bits (instructions) / Block of 2 bits (respect condition |cfo| < B/2N with cfo_range = 10e4)
+    Nt = N*R # Number of blocks used for CFO estimation
+    T = 1/B # B=1/T
+
+    y = y.copy()
+    y_copy = y.copy()
+    cfo_est = 0
     
-    cfo_est = (1/(2*np.pi*1/B*Nt/R)) * np.angle(alpha_hat)
+    for i in range(len(N)):
+
+        # Extract 2 blocks of size N*R at the start of y
+        block1 = y[:Nt[i]]
+        block2 = y[Nt[i]:2*Nt[i]] 
+        alpha_hat = np.sum(block2 * np.conj(block1))
+
+        # Apply the Moose algorithm on these two blocks to estimate the CFO
+        cfo_est += (1/(2*np.pi*T*Nt[i]/R)) * np.angle(alpha_hat)
+
+        # Correct the signal with the estimated CFO
+        y = np.exp(-1j * 2 * np.pi * cfo_est * np.arange(len(y)) / (B*R)) * y_copy
 
     return cfo_est
 
+bypass_sto_estimation = False
+
 
 def sto_estimation(y, B, R, Fdev):
+
     """
-    Estimate symbol timing (fractional) based on phase shifts
+    Estimates symbol timing (fractional) based on phase shifts.
     """
+
+    order = 2 # Order of the finite difference
+    
+
+    # Computation of derivatives of phase function
     phase_function = np.unwrap(np.angle(y))
-    phase_derivative_sign = phase_function[1:] - phase_function[:-1]
-    sign_derivative = np.abs(phase_derivative_sign[1:] - phase_derivative_sign[:-1])
+
+    phase_derivative_1 = phase_function[1:] - phase_function[:-1]
+    phase_derivative_2 = np.abs(phase_derivative_1[1:] - phase_derivative_1[:-1])
+
+    def second_derivative(function, ord):
+        # Compute the central finite difference of with error term of order ord (2 or 4)
+        derivative = np.zeros(len(phase_function))
+        
+        if ord == 2:
+            # (U+h − 2U0 + U-h)/h^2
+            derivative[1:-1] = (function[2:] - 2 * function[1:-1] + function[:-2])
+
+        if ord == 4:
+            # (−U2h + 16Uh − 30U0 + 16U−h − U−2h)/12h^2
+            derivative[2:-2] = (-function[4:] + 16 * function[3:-1] - 30 * function[2:-2] + 16 * function[1:-3] - function[:-4])
+
+        if ord == 6:
+            # 2f(x−3h)−27f(x−2h)+270f(x−h)−490f(x)+270f(x+h)−27f(x+2h)+2f(x+3h)​/180h^2
+            derivative[3:-3] = (2*function[6:] - 27*function[5:-1] + 270*function[4:-2] - 490*function[3:-3] + 270*function[2:-4] - 27*function[1:-5] + 2*function[:-6])
+
+        if ord == 8:
+            # −9f(x−4h)+128f(x−3h)−1008f(x−2h)+8064f(x−h)−14350f(x)+8064f(x+h)−1008f(x+2h)+128f(x+3h)−9f(x+4h)​/5040h^2
+            derivative[4:-4] = (-9*function[8:] + 128*function[7:-1] - 1008*function[6:-2] + 8064*function[5:-3] - 14350*function[4:-4] + 8064*function[3:-5] - 1008*function[2:-6] + 128*function[1:-7] - 9*function[:-8])
+
+        return derivative
+
+    phase_function = savgol_filter(phase_function, 51, 3)
+    phase_derivative_2 = np.abs(second_derivative(phase_function, order))
+    #phase_derivative_2 = np.abs(weno5_second_derivative(phase_function, 1/R))
 
     sum_der_saved = -np.inf
     save_i = 0
-
     for i in range(0, R):
-        sum_der = np.sum(sign_derivative[i::R])
+        sum_der = np.sum(phase_derivative_2[i::R])  # Sum every R samples
 
         if sum_der > sum_der_saved:
             sum_der_saved = sum_der
             save_i = i
 
-    return np.mod(save_i + 1, R)
+    # return np.mod(save_i + 1, R)
+    return save_i
 
 
 class synchronization(gr.basic_block):
