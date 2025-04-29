@@ -23,7 +23,7 @@ def extract_data(file_path):
 
 
 file_path = 'telecom/Data.txt'
-  # Remplace par le chemin réel de ton fichier
+# Remplace par le chemin réel de ton fichier
 data_exp = extract_data(file_path)
 
 cfo = []
