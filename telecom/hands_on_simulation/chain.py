@@ -412,7 +412,7 @@ class BasicChain(Chain):
 
         return bits_hat
 
-    bypass_viterbi = True
+    bypass_viterbi = False
 
     def viterbi_decoder(self, x_tilde):
 

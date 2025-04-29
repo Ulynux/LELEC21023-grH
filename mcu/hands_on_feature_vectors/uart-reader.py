@@ -86,15 +86,15 @@ if __name__ == "__main__":
 
             print(f"MEL Spectrogram #{msg_counter}")
 
-            # plt.figure()
-            # plot_specgram(
-            #     melvec.reshape((N_MELVECS, MELVEC_LENGTH)).T,
-            #     ax=plt.gca(),
-            #     is_mel=True,
-            #     title=f"",
-            #     xlabel="Mel vector",
-            # )
-            # # plt.draw()
-            # plt.pause(0.001)
-            # plt.savefig(f"mcu/hands_on_feature_vectors/mel_spectrogram_fire10.png")
-            # # plt.clf()
+            plt.figure()
+            plot_specgram(
+                melvec.reshape((N_MELVECS, MELVEC_LENGTH)).T,
+                ax=plt.gca(),
+                is_mel=True,
+                title=f"",
+                xlabel="Mel vector",
+            )
+            # plt.draw()
+            plt.pause(0.001)
+            plt.savefig(f"mcu/hands_on_feature_vectors/mel_spectrogram_fire10.png")
+            # plt.clf()

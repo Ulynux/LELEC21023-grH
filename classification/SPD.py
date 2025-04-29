@@ -36,7 +36,7 @@ memory_array = np.array(memory)
 # Compute log-likelihoods
 log_likelihood = np.log(memory_array)
 log_likelihood_sum = np.sum(log_likelihood, axis=0)
-
+print(f"Log-likelihoods: {log_likelihood_sum}")
 # Find the most likely class and the second most likely class
 sorted_indices = np.argsort(log_likelihood_sum)[::-1]  # Sort in descending order
 most_likely_class_index = sorted_indices[0]

@@ -4,6 +4,7 @@ from chain import Chain
 from scipy.signal import firwin, freqz
 from scipy.special import erfc
 from scipy.signal import savgol_filter
+
 import csv
 import os
 from tqdm import tqdm
@@ -323,7 +324,7 @@ def run_sim(chain: Chain):
         ax2.set_xlim(ax.get_xlim())
         ax2.xaxis.label.set_color("b")
         ax2.tick_params(axis="x", colors="b")
-        plt.savefig(plots_folder+'SNRe.pdf')
+        plt.savefig(plots_folder+'withViterbi.pdf')
 
 
     # Packet error rate
@@ -359,7 +360,7 @@ def run_sim(chain: Chain):
         ax2.set_xlim(ax.get_xlim())
         ax2.xaxis.label.set_color("b")
         ax2.tick_params(axis="x", colors="b")
-    plt.savefig(plots_folder+"PER_SNRe.pdf")
+    plt.savefig(plots_folder+"withViterbi.pdf")
 
     # Preamble metrics
     # plt.figure()
@@ -383,7 +384,7 @@ def run_sim(chain: Chain):
     plt.savefig(plots_folder+"RMSE_CFO.pdf")
     # Assuming SNRs_dB and RMSE_cfo are your data arrays
     data = np.column_stack((SNRs_dB, RMSE_cfo))
-    np.savetxt(plots_folder+'RMSE_CFO_data.csv', data, delimiter=',', header='SNR_dB,RMSE_cfo', comments='')
+    np.savetxt(plots_folder+'RMSE_CFO_data_wViterbi.csv', data, delimiter=',', header='SNR_dB,RMSE_cfo', comments='')
 
     # RMSE STO
     plt.figure()
