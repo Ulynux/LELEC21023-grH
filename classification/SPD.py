@@ -54,3 +54,30 @@ if confidence >= confidence_threshold:
     print("Submitting the guess...")
 else:
     print(f"Confidence too low ({confidence}). Not submitting the guess.")
+
+a = np.ones((20,20))
+a = a.reshape(-1)
+print(a)
+print("aaaaaaaaaaaaaaaaaaaaa",a.shape)
+
+
+b = a.reshape(-1,20,20,1)
+c = a.reshape(20,20,1)
+print(b.shape,c.shape)
+
+import random  # <-- add this!
+import pandas as pd
+import numpy as np
+
+# Fake Grid Search Results
+np.random.seed(42)
+random.seed(42)  # optional, to match numpy randomness
+param_combinations = 30
+
+results_df = pd.DataFrame({
+    'param_model__kernel_size': random.choices([(3,3), (5,5)], k=param_combinations),
+    'param_model__activation': random.choices(['relu', 'tanh'], k=param_combinations),
+    'param_model__optimizer': random.choices(['adam', 'sgd', 'rmsprop'], k=param_combinations),
+    'param_model__learning_rate': random.choices([0.001, 0.01], k=param_combinations),
+    'mean_test_score': np.random.uniform(0.7, 0.95, param_combinations)
+})
