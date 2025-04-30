@@ -7,10 +7,11 @@ from scipy.signal import savgol_filter
 
 import csv
 import os
+from tqdm import tqdm
 
 
-plots_folder = "telecom/optimisations/Viterbi"
-test_name = "h_no_savgol"
+plots_folder = "telecom/optimisations/h_index/h_1/"
+test_name = "h_1"
 
 
 
@@ -82,7 +83,7 @@ def run_sim(chain: Chain):
     rng = np.random.default_rng()
 
     # For loop on the number of packets to send
-    for n in range(chain.n_packets):
+    for n in tqdm(range(chain.n_packets)):
         # Random generation of payload bits
         bits = rng.integers(2, size=chain.payload_len)
         payload = bits
@@ -329,7 +330,7 @@ def run_sim(chain: Chain):
     # Packet error rate
     fig, ax = plt.subplots(constrained_layout=True)
     ax.plot(SNRs_dB + shift_SNR_out, PER, "-s", label="Simulation")
-
+    # ax.plot(per.SNR_aver +shift_SNR_filter ,per.PACKET_ERROR,"-s",label="Measurements")
 
 
 
@@ -362,16 +363,16 @@ def run_sim(chain: Chain):
     plt.savefig(plots_folder+"withViterbi.pdf")
 
     # Preamble metrics
-    plt.figure()
-    plt.plot(SNRs_dB, preamble_mis * 100, "-s", label="Miss-detection")
-    plt.plot(SNRs_dB, preamble_false * 100, "-s", label="False-detection")
-    plt.title("Preamble detection error ")
-    plt.ylabel("[%]")
-    plt.xlabel("SNR [dB]")
-    plt.ylim([-1, 101])
-    plt.grid()
-    plt.legend()
-    plt.savefig(plots_folder+"Preamble_detection_wViterbi.png")
+    # plt.figure()
+    # plt.plot(SNRs_dB, preamble_mis * 100, "-s", label="Miss-detection")
+    # plt.plot(SNRs_dB, preamble_false * 100, "-s", label="False-detection")
+    # plt.title("Preamble detection error ")
+    # plt.ylabel("[%]")
+    # plt.xlabel("SNR [dB]")
+    # plt.ylim([-1, 101])
+    # plt.grid()
+    # plt.legend()
+    # plt.savefig(plots_folder+"Preamble_detection.png")
 
     # RMSE CFO
     plt.figure()
@@ -380,7 +381,7 @@ def run_sim(chain: Chain):
     plt.ylabel("RMSE [-]")
     plt.xlabel("SNR [dB]")
     plt.grid()
-    plt.savefig(plots_folder+"RMSE_CFO.png")
+    plt.savefig(plots_folder+"RMSE_CFO.pdf")
     # Assuming SNRs_dB and RMSE_cfo are your data arrays
     data = np.column_stack((SNRs_dB, RMSE_cfo))
     np.savetxt(plots_folder+'RMSE_CFO_data_wViterbi.csv', data, delimiter=',', header='SNR_dB,RMSE_cfo', comments='')
@@ -392,7 +393,7 @@ def run_sim(chain: Chain):
     plt.ylabel("RMSE [-]")
     plt.xlabel("SNR [dB]")
     plt.grid()
-    plt.savefig(plots_folder+"RMSE_STO_wViterbi.png")
+    plt.savefig(plots_folder+"RMSE_STO.pdf")
     
     # Save simulation outputs (for later post-processing, building new figures,...)
     save_var = np.column_stack(
@@ -407,7 +408,7 @@ def run_sim(chain: Chain):
             preamble_false,
         )
     )
-    np.savetxt(f"{test_name}.csv", save_var, delimiter="\t")
+    np.savetxt(f"{plots_folder}{test_name}.csv", save_var, delimiter="\t")
     
 
 

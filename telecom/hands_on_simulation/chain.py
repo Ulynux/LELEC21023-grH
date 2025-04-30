@@ -14,7 +14,7 @@ class Chain:
 
     # Communication parameters
     bit_rate: float = BIT_RATE
-    freq_dev: float = BIT_RATE / 2 * 2
+    freq_dev: float = BIT_RATE / 2 * 1
 
     osr_tx: int = 64
     osr_rx: int = 8
@@ -41,7 +41,7 @@ class Chain:
     # Lowpass filter parameters
     numtaps: int = 31
     #cutoff: float = BIT_RATE * osr_rx / 2.0001  # or 2*BIT_RATE,...
-    cutoff = 100000
+    cutoff = 75000
 
     # Viterbi encoder parameters
     R1 = np.array([2,1,3,0])
@@ -51,6 +51,16 @@ class Chain:
     symb_R1 = np.array([1.0 + 1.0j, 1.0 + 0.0j, 1.0 + 1.0j, 1.0 + 0.0j])
     symb_R0 = np.array([0.0 + 0.0j, 0.0 + 1.0j, 0.0 + 0.0j, 0.0 + 1.0j])
     len_b = 206*8
+
+    # Hamming encoder parameters
+    G = np.array([[1,0,0,0,1,0,1],
+                  [0,1,0,0,1,1,0],
+                  [0,0,1,0,1,1,1],
+                  [0,0,0,1,0,1,1]])
+    
+    H = np.array([[1,1,1,0,1,0,0],
+                  [0,1,1,1,0,1,0],
+                  [1,0,1,1,0,0,1]])
 
     # Tx methods
 
@@ -125,6 +135,21 @@ class Chain:
         c = np.reshape(c_b,u.shape)
         
         return (u,c)
+    
+
+    def hamming_encoder(self, u):
+
+        N_b = len(u)//4
+        G = self.G
+        H = self.H
+
+        u_encoded = np.zeros(len(u)//4*7)
+
+        for i in range(N_b):
+            pass
+
+
+
 
     def modulate(self, bits: np.array) -> np.array:
         """
@@ -234,7 +259,7 @@ class BasicChain(Chain):
         R = self.osr_rx # Receiver oversampling factor
         B = self.bit_rate # B=1/T
         
-        N = np.array([2, 4, 8]) # Block of 4 bits (instructions) / Block of 2 bits (respect condition |cfo| < B/2N with cfo_range = 10e4)
+        N = np.array([2]) # Block of 4 bits (instructions) / Block of 2 bits (respect condition |cfo| < B/2N with cfo_range = 10e4)
         Nt = N*R # Number of blocks used for CFO estimation
         T = 1/self.bit_rate  # B=1/T
 
@@ -338,7 +363,7 @@ class BasicChain(Chain):
 
         #     return fxx
         
-        phase_function = savgol_filter(phase_function, 51, 3)
+        # phase_function = savgol_filter(phase_function, 51, 3)
         phase_derivative_2 = np.abs(second_derivative(phase_function, order))
         # phase_derivative_2 = np.abs(weno5_second_derivative(phase_function, 1/R))
 
