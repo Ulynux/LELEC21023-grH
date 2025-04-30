@@ -128,7 +128,6 @@ def main(
             short_sum_1 = np.convolve(melvec.reshape(-1)[:200], np.ones(200) / 200, mode='valid')[0]
             short_sum_2 = np.convolve(melvec.reshape(-1)[200:], np.ones(200) / 200, mode='valid')[0]
 
-            long_sum.append(short_sum_1)
             
             if moving_avg == 0:
                 moving_avg = short_sum_1  
@@ -136,14 +135,16 @@ def main(
             if short_sum_1 >= threshold * moving_avg :
                 energy_flag = True
             else:
+                long_sum.append(short_sum_1)
                 moving_avg = np.mean(long_sum)
             
-            long_sum.append(short_sum_2)
             
             if not energy_flag:
                 if short_sum_2 >= threshold * moving_avg  :
                     energy_flag = True
                 else:
+                    long_sum.append(short_sum_2)
+
                     moving_avg = np.mean(long_sum)
                     logger.info(f"moving_avg  : {moving_avg.round(5)}")
 

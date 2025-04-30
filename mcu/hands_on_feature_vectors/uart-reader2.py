@@ -107,10 +107,10 @@ if __name__ == "__main__":
     else:
         input_stream = reader(port=args.port)
         
-        model = load_model('classification/data/models/CNN_good_bcr.keras')
+        model = load_model('classification/data/models/model_cnn_2D.keras')
 
         # Parameters
-        threshold = 1.7
+        threshold = 5
         confidence_threshold = 0.45
         melvec_length = 400  # Replace with actual value
         n_melvecs = 20       # Replace with actual value
@@ -120,29 +120,38 @@ if __name__ == "__main__":
         moving_avg = 0
         energy_flag = False
         memory = []
-        long_sum = deque(maxlen=5)
+        long_sum = deque(maxlen=10)
         i = 0
-        
+        msg_counter = 0
         for melvec in input_stream:
             print(msg_counter)
             msg_counter += 1
+            # print(melvec)
             melvec = melvec.copy()
+            print(melvec.shape)
             melvec = melvec.astype(np.float64)
+            
+            short_sum_1 = np.convolve(melvec.reshape(-1)[:200], np.ones(200) / 200, mode='valid')[0]
+            short_sum_2 = np.convolve(melvec.reshape(-1)[200:], np.ones(200) / 200, mode='valid')[0]
 
-            # melvec is a 20x20 array => compute the energy to see if there is a signal
-            tmp_moving_avg = np.convolve(melvec.reshape(-1), np.ones(400) / 400, mode='valid')[0] 
-            # convolve retourne un tableau de 1 valeur donc on prend le premier élément
-
-            long_sum.append(tmp_moving_avg)
-            moving_avg = np.mean(long_sum)
+            if moving_avg == 0:
+                moving_avg = short_sum_1  
+                        
+            if short_sum_1 >= threshold * moving_avg :
+                energy_flag = True
+            else:
+                print(f"Energy not detected",moving_avg)
+                long_sum.append(short_sum_1)
+                moving_avg = np.mean(long_sum)
+                
 
             # Threshold detection
-            if tmp_moving_avg >= threshold * moving_avg:
-                energy_flag = True
-                print(f"Energy spike detected. Threshold: {5 * moving_avg}")
-            else:
-                print(f"moving_avg  : {moving_avg.round(5)}")
-                print(tmp_moving_avg.round(5))
+            if not energy_flag:
+                if short_sum_2 >= threshold * moving_avg  :
+                    energy_flag = True
+                else:
+                    long_sum.append(short_sum_2)
+                    moving_avg = np.mean(long_sum)
 
             if energy_flag: # Mtn que l'on est sur qu'il y a un signal, on peut faire la classification 
                             # sans regarder à la valeur du moving average car on ne va pas regarder 
@@ -154,10 +163,27 @@ if __name__ == "__main__":
                 melvec -= np.mean(melvec)
                 melvec = melvec / np.linalg.norm(melvec)
 
-                melvec = melvec.reshape(-1)
+                # melvec = melvec.reshape(1,-1)
+                melvec = melvec.reshape((-1, 20, 20, 1))
+                print("after reshape",melvec.shape)
+                melvec = np.rot90(melvec, k=1)  # Rotate the array 90 degrees counterclockwise
 
-                proba_rf = model_rf.predict(melvec)  # Use predict instead of predict_proba
-                proba_array = np.array(proba_rf)
+                # print(melvec.shape)
+                # print(melvec)
+                fig, ax = plt.subplots()
+                plot_specgram(
+                             melvec[0, :, :, 0],  # Extract the 2D spectrogram from the 4D array
+                            ax=ax,
+                            is_mel=True,
+                            title="",
+                            xlabel="Mel vector",
+                            cb=False  # facultatif : supprime la colorbar pour gagner du temps
+                        )
+                fig.savefig(f"mel_{i}.png")
+                plt.close(fig)
+
+                proba = model.predict(melvec)  # Use predict instead of predict_proba
+                proba_array = np.array(proba)
 
                 memory.append(proba_array)
 
@@ -166,8 +192,13 @@ if __name__ == "__main__":
                     
                     
                     memory_array = np.array(memory)
+                    
+                    ## going from shape (5,1,4) to (5,4)
 
-                    log_likelihood = np.log(memory_array)
+                    memory_array = memory_array.reshape(memory_array.shape[0], -1)
+                    print(memory_array)
+
+                    log_likelihood = np.log(memory_array + 1e-10)  # Adding a small value to avoid log(0)
                     log_likelihood_sum = np.sum(log_likelihood, axis=0)
 
                     sorted_indices = np.argsort(log_likelihood_sum)[::-1]  # Sort in descending order
@@ -178,8 +209,7 @@ if __name__ == "__main__":
 
                     # threshold sur la confiance de la prédiction
                     
-                    confidence_threshold = 0.45  
-                    print(f"Majority voting class after 5 inputs: {majority_class}")
+                    confidence_threshold = 1  
 
                     # On revient à un état où on relance la classification depuis le début
                     # => on clear la mémoire, et on relance le moving average mais on garde les valeurs 
@@ -188,14 +218,15 @@ if __name__ == "__main__":
                     energy_flag  = False
                     memory = []
                     
-                    if majority_class == "gun":
-                        majority_class = "gunshot"
-                    majority_class = CLASSNAMES[majority_class-1]
                     
                     if confidence >= confidence_threshold:
-                        print(f"Most likely class index: {most_likely_class_index}")
-                        print(f"Confidence: {confidence}")
-                                            
+                        majority_class = CLASSNAMES[most_likely_class_index]
+                        if majority_class == "gun":
+                            majority_class = "gunshot"
+                        print(f"Most likely class index: {majority_class}    ",confidence)
+                        # answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{majority_class}", timeout=1)
+                        # json_answer = json.loads(answer.text)
+                        # print(json_answer)                            
                     else:
                         print(f"Confidence too low ({confidence}). Not submitting the guess.")
                     
