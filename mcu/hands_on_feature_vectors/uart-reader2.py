@@ -12,9 +12,13 @@ from collections import Counter
 from sklearn.metrics import accuracy_score, confusion_matrix
 import pandas as pd
 import pickle
+import struct
+
 from classification.utils.plots import plot_specgram
 import seaborn as sns
 from tensorflow.keras.models import load_model
+import keras
+
 def payload_to_melvecs(
     payload: str, melvec_length: int = 20, n_melvecs: int = 20
 ) -> np.ndarray:
