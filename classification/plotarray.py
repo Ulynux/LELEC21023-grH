@@ -421,22 +421,23 @@ a =[[[[-1.68720191e-02],
 import numpy as np
 import matplotlib.pyplot as plt
 a = np.array(a)  # Convert to numpy array
-# a  = a[0, :, :,0]  # Extract the 2D spectrogram
-
+## transform a into 400,
+a = a.flatten()  # Flatten the array into a 1D array with 400 elements
 print(a.shape)
-## a is 1,20,20,1 invert the 20 and 20 
-a = a.reshape(20, 20)  # Reshape to 2D array
+a = a.reshape((-1,20, 20,1)) 
+print(a.shape)
+# Extraire la matrice 2D de l'image
+a_2d = a[0, :, :, 0]  # Supprime les dimensions inutiles (batch et canal)
 
-# flip a counterclockwise 
-a = np.rot90(a, k=1)  # Rotate the array 90 degrees counterclockwise
-### plot a 2D array
+# Afficher avec matshow
+a_2d = a_2d.T  # Transposer la matrice pour l'affichage
 
-fig, ax = plt.subplots()
-cax = ax.matshow(a, cmap='viridis')
-fig.colorbar(cax)
-plt.title("2D Array Heatmap")
-plt.xlabel("X-axis")
-plt.ylabel("Y-axis")
+# Afficher avec imshow
+plt.figure(figsize=(4, 3))
+plt.imshow(a_2d, cmap="jet", aspect="auto")  # Utiliser la matrice 2D
+plt.colorbar(label="Amplitude")
+plt.title("Mel Spectrogram of ")
+plt.xlabel("Time")
+plt.ylabel("Frequency")
+plt.gca().invert_yaxis()
 plt.show()
-# plt.savefig("2D_array_heatmap.png")
-plt.close(fig)

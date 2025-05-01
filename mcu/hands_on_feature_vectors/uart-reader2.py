@@ -33,7 +33,6 @@ def payload_to_melvecs(
     return melvecs
 from collections import deque
 
-model_rf = load_model('classification/data/models/best_cnn_last.keras')  # Write your path to the model here!
 PRINT_PREFIX = "DF:HEX:"
 FREQ_SAMPLING = 10200
 MELVEC_LENGTH = 20
@@ -107,10 +106,11 @@ if __name__ == "__main__":
     else:
         input_stream = reader(port=args.port)
         
-        model = load_model('classification/data/models/model_cnn_2D.keras')
+        model = load_model('classification/data/models/10525.keras')
+        melvecs_to_plot = []
 
         # Parameters
-        threshold = 5
+        threshold = 2
         confidence_threshold = 0.45
         melvec_length = 400  # Replace with actual value
         n_melvecs = 20       # Replace with actual value
@@ -128,7 +128,6 @@ if __name__ == "__main__":
             msg_counter += 1
             # print(melvec)
             melvec = melvec.copy()
-            print(melvec.shape)
             melvec = melvec.astype(np.float64)
             
             short_sum_1 = np.convolve(melvec.reshape(-1)[:200], np.ones(200) / 200, mode='valid')[0]
@@ -162,25 +161,28 @@ if __name__ == "__main__":
                 
                 melvec -= np.mean(melvec)
                 melvec = melvec / np.linalg.norm(melvec)
-
-                # melvec = melvec.reshape(1,-1)
+                melvec = melvec.reshape((20, 20)).T
+                # Ajoutez les dimensions pour le batch et les canaux
                 melvec = melvec.reshape((-1, 20, 20, 1))
-                print("after reshape",melvec.shape)
-                melvec = np.rot90(melvec, k=1)  # Rotate the array 90 degrees counterclockwise
 
-                # print(melvec.shape)
-                # print(melvec)
-                fig, ax = plt.subplots()
-                plot_specgram(
-                             melvec[0, :, :, 0],  # Extract the 2D spectrogram from the 4D array
+                melvecs_to_plot.append(melvec[0, :, :, 0])  # Stockez uniquement le 2D spectrogram
+
+                # Si on a accumulé 5 melspectrograms, on les affiche
+                if len(melvecs_to_plot) == 5:
+                    fig, axes = plt.subplots(1, 5, figsize=(15, 3))  # Créez un subplot avec 5 colonnes
+                    for idx, ax in enumerate(axes):
+                        plot_specgram(
+                            melvecs_to_plot[idx],
                             ax=ax,
                             is_mel=True,
-                            title="",
+                            title=f"Mel {i - 4 + idx}",  # Ajustez l'index pour correspondre aux fichiers
                             xlabel="Mel vector",
-                            cb=False  # facultatif : supprime la colorbar pour gagner du temps
+                            cb=False  # Facultatif : supprime la colorbar
                         )
-                fig.savefig(f"mel_{i}.png")
-                plt.close(fig)
+                    fig.savefig(f"mcu/hands_on_feature_vectors/mel_group_{i // 5}.png")  # Sauvegardez le plot groupé
+                    plt.close(fig)
+                    i+=1
+                    melvecs_to_plot = []  # Réinitialisez la liste après le plot
 
                 proba = model.predict(melvec)  # Use predict instead of predict_proba
                 proba_array = np.array(proba)
