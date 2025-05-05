@@ -320,7 +320,9 @@ class AudioUtil:
         spec, max_mask_pct=0.1, n_freq_masks=1, n_time_masks=1
     ) -> ndarray:
         """
-        Augment the Spectrogram by masking out some sections of it in both the frequency dimension (ie. horizontal bars) and the time dimension (vertical bars) to prevent overfitting and to help the model generalise better. The masked sections are replaced with the mean value.
+        Augment the Spectrogram by masking out some sections of it in both the frequency dimension 
+        (ie. horizontal bars) and the time dimension (vertical bars) to prevent overfitting and to help the model generalise better. 
+        The masked sections are replaced with the mean value.
 
 
         :param spec: The spectrogram.

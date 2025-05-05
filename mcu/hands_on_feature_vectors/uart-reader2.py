@@ -16,8 +16,8 @@ import struct
 
 from classification.utils.plots import plot_specgram
 import seaborn as sns
-from tensorflow.keras.models import load_model
-import keras
+# from tensorflow.keras.models import load_model
+# import keras
 
 def payload_to_melvecs(
     payload: str, melvec_length: int = 20, n_melvecs: int = 20
@@ -106,12 +106,12 @@ if __name__ == "__main__":
     else:
         input_stream = reader(port=args.port)
         
-        model = load_model('classification/data/models/10525.keras')
-        melvecs_to_plot = []
-
+        # model = load_model('classification/data/models/10525.keras')
+        model = pickle.load(open('classification/data/models/RF_05.pickle', 'rb'))
+        pca = pickle.load(open('classification/data/models/PCA_16_RF05.pickle', 'rb'))
         # Parameters
         threshold = 2
-        confidence_threshold = 0.45
+        confidence_threshold = 3
         melvec_length = 400  # Replace with actual value
         n_melvecs = 20       # Replace with actual value
         CLASSNAMES = ["chainsaw", "fire", "fireworks", "gunshot"]
@@ -128,7 +128,6 @@ if __name__ == "__main__":
             msg_counter += 1
             # print(melvec)
             melvec = melvec.copy()
-            melvec = melvec.astype(np.float64)
             
             short_sum_1 = np.convolve(melvec.reshape(-1)[:200], np.ones(200) / 200, mode='valid')[0]
             short_sum_2 = np.convolve(melvec.reshape(-1)[200:], np.ones(200) / 200, mode='valid')[0]
@@ -158,40 +157,42 @@ if __name__ == "__main__":
                             # de celle-ci et recommencer à chaque fois 
                         
                 print(f"Starting classification")
-                
+                melvec = melvec.astype(np.float64)
                 melvec -= np.mean(melvec)
                 melvec = melvec / np.linalg.norm(melvec)
-                melvec = melvec.reshape((20, 20)).T
+                # print(f"Melvec shape: {melvec.reshape(1,-1).shape}")
+                
+                ### -------- pour le CNN
+                # melvec = melvec.reshape((20, 20)).T
                 # Ajoutez les dimensions pour le batch et les canaux
-                melvec = melvec.reshape((-1, 20, 20, 1))
+                # melvec = melvec.reshape((-1, 20, 20, 1))
 
-                melvecs_to_plot.append(melvec[0, :, :, 0])  # Stockez uniquement le 2D spectrogram
+                # melvecs_to_plot.append(melvec[0, :, :, 0])  # Stockez uniquement le 2D spectrogram
 
-                # Si on a accumulé 5 melspectrograms, on les affiche
-                if len(melvecs_to_plot) == 5:
-                    fig, axes = plt.subplots(1, 5, figsize=(15, 3))  # Créez un subplot avec 5 colonnes
-                    for idx, ax in enumerate(axes):
-                        plot_specgram(
-                            melvecs_to_plot[idx],
-                            ax=ax,
-                            is_mel=True,
-                            title=f"Mel {i - 4 + idx}",  # Ajustez l'index pour correspondre aux fichiers
-                            xlabel="Mel vector",
-                            cb=False  # Facultatif : supprime la colorbar
-                        )
-                    fig.savefig(f"mcu/hands_on_feature_vectors/mel_group_{i // 5}.png")  # Sauvegardez le plot groupé
-                    plt.close(fig)
-                    i+=1
-                    melvecs_to_plot = []  # Réinitialisez la liste après le plot
-
-                proba = model.predict(melvec)  # Use predict instead of predict_proba
+                # Affichez le melspectrogram à chaque itération
+                
+                 ### -------- 
+                
+                fig, ax = plt.subplots(figsize=(3, 3))  # Créez un subplot pour un seul spectrogramme
+                plot_specgram(
+                    melvec.reshape((20, 20)).T,  # Reshape le melvec pour l'affichage
+                    ax=ax,
+                    is_mel=True,
+                    title=f"Mel {i}",  # Utilisez l'index actuel
+                    xlabel="Mel vector",
+                    cb=False  # Facultatif : supprime la colorbar
+                )
+                fig.savefig(f"mcu/hands_on_feature_vectors/mel_{i}.png")  # Sauvegardez le plot
+                plt.close(fig)
+                i += 1
+                melvec = pca.transform(melvec.reshape(1, -1))
+                proba = model.predict_proba(melvec)  # Use predict instead of predict_proba
                 proba_array = np.array(proba)
 
                 memory.append(proba_array)
 
                 # Only predict after 5 inputs
                 if len(memory) >= 5:
-                    
                     
                     memory_array = np.array(memory)
                     
@@ -211,7 +212,6 @@ if __name__ == "__main__":
 
                     # threshold sur la confiance de la prédiction
                     
-                    confidence_threshold = 1  
 
                     # On revient à un état où on relance la classification depuis le début
                     # => on clear la mémoire, et on relance le moving average mais on garde les valeurs 

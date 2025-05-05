@@ -41,4 +41,4 @@ if __name__ == "__main__":
             print(f"Current file: {file_name}")
             print(f"Playing sound: {file_path}")
             play_sound(file_path)
-            # time.sleep(10)
+            time.sleep(10)
