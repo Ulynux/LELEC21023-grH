@@ -81,3 +81,39 @@ results_df = pd.DataFrame({
     'param_model__learning_rate': random.choices([0.001, 0.01], k=param_combinations),
     'mean_test_score': np.random.uniform(0.7, 0.95, param_combinations)
 })
+
+
+def time_shift(audio, shift_pct):
+    """
+    Shifts the signal to the left or right by a percentage of its length.
+    Values at the end are 'wrapped around' to the start of the transformed signal.
+
+    :param audio: The audio signal as a tuple (signal, sample_rate).
+    :param shift_pct: The percentage (between -1.0 and 1.0) by which to circularly shift the signal.
+                      Positive values shift to the right, negative values shift to the left.
+    :return: The shifted audio signal as a tuple (signal, sample_rate).
+    """
+    sig, sr = audio
+    sig_len = len(sig)
+    
+    # Convert shift percentage to number of samples
+    shift_amt =int((shift_pct) * sr)
+    print("shift_amt",shift_amt)
+    # Ensure the shift amount is within valid bounds
+    shift_amt = shift_amt % sig_len  # Handle cases where shift_amt > sig_len or < -sig_len
+    
+    # Perform the circular shift
+    shifted_sig = np.roll(sig, shift_amt)
+    
+    return (shifted_sig, sr)
+# Exemple de signal audio
+audio = (np.array([[1, 2, 3, 4, 5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]]), 10200)  # Signal fictif avec une fréquence d'échantillonnage de 1000 Hz
+
+# Décaler le signal de 50% de sa longueur
+shifted_audio = time_shift(audio, shift_pct=0.0504)
+print("Signal original :", audio[0])
+print("Signal décalé :", shifted_audio[0])
+
+# Décaler le signal de -50% (vers la gauche)
+shifted_audio_left = time_shift(audio, shift_pct=-0.5)
+print("Signal décalé vers la gauche :", shifted_audio_left[0])

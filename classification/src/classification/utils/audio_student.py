@@ -58,7 +58,7 @@ class AudioUtil:
         sign *= C
         return (sign, sr)
 
-    def resample(audio, newsr=11025) -> Tuple[np.ndarray, int]:
+    def resample(audio, newsr=10200) -> Tuple[np.ndarray, int]:
         """
         Resample to target sampling frequency.
 
@@ -104,7 +104,7 @@ class AudioUtil:
 
         return (sig, sr)
 
-    def time_shift(audio, shift_limit=0.3) -> Tuple[ndarray, int]:
+    def time_shift_random(audio, shift_limit=0.3) -> Tuple[ndarray, int]:
         """
         Shifts the signal to the left or right by some percent. Values at the end are 'wrapped around' to the start of the transformed signal.
 
@@ -115,6 +115,30 @@ class AudioUtil:
         sig_len = len(sig)
         shift_amt = int(random.random() * shift_limit * sig_len)
         return (np.roll(sig, shift_amt), sr)
+    
+    def time_shift(audio, shift_ms: float) -> Tuple[ndarray, int]:
+        """
+        Shifts the signal to the left or right by a fixed duration in milliseconds.
+        Values at the end are 'wrapped around' to the start of the transformed signal.
+
+        :param audio: The audio signal as a tuple (signal, sample_rate).
+        :param shift_ms: The duration (in milliseconds) by which to circularly shift the signal.
+                        Positive values shift to the right, negative values shift to the left.
+        :return: The shifted audio signal as a tuple (signal, sample_rate).
+        """
+        sig, sr = audio
+        sig_len = len(sig)
+        
+        # Convert shift duration (ms) to number of samples
+        shift_amt = int((shift_ms / 1000) * sr)
+        
+        # Ensure the shift amount is within valid bounds
+        shift_amt = shift_amt % sig_len  # Handle cases where shift_amt > sig_len or < -sig_len
+        
+        # Perform the circular shift
+        shifted_sig = np.roll(sig, shift_amt)
+        
+        return (shifted_sig, sr)
 
     def scaling(audio, scaling_limit=5) -> Tuple[ndarray, int]:
         """
@@ -263,7 +287,7 @@ class AudioUtil:
         return sig, sr
 
 
-    def specgram(audio, Nft=512, fs2=11025) -> ndarray:
+    def specgram(audio, Nft=512, fs2=10200) -> ndarray:
         """
         Compute a Spectrogram.
 
@@ -282,7 +306,7 @@ class AudioUtil:
         
         return stft
 
-    def get_hz2mel(fs2=11025, Nft=512, Nmel=20) -> ndarray:
+    def get_hz2mel(fs2=10200, Nft=512, Nmel=20) -> ndarray:
         """
         Get the hz2mel conversion matrix.
 
@@ -296,7 +320,7 @@ class AudioUtil:
 
         return mels
 
-    def melspectrogram(audio, Nmel=20, Nft=512, fs2=11025) -> ndarray:
+    def melspectrogram(audio, Nmel=20, Nft=512, fs2=10200) -> ndarray:
         """
         Generate a Melspectrogram.
 
@@ -315,7 +339,34 @@ class AudioUtil:
         mels = mels / np.max(mels)
         melspec = np.dot(mels, np.abs(stft))
         return melspec
+    def split_melspectrogram(melspec, target_width=20):
+        """
+        Divise un melspectrogram (50, 20) en deux melspectrograms (20, 20) en sélectionnant
+        les parties avec le plus d'énergie.
 
+        :param melspec: Le melspectrogram d'entrée de dimensions (50, 20).
+        :param target_width: La largeur cible pour les sous-melspectrograms.
+        :return: Deux sous-melspectrograms de dimensions (20, 20).
+        """
+        num_cols = melspec.shape[1]
+        if num_cols < target_width:
+            raise ValueError("Le melspectrogram doit avoir au moins autant de colonnes que target_width.")
+
+        # Étape 1 : Calculer l'énergie pour chaque fenêtre de 20 colonnes
+        energies = [
+            np.sum(melspec[:, i:i + target_width] ** 2)
+            for i in range(1,num_cols - target_width + 1)
+        ]
+
+        # Étape 2 : Trouver les indices des deux fenêtres avec le plus d'énergie
+        top_indices = np.argsort(energies)[-2:]  # Les deux indices avec la plus grande énergie
+        top_indices = sorted(top_indices)  # Garder l'ordre pour rester ordonné
+
+        # Étape 3 : Extraire les deux sous-melspectrograms
+        sub_melspec_1 = melspec[:, top_indices[0]:top_indices[0] + target_width]
+        sub_melspec_2 = melspec[:, top_indices[1]:top_indices[1] + target_width]
+
+        return sub_melspec_1, sub_melspec_2
     def spectro_aug_timefreq_masking(
         spec, max_mask_pct=0.1, n_freq_masks=1, n_time_masks=1
     ) -> ndarray:
@@ -360,7 +411,7 @@ class Feature_vector_DS:
         Nft=512,
         nmel=20,
         duration=500,
-        shift_pct=0.4,
+        shift_pct=0,
         normalize=False,
         data_aug=None,
         pca=None,
@@ -369,7 +420,7 @@ class Feature_vector_DS:
         self.Nft = Nft
         self.nmel = nmel
         self.duration = duration  # ms
-        self.sr = 11025
+        self.sr = 10200
         self.shift_pct = shift_pct  # percentage of total
         self.normalize = normalize
         self.data_aug = data_aug
@@ -417,7 +468,7 @@ class Feature_vector_DS:
                 aud = AudioUtil.add_background_noise(aud, SNR = 20)
 
         # aud = AudioUtil.normalize(aud, target_dB=10)
-        aud = (aud[0] / np.max(np.abs(aud[0])), aud[1])
+        # aud = (aud[0] / np.max(np.abs(aud[0])), aud[1])
         return aud
 
     def __getitem__(self, cls_index: Tuple[str, int]) -> Tuple[ndarray, int]:

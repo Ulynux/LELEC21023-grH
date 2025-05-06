@@ -28,6 +28,8 @@
 #include <boost/format.hpp>
 
 #include <stdexcept>
+#include <iostream>   // pour std::cout et std::endl
+#include <bitset>     // pour std::bitset
 
 device_handler_fpga::device_handler_fpga()
 {
@@ -559,6 +561,8 @@ device_handler_fpga::set_gain(int device_number, bool direction, int channel, un
 {
     unsigned gain_value = 0;
 
+    uint16_t fixed_gain = 0;
+
     if (gain_dB >= 0 && gain_dB <= 73) {
         GR_LOG_DEBUG(d_debug_logger, "device_handler_fpga::set_gain(): ");
 
@@ -571,6 +575,70 @@ device_handler_fpga::set_gain(int device_number, bool direction, int channel, un
         short_sum = get_dspcfg_short_sum(device_number);
         long_sum  = get_dspcfg_long_sum(device_number);
         std::cout << "Clear : Short = " << short_sum << " /  Long = " << long_sum << std::endl;
+
+
+        LMS_ReadLMSReg(
+            device_handler_fpga::getInstance().get_device(device_number), 0x0113, &fixed_gain);
+
+            std::cout << "Fixed gain before = " << std::bitset<16>(fixed_gain) << std::endl;
+
+        uint16_t reg_value;
+
+        // Write AGC loop gain at address 0x0408, 16 bits LSB
+        LMS_WriteLMSReg(
+            device_handler_fpga::getInstance().get_device(device_number), 0x0408, 0x6000);
+
+        // Write AGC loop gain at address 0x0409[1:0], 2 bits MSB
+        // Write AGC_ADESIRED[15:4]
+        // Bits 2 and 3 are reserved
+
+        LMS_ReadLMSReg(
+            device_handler_fpga::getInstance().get_device(device_number), 0x0409, &reg_value);
+        reg_value &= 0x000C; // Clear all bits except 2 and 3
+        reg_value |= 0x00F0; 
+        LMS_WriteLMSReg(
+            device_handler_fpga::getInstance().get_device(device_number), 0x0409, reg_value);
+
+        // Write at address 0x040A, AGC_Mode[13:12] = 0, AGC_AVG[2:0] = 2
+        
+        LMS_ReadLMSReg(
+            device_handler_fpga::getInstance().get_device(device_number), 0x040A, &reg_value);
+        reg_value &= 0xCFFF; // Clear all bits except 12 and 13
+        reg_value |= 0x0005; // Set bits 12 and 13 to 0, bits [2:0] = 2
+        LMS_WriteLMSReg(
+            device_handler_fpga::getInstance().get_device(device_number), 0x040A, reg_value);
+
+        // Write AGC bypass at address 0x040C, bit 6 = 1 (7th bit)
+        LMS_ReadLMSReg(
+            device_handler_fpga::getInstance().get_device(device_number), 0x040C, &reg_value);
+        reg_value &= 0xFFBF; // Keep all bits except 6
+        LMS_WriteLMSReg(
+            device_handler_fpga::getInstance().get_device(device_number), 0x040C, reg_value);
+        
+            /*
+        LMS_ReadLMSReg(
+            device_handler_fpga::getInstance().get_device(device_number), 0x0113, &reg_value);
+        reg_value &= 0xFC3C; // Keep all bits except 6
+        reg_value |= 0x0041; // Set bits 12 and 13 to 0, bits [2:0] = 2
+        LMS_WriteLMSReg(
+            device_handler_fpga::getInstance().get_device(device_number), 0x0113, reg_value);
+        */
+
+
+    
+        /*LMS_ReadLMSReg(
+            device_handler_fpga::getInstance().get_device(device_number), 0x0113, &fixed_gain);
+
+        std::cout << "Fixed gain after = " << std::bitset<16>(fixed_gain) << std::endl;
+        */
+    
+
+
+        
+        
+
+
+
 
         LMS_SetGaindB(device_handler_fpga::getInstance().get_device(device_number),
                       direction,
