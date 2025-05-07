@@ -110,8 +110,8 @@ def main(
     model = keras.models.load_model('classification/data/models/CNN_good_bcr.keras')
 
 
-    moving_avg = np.inf
-    threshold = 7.5
+    moving_avg = 0
+    threshold = 5
     energy_flag = False
     memory = []
     ## Using a queue to store avg of before 
@@ -126,19 +126,27 @@ def main(
 
             # Compute the energy
             short_sum_1 = np.convolve(melvec.reshape(-1)[:200], np.ones(200) / 200, mode='valid')[0]
-            short_sum_2 = np.convolve(melvec.reshape(-1)[200:], np.ones(200) / 200, mode='valid')[0] 
-                     
+            short_sum_2 = np.convolve(melvec.reshape(-1)[200:], np.ones(200) / 200, mode='valid')[0]
+
+            
+            if moving_avg == 0:
+                moving_avg = short_sum_1  
+                          
             if short_sum_1 >= threshold * moving_avg :
                 energy_flag = True
-
-            if short_sum_2 >= threshold * moving_avg :
-                energy_flag = True           
+            else:
+                long_sum.append(short_sum_1)
+                moving_avg = np.mean(long_sum)
+            
             
             if not energy_flag:
-                long_sum.append(short_sum_1)
-                long_sum.append(short_sum_2)
-                moving_avg = np.mean(long_sum)
-                logger.info(f"moving_avg  : {moving_avg.round(5)}")
+                if short_sum_2 >= threshold * moving_avg  :
+                    energy_flag = True
+                else:
+                    long_sum.append(short_sum_2)
+
+                    moving_avg = np.mean(long_sum)
+                    logger.info(f"moving_avg  : {moving_avg.round(5)}")
 
             if energy_flag: # Mtn que l'on est sur qu'il y a un signal, on peut faire la classification 
                             # sans regarder à la valeur du moving average car on ne va pas regarder 
@@ -153,17 +161,17 @@ def main(
                 # melvec = melvec.reshape(1,-1)
                 melvec = melvec.reshape((-1, 20, 20, 1))
                 
-                # fig, ax = plt.subplots()
-                # plot_specgram(
-                #             melvec[0, :, :, 0],
-                #             ax=ax,
-                #             is_mel=True,
-                #             title="",
-                #             xlabel="Mel vector",
-                #             cb=False  # facultatif : supprime la colorbar pour gagner du temps
-                #         )
-                # fig.savefig(f"mel_{i}.png")
-                # plt.close(fig)
+                fig, ax = plt.subplots()
+                plot_specgram(
+                            melvec[0, :, :, 0],
+                            ax=ax,
+                            is_mel=True,
+                            title="",
+                            xlabel="Mel vector",
+                            cb=False  # facultatif : supprime la colorbar pour gagner du temps
+                        )
+                fig.savefig(f"mel_{i}.png")
+                plt.close(fig)
 
                 i+=1
                 proba = model.predict(melvec)
@@ -172,7 +180,7 @@ def main(
                 memory.append(proba_array)
 
                 # Only predict after 5 inputs
-                if len(memory) >= 4:
+                if len(memory) >= 5:
                     
                     
                     memory_array = np.array(memory)
@@ -182,7 +190,7 @@ def main(
                     memory_array = memory_array.reshape(memory_array.shape[0], -1)
                     logger.info(memory_array)
 
-                    log_likelihood = np.log(memory_array)
+                    log_likelihood = np.log(memory_array + 1e-10)  # Adding a small value to avoid log(0)
                     log_likelihood_sum = np.sum(log_likelihood, axis=0)
 
                     sorted_indices = np.argsort(log_likelihood_sum)[::-1]  # Sort in descending order

@@ -12,9 +12,13 @@ from collections import Counter
 from sklearn.metrics import accuracy_score, confusion_matrix
 import pandas as pd
 import pickle
+import struct
+
 from classification.utils.plots import plot_specgram
 import seaborn as sns
-from tensorflow.keras.models import load_model
+# from tensorflow.keras.models import load_model
+# import keras
+
 def payload_to_melvecs(
     payload: str, melvec_length: int = 20, n_melvecs: int = 20
 ) -> np.ndarray:
@@ -29,7 +33,6 @@ def payload_to_melvecs(
     return melvecs
 from collections import deque
 
-model_rf = load_model('classification/data/models/best_cnn_last.keras')  # Write your path to the model here!
 PRINT_PREFIX = "DF:HEX:"
 FREQ_SAMPLING = 10200
 MELVEC_LENGTH = 20
@@ -103,11 +106,12 @@ if __name__ == "__main__":
     else:
         input_stream = reader(port=args.port)
         
-        model = load_model('classification/data/models/CNN_good_bcr.keras')
-
+        # model = load_model('classification/data/models/10525.keras')
+        model = pickle.load(open('classification/data/models/RF_05.pickle', 'rb'))
+        pca = pickle.load(open('classification/data/models/PCA_16_RF05.pickle', 'rb'))
         # Parameters
-        threshold = 1.7
-        confidence_threshold = 0.45
+        threshold = 2
+        confidence_threshold = 3
         melvec_length = 400  # Replace with actual value
         n_melvecs = 20       # Replace with actual value
         CLASSNAMES = ["chainsaw", "fire", "fireworks", "gunshot"]
@@ -116,29 +120,36 @@ if __name__ == "__main__":
         moving_avg = 0
         energy_flag = False
         memory = []
-        long_sum = deque(maxlen=5)
+        long_sum = deque(maxlen=10)
         i = 0
-        
+        msg_counter = 0
         for melvec in input_stream:
             print(msg_counter)
             msg_counter += 1
+            # print(melvec)
             melvec = melvec.copy()
-            melvec = melvec.astype(np.float64)
+            
+            short_sum_1 = np.convolve(melvec.reshape(-1)[:200], np.ones(200) / 200, mode='valid')[0]
+            short_sum_2 = np.convolve(melvec.reshape(-1)[200:], np.ones(200) / 200, mode='valid')[0]
 
-            # melvec is a 20x20 array => compute the energy to see if there is a signal
-            tmp_moving_avg = np.convolve(melvec.reshape(-1), np.ones(400) / 400, mode='valid')[0] 
-            # convolve retourne un tableau de 1 valeur donc on prend le premier élément
-
-            long_sum.append(tmp_moving_avg)
-            moving_avg = np.mean(long_sum)
+            if moving_avg == 0:
+                moving_avg = short_sum_1  
+                        
+            if short_sum_1 >= threshold * moving_avg :
+                energy_flag = True
+            else:
+                print(f"Energy not detected",moving_avg)
+                long_sum.append(short_sum_1)
+                moving_avg = np.mean(long_sum)
+                
 
             # Threshold detection
-            if tmp_moving_avg >= threshold * moving_avg:
-                energy_flag = True
-                print(f"Energy spike detected. Threshold: {5 * moving_avg}")
-            else:
-                print(f"moving_avg  : {moving_avg.round(5)}")
-                print(tmp_moving_avg.round(5))
+            if not energy_flag:
+                if short_sum_2 >= threshold * moving_avg  :
+                    energy_flag = True
+                else:
+                    long_sum.append(short_sum_2)
+                    moving_avg = np.mean(long_sum)
 
             if energy_flag: # Mtn que l'on est sur qu'il y a un signal, on peut faire la classification 
                             # sans regarder à la valeur du moving average car on ne va pas regarder 
@@ -146,24 +157,51 @@ if __name__ == "__main__":
                             # de celle-ci et recommencer à chaque fois 
                         
                 print(f"Starting classification")
-                
+                melvec = melvec.astype(np.float64)
                 melvec -= np.mean(melvec)
                 melvec = melvec / np.linalg.norm(melvec)
+                # print(f"Melvec shape: {melvec.reshape(1,-1).shape}")
+                
+                ### -------- pour le CNN
+                # melvec = melvec.reshape((20, 20)).T
+                # Ajoutez les dimensions pour le batch et les canaux
+                # melvec = melvec.reshape((-1, 20, 20, 1))
 
-                melvec = melvec.reshape(-1)
+                # melvecs_to_plot.append(melvec[0, :, :, 0])  # Stockez uniquement le 2D spectrogram
 
-                proba_rf = model_rf.predict(melvec)  # Use predict instead of predict_proba
-                proba_array = np.array(proba_rf)
+                # Affichez le melspectrogram à chaque itération
+                
+                 ### -------- 
+                
+                fig, ax = plt.subplots(figsize=(3, 3))  # Créez un subplot pour un seul spectrogramme
+                plot_specgram(
+                    melvec.reshape((20, 20)).T,  # Reshape le melvec pour l'affichage
+                    ax=ax,
+                    is_mel=True,
+                    title=f"Mel {i}",  # Utilisez l'index actuel
+                    xlabel="Mel vector",
+                    cb=False  # Facultatif : supprime la colorbar
+                )
+                fig.savefig(f"mcu/hands_on_feature_vectors/mel_{i}.png")  # Sauvegardez le plot
+                plt.close(fig)
+                i += 1
+                melvec = pca.transform(melvec.reshape(1, -1))
+                proba = model.predict_proba(melvec)  # Use predict instead of predict_proba
+                proba_array = np.array(proba)
 
                 memory.append(proba_array)
 
                 # Only predict after 5 inputs
                 if len(memory) >= 5:
                     
-                    
                     memory_array = np.array(memory)
+                    
+                    ## going from shape (5,1,4) to (5,4)
 
-                    log_likelihood = np.log(memory_array)
+                    memory_array = memory_array.reshape(memory_array.shape[0], -1)
+                    print(memory_array)
+
+                    log_likelihood = np.log(memory_array + 1e-10)  # Adding a small value to avoid log(0)
                     log_likelihood_sum = np.sum(log_likelihood, axis=0)
 
                     sorted_indices = np.argsort(log_likelihood_sum)[::-1]  # Sort in descending order
@@ -174,8 +212,6 @@ if __name__ == "__main__":
 
                     # threshold sur la confiance de la prédiction
                     
-                    confidence_threshold = 0.45  
-                    print(f"Majority voting class after 5 inputs: {majority_class}")
 
                     # On revient à un état où on relance la classification depuis le début
                     # => on clear la mémoire, et on relance le moving average mais on garde les valeurs 
@@ -184,14 +220,15 @@ if __name__ == "__main__":
                     energy_flag  = False
                     memory = []
                     
-                    if majority_class == "gun":
-                        majority_class = "gunshot"
-                    majority_class = CLASSNAMES[majority_class-1]
                     
                     if confidence >= confidence_threshold:
-                        print(f"Most likely class index: {most_likely_class_index}")
-                        print(f"Confidence: {confidence}")
-                                            
+                        majority_class = CLASSNAMES[most_likely_class_index]
+                        if majority_class == "gun":
+                            majority_class = "gunshot"
+                        print(f"Most likely class index: {majority_class}    ",confidence)
+                        # answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{majority_class}", timeout=1)
+                        # json_answer = json.loads(answer.text)
+                        # print(json_answer)                            
                     else:
                         print(f"Confidence too low ({confidence}). Not submitting the guess.")
                     

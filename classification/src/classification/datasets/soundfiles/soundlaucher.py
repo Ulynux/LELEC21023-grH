@@ -13,16 +13,16 @@ if __name__ == "__main__":
     argParser = argparse.ArgumentParser()
     argParser.add_argument("-d", "--dataset", default="data/", help="Path to the dataset directory")
     args = argParser.parse_args()
-    print("play_sounds launched...\n")
+    # print("play_sounds launched...\n")
     ## print all the files in the dataset
-    print("Dataset files:")
+    # print("Dataset files:")
     file_list = []
     for root, dirs, files in os.walk(args.dataset):
         for file in files:
             file_list.append(os.path.join(root, file))
     file_list.sort()
-    for file in file_list:
-        print(file)
+    # for file in file_list:
+        # print(file)
         # Iterate over the sorted dataset and play each sound in order
     # Group files by class (assuming class is determined by the parent directory name)
     class_files = defaultdict(list)
@@ -33,10 +33,12 @@ if __name__ == "__main__":
 
     # Take up to 20 sounds per class and play them
     for class_name, files in class_files.items():
+        # files = [file for i, file in enumerate(files) if i % 40 < 5]
+        print(files)
         print(f"Processing class: {class_name}")
-        for file_path in sorted(files)[:20]:  # Take the first 20 files per class
+        for file_path in files[:]:  # Take the first 20 files per class
             file_name = os.path.basename(file_path)
             print(f"Current file: {file_name}")
             print(f"Playing sound: {file_path}")
             play_sound(file_path)
-            time.sleep(5)
+            time.sleep(10)
