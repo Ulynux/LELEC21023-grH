@@ -102,10 +102,11 @@ def plot_specgram(
     cb=True,
     tf=None,
     invert=True,
-    filename="specgram_plot.pdf"
+    filename="specgram_plot.pdf",
+    amplitude_label="Amplitude"
 ):
     """
-    Plot a spectrogram (2D matrix) in a chosen axis of a figure.
+    Plot a spectrogram (2D matrix) in a chosen axis of a figure, including amplitude information.
     Inputs:
         - specgram = spectrogram (2D array)
         - ax       = current axis in figure
@@ -115,6 +116,7 @@ def plot_specgram(
         - cmap
         - cb       = show colorbar if True
         - tf       = final time in xaxis of specgram
+        - amplitude_label = Label for the colorbar (default: "Amplitude")
     """
     if tf is None:
         tf = specgram.shape[1]
@@ -135,8 +137,8 @@ def plot_specgram(
         ax.invert_yaxis()
     fig = plt.gcf()
     if cb:
-        fig.colorbar(im, ax=ax)
-    # cbar.set_label('log scale', rotation=270)
+        cbar = fig.colorbar(im, ax=ax)
+        cbar.set_label(amplitude_label, rotation=270, labelpad=15)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title)

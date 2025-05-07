@@ -18,6 +18,8 @@ absl-py==2.1.0
     # via keras
     # via tensorboard
     # via tensorflow
+alembic==1.15.2
+    # via optuna
 aniso8601==9.0.1
     # via flask-restx
 anyio==4.4.0
@@ -70,6 +72,8 @@ click==8.1.7
     # via flask
     # via leaderboard
     # via mcu
+colorlog==6.9.0
+    # via optuna
 comm==0.2.2
     # via ipykernel
 contourpy==1.2.1
@@ -138,6 +142,7 @@ google-pasta==0.2.0
 greenlet==3.0.3
     # via eventlet
     # via gevent
+    # via sqlalchemy
 grpcio==1.71.0
     # via tensorboard
     # via tensorflow
@@ -246,6 +251,8 @@ limits==3.13.0
     # via flask-limiter
 llvmlite==0.43.0
     # via numba
+mako==1.3.10
+    # via alembic
 markdown==3.7
     # via leaderboard
     # via tensorboard
@@ -253,6 +260,7 @@ markdown-it-py==3.0.0
     # via rich
 markupsafe==2.1.5
     # via jinja2
+    # via mako
     # via nbconvert
     # via werkzeug
     # via wtforms
@@ -300,6 +308,7 @@ numpy==2.0.2
     # via mcu
     # via ml-dtypes
     # via numba
+    # via optuna
     # via pandas
     # via scikit-learn
     # via scipy
@@ -314,6 +323,7 @@ opt-einsum==3.4.0
     # via tensorflow
 optree==0.14.1
     # via keras
+optuna==4.3.0
 ordered-set==4.1.0
     # via flask-limiter
 overrides==7.7.0
@@ -328,6 +338,7 @@ packaging==24.1
     # via limits
     # via matplotlib
     # via nbconvert
+    # via optuna
     # via plotly
     # via pooch
     # via tensorboard
@@ -406,6 +417,7 @@ pytz==2024.1
 pyyaml==6.0.2
     # via flask-swagger
     # via jupyter-events
+    # via optuna
 pyzmq==26.2.0
     # via auth
     # via ipykernel
@@ -479,6 +491,9 @@ soupsieve==2.6
     # via beautifulsoup4
 soxr==0.5.0
     # via librosa
+sqlalchemy==2.0.40
+    # via alembic
+    # via optuna
 stack-data==0.6.3
     # via ipython
 tensorboard==2.19.0
@@ -510,6 +525,7 @@ tornado==6.4.1
     # via terminado
 tqdm==4.66.5
     # via classification
+    # via optuna
 traitlets==5.14.3
     # via comm
     # via ipykernel
@@ -526,6 +542,7 @@ traitlets==5.14.3
 types-python-dateutil==2.9.0.20240821
     # via arrow
 typing-extensions==4.12.2
+    # via alembic
     # via anyio
     # via async-lru
     # via flask-limiter
@@ -534,6 +551,7 @@ typing-extensions==4.12.2
     # via limits
     # via optree
     # via pydantic
+    # via sqlalchemy
     # via tensorflow
 tzdata==2024.1
     # via pandas

@@ -117,3 +117,55 @@ print("Signal décalé :", shifted_audio[0])
 # Décaler le signal de -50% (vers la gauche)
 shifted_audio_left = time_shift(audio, shift_pct=-0.5)
 print("Signal décalé vers la gauche :", shifted_audio_left[0])
+
+from classification.utils.plots import (
+    plot_specgram,
+    show_confusion_matrix,
+)
+import matplotlib.pyplot as plt
+fm_dir = "data/feature_matrices/"  # where to save the features matrices
+
+X_train_aug = np.load(fm_dir + "feature_matrix_400_aug.npy")
+
+### Test des data augmentation --> Tests OK
+# ----------------------------
+
+vector = X_train_aug[0]  
+fig, ax = plt.subplots(figsize=(7, 7))
+plot_specgram(
+    vector.reshape((20, 20)), 
+    ax=ax,
+    is_mel=True,
+    title=f"Mel {0}",  
+    xlabel="Mel vector",
+    amplitude_label="Amplitude"
+)
+
+
+# ----------------------------
+
+shifted = X_train_aug[1]
+fig, ax = plt.subplots(figsize=(3, 3))  # Créez un subplot pour un seul spectrogramme
+
+plot_specgram(
+    shifted.reshape((20, 20)).T, 
+    ax=ax,
+    is_mel=True,
+    title=f"shifted",  
+    xlabel="Mel vector",
+    amplitude_label="Amplitude"
+)
+shifted_noised = X_train_aug[3]
+fig, ax = plt.subplots(figsize=(3, 3))  # Créez un subplot pour un seul spectrogramme
+
+plot_specgram(
+    shifted.reshape((20, 20)).T, 
+    ax=ax,
+    is_mel=True,
+    title=f"shifted",  
+    xlabel="Mel vector",
+    amplitude_label="Amplitude"
+)
+plt.show()
+
+

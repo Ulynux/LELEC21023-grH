@@ -166,24 +166,16 @@ class AudioUtil:
         :param audio: The audio signal as a tuple (signal, sample_rate).
         :param sigma: Standard deviation of the gaussian noise.
         """
-        Version = False # garder ça en false c'était pas bon l'ancienne version
-        if Version:
-            sig, sr = audio
-            noise = np.random.normal(0, sigma, len(sig))
-            sig += noise
-            sig = np.clip(sig, -1, 1)
-            sig,sr = audio
-        else :
-            sig, sr = audio
-            desired_snr_db = 20
-            signal_power = np.mean(sig**2)  # Assuming 'sig' is your signal
-            noise_power = signal_power / (10**(desired_snr_db / 10))
-            noise_std_dev = np.sqrt(noise_power)
-            
-            noise = np.random.normal(0, noise_std_dev, len(sig))
-            sig += noise
-            sig = np.clip(sig, -1, 1)
-            sig,sr = audio
+        sig, sr = audio
+        desired_snr_db = 20
+        signal_power = np.mean(sig**2)  # Assuming 'sig' is your signal
+        noise_power = signal_power / (10**(desired_snr_db / 10))
+        noise_std_dev = np.sqrt(noise_power)
+        
+        noise = np.random.normal(0, noise_std_dev, len(sig))
+        sig += noise
+        sig = np.clip(sig, -1, 1)
+        sig,sr = audio
         return audio
 
     def echo(audio, nechos=2) -> Tuple[ndarray, int]:
