@@ -107,7 +107,7 @@ def main(
     This way, you will directly receive the authentified packets from STDIN
     (standard input, i.e., the terminal).
     """
-    model = keras.models.load_model('classification/data/models/CNN_good_bcr.keras')
+    model = keras.models.load_model('classification/data/models/10525.keras')
 
 
     moving_avg = 0
