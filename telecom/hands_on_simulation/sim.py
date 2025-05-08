@@ -10,8 +10,8 @@ import os
 from tqdm import tqdm
 
 
-plots_folder = "telecom/optimisations/h_index/h_1/"
-test_name = "h_1"
+plots_folder = "telecom/optimisations/dump/"
+test_name = "dump"
 
 
 
@@ -268,7 +268,7 @@ def run_sim(chain: Chain):
     shift_SNR_out = 10 * np.log10(R**2 / sum_Cu)  # 10*np.log10(chain.osr_rx)
     shift_SNR_filter = 10 * np.log10(1 / np.sum(np.abs(taps) ** 2))
     
-
+    # SNR_th = SNR_o
     SNR_th = np.arange(SNRs_dB[0], SNRs_dB[-1] + shift_SNR_out)
     BER_th = 0.5 * erfc(np.sqrt(10 ** (SNR_th / 10.0) / 2))
     BER_th_BPSK = 0.5 * erfc(np.sqrt(10 ** (SNR_th / 10.0)))
@@ -324,7 +324,7 @@ def run_sim(chain: Chain):
         ax2.set_xlim(ax.get_xlim())
         ax2.xaxis.label.set_color("b")
         ax2.tick_params(axis="x", colors="b")
-        plt.savefig(plots_folder+'withViterbi.pdf')
+        plt.savefig(plots_folder+'SNRe.pdf')
 
 
     # Packet error rate
@@ -360,7 +360,7 @@ def run_sim(chain: Chain):
         ax2.set_xlim(ax.get_xlim())
         ax2.xaxis.label.set_color("b")
         ax2.tick_params(axis="x", colors="b")
-    plt.savefig(plots_folder+"withViterbi.pdf")
+    plt.savefig(plots_folder+"PER_SNRe.pdf")
 
     # Preamble metrics
     # plt.figure()
@@ -384,7 +384,7 @@ def run_sim(chain: Chain):
     plt.savefig(plots_folder+"RMSE_CFO.pdf")
     # Assuming SNRs_dB and RMSE_cfo are your data arrays
     data = np.column_stack((SNRs_dB, RMSE_cfo))
-    np.savetxt(plots_folder+'RMSE_CFO_data_wViterbi.csv', data, delimiter=',', header='SNR_dB,RMSE_cfo', comments='')
+    np.savetxt(plots_folder+'RMSE_CFO_data.csv', data, delimiter=',', header='SNR_dB,RMSE_cfo', comments='')
 
     # RMSE STO
     plt.figure()

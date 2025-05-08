@@ -14,7 +14,7 @@ class Chain:
 
     # Communication parameters
     bit_rate: float = BIT_RATE
-    freq_dev: float = BIT_RATE / 2 * 1
+    freq_dev: float = BIT_RATE / 2 * 2
 
     osr_tx: int = 64
     osr_rx: int = 8
@@ -25,7 +25,7 @@ class Chain:
     payload_len: int = 824*8  # Number of bits per packet
 
     # Simulation parameters
-    n_packets: int = 100  # Number of sent packets
+    n_packets: int = 20  # Number of sent packets
 
     # Channel parameters
     sto_val: float = np.nan
@@ -41,7 +41,7 @@ class Chain:
     # Lowpass filter parameters
     numtaps: int = 31
     #cutoff: float = BIT_RATE * osr_rx / 2.0001  # or 2*BIT_RATE,...
-    cutoff = 75000
+    cutoff = 130000
 
     # Viterbi encoder parameters
     R1 = np.array([2,1,3,0])
@@ -52,15 +52,12 @@ class Chain:
     symb_R0 = np.array([0.0 + 0.0j, 0.0 + 1.0j, 0.0 + 0.0j, 0.0 + 1.0j])
     len_b = 206*8
 
-    # Hamming encoder parameters
-    G = np.array([[1,0,0,0,1,0,1],
-                  [0,1,0,0,1,1,0],
-                  [0,0,1,0,1,1,1],
-                  [0,0,0,1,0,1,1]])
-    
-    H = np.array([[1,1,1,0,1,0,0],
-                  [0,1,1,1,0,1,0],
-                  [1,0,1,1,0,0,1]])
+    # R1 = np.array([3, 5, 2, 4, 1, 7, 0, 6])
+    # R0 = np.array([0, 6, 1, 7, 2, 4, 3, 5])
+    # out_R1 = np.array([[1,1],[1,0],[1,1],[1,0],[1,1],[1,0],[1,1],[1,0]])
+    # out_R0 = np.array([[0,0],[0,1],[0,0],[0,1],[0,0],[0,1],[0,0],[0,1]])
+    # symb_R1 = np.array([1.0 + 1.0j, 1.0 + 0.0j, 1.0 + 1.0j, 1.0 + 0.0j, 1.0 + 1.0j, 1.0 + 0.0j, 1.0 + 1.0j, 1.0 + 0.0j])
+    # symb_R0 = np.array([0.0 + 0.0j, 0.0 + 1.0j, 0.0 + 0.0j, 0.0 + 1.0j, 0.0 + 0.0j, 0.0 + 1.0j, 0.0 + 0.0j, 0.0 + 1.0j])
 
     # Tx methods
 
@@ -136,20 +133,6 @@ class Chain:
         
         return (u,c)
     
-
-    def hamming_encoder(self, u):
-
-        N_b = len(u)//4
-        G = self.G
-        H = self.H
-
-        u_encoded = np.zeros(len(u)//4*7)
-
-        for i in range(N_b):
-            pass
-
-
-
 
     def modulate(self, bits: np.array) -> np.array:
         """
@@ -289,7 +272,7 @@ class BasicChain(Chain):
         Estimates symbol timing (fractional) based on phase shifts.
         """
         R = self.osr_rx  # Receiver oversampling factor
-        order = 2# Order of the finite difference
+        order = 2 # Order of the finite difference
         
 
         # Computation of derivatives of phase function
@@ -319,49 +302,6 @@ class BasicChain(Chain):
                 derivative[4:-4] = (-9*function[8:] + 128*function[7:-1] - 1008*function[6:-2] + 8064*function[5:-3] - 14350*function[4:-4] + 8064*function[3:-5] - 1008*function[2:-6] + 128*function[1:-7] - 9*function[:-8])
 
             return derivative
-         
-        # def weno5_second_derivative(f, h):
-        #     """
-        #     Compute the second derivative using the WENO-5 scheme.
-            
-        #     Parameters:
-        #     f : numpy array
-        #         The function values at discrete points.
-        #     h : float
-        #         The uniform grid spacing.
-
-        #     Returns:
-        #     numpy array
-        #         The second derivative approximation.
-        #     """
-        #     n = len(f)
-        #     fxx = np.zeros(n)
-
-        #     # Small epsilon to prevent division by zero
-        #     eps = 1e-6  
-
-        #     for i in range(2, n - 2):  # Ensure we don't go out of bounds
-        #         # Compute smoothness indicators
-        #         beta0 = (13/12) * (f[i-2] - 2*f[i-1] + f[i])**2 + (1/4) * (f[i-2] - 4*f[i-1] + 3*f[i])**2
-        #         beta1 = (13/12) * (f[i-1] - 2*f[i] + f[i+1])**2 + (1/4) * (f[i-1] - f[i+1])**2
-        #         beta2 = (13/12) * (f[i] - 2*f[i+1] + f[i+2])**2 + (1/4) * (3*f[i] - 4*f[i+1] + f[i+2])**2
-
-        #         # Compute nonlinear weights
-        #         alpha0 = 1 / (eps + beta0)**2
-        #         alpha1 = 6 / (eps + beta1)**2
-        #         alpha2 = 3 / (eps + beta2)**2
-        #         w0 = alpha0 / (alpha0 + alpha1 + alpha2)
-        #         w1 = alpha1 / (alpha0 + alpha1 + alpha2)
-        #         w2 = alpha2 / (alpha0 + alpha1 + alpha2)
-
-        #         # Compute second derivative using WENO-5 weighting
-        #         fxx[i] = (
-        #             w0 * (-f[i-2] + 16*f[i-1] - 30*f[i] + 16*f[i+1] - f[i+2]) / (12*h**2)
-        #             + w1 * (-f[i-2] + 16*f[i-1] - 30*f[i] + 16*f[i+1] - f[i+2]) / (12*h**2)
-        #             + w2 * (-f[i-2] + 16*f[i-1] - 30*f[i] + 16*f[i+1] - f[i+2]) / (12*h**2)
-        #         )
-
-        #     return fxx
         
         # phase_function = savgol_filter(phase_function, 51, 3)
         phase_derivative_2 = np.abs(second_derivative(phase_function, order))
@@ -412,8 +352,7 @@ class BasicChain(Chain):
 
         return bits_hat
 
-    bypass_viterbi = False
-
+    bypass_viterbi = True
     def viterbi_decoder(self, x_tilde):
 
         # Viterbi decoder parameters
@@ -424,8 +363,10 @@ class BasicChain(Chain):
         len_b = self.len_b
 
         def dist(a,b):
+            # Hamming distance for hard decoding
             distance = np.abs(a-b)
-            # distance = np.abs(np.real(a)-np.real(b)) + np.abs(np.imag(a)-np.imag(b))
+            # Euclidean distance for soft decoding, 8 samples
+            # distance = np.sqrt(np.sum(np.abs(a-b)**2))
             return distance
         
         # Reshape of the received sequence to have u and c
