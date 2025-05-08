@@ -74,7 +74,7 @@ blocks:
     start: '1'
     step: '1'
     stop: '254'
-    value: '3'
+    value: '20'
     widget: counter_slider
   states:
     bus_sink: false
@@ -157,7 +157,7 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: data_rate
+    value: data_rate/2
   states:
     bus_sink: false
     bus_source: false
@@ -303,10 +303,11 @@ blocks:
   id: variable_qtgui_entry
   parameters:
     comment: ''
+    entry_signal: editingFinished
     gui_hint: ''
     label: TX power used (no impact, just for logging)
     type: int
-    value: '-30'
+    value: '0'
   states:
     bus_sink: false
     bus_source: false
@@ -505,7 +506,9 @@ blocks:
     address: tcp://127.0.0.1:10000
     affinity: ''
     alias: ''
+    bind: 'True'
     comment: ''
+    drop_on_hwm: 'True'
     hwm: '-1'
     key: ''
     pass_tags: 'False'
@@ -533,3 +536,4 @@ connections:
 
 metadata:
   file_format: 1
+  grc_version: 3.10.9.2

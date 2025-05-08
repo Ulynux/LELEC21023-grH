@@ -64,8 +64,10 @@ static void encode_packet(uint8_t *packet, uint32_t* packet_cnt) {
 	// BE encoding of each mel coef
 	for (size_t i=0; i<N_MELVECS; i++) {
 		for (size_t j=0; j<MELVEC_LENGTH; j++) {
-			(packet+PACKET_HEADER_LENGTH)[(i*MELVEC_LENGTH+j)*2]   = mel_vectors[i][j] >> 8;
-			(packet+PACKET_HEADER_LENGTH)[(i*MELVEC_LENGTH+j)*2+1] = mel_vectors[i][j] & 0xFF;
+//			(packet+PACKET_HEADER_LENGTH)[(i*MELVEC_LENGTH+j)*2]   = mel_vectors[i][j] >> 8;
+//			(packet+PACKET_HEADER_LENGTH)[(i*MELVEC_LENGTH+j)*2+1] = mel_vectors[i][j] & 0xFF;
+			(packet+PACKET_HEADER_LENGTH)[(i*MELVEC_LENGTH+j)*2]   = 0xFF;
+			(packet+PACKET_HEADER_LENGTH)[(i*MELVEC_LENGTH+j)*2+1] = 0x00;
 		}
 	}
 
