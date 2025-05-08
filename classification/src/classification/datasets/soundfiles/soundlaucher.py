@@ -4,41 +4,44 @@ import sounddevice as sd
 import argparse
 import time
 from collections import defaultdict
+
 def play_sound(file_path):
-    data, fs = sf.read(file_path)
-    sd.play(data, fs)
-    sd.wait()  # Wait until the sound has finished playing
+    try:
+        data, fs = sf.read(file_path)
+        sd.play(data, fs)
+        sd.wait()  # Wait until the sound has finished playing
+    except Exception as e:
+        print(f"Error playing {file_path}: {e}")
 
 if __name__ == "__main__":
     argParser = argparse.ArgumentParser()
     argParser.add_argument("-d", "--dataset", default="data/", help="Path to the dataset directory")
+    argParser.add_argument("-p", "--pause", type=int, default=10, help="Pause duration between sounds (in seconds)")
     args = argParser.parse_args()
-    # print("play_sounds launched...\n")
-    ## print all the files in the dataset
-    # print("Dataset files:")
+
     file_list = []
     for root, dirs, files in os.walk(args.dataset):
         for file in files:
-            file_list.append(os.path.join(root, file))
+            if file.endswith(".wav"):  # Assurez-vous de ne prendre que les fichiers .wav
+                file_list.append(os.path.join(root, file))
     file_list.sort()
-    # for file in file_list:
-        # print(file)
-        # Iterate over the sorted dataset and play each sound in order
-    # Group files by class (assuming class is determined by the parent directory name)
+    print
     class_files = defaultdict(list)
     for file_path in file_list:
+        # Si le fichier est dans le dossier racine, utilisez "root" comme classe
         class_name = os.path.basename(os.path.dirname(file_path))
-        if file_path.endswith(".wav"):  # Ensure only .wav files are processed
-            class_files[class_name].append(file_path)
+        if class_name == args.dataset.strip("/").split("/")[-1]:  # Si c'est le dossier racine
+            class_name = "root"
+        class_files[class_name].append(file_path)
 
-    # Take up to 20 sounds per class and play them
+    print(f"Classified files: {dict(class_files)}")  # Log pour vérifier les fichiers classés
+
     for class_name, files in class_files.items():
-        # files = [file for i, file in enumerate(files) if i % 40 < 5]
-        print(files)
-        print(f"Processing class: {class_name}")
-        for file_path in files[:]:  # Take the first 20 files per class
-            file_name = os.path.basename(file_path)
-            print(f"Current file: {file_name}")
-            print(f"Playing sound: {file_path}")
-            play_sound(file_path)
-            time.sleep(10)
+        print(f"Class: {class_name}, Number of files: {len(files)}")
+        if class_name.lower() in ["gun", "fire", "fireworks", "root"]:  # Inclure "root" si nécessaire
+            print(f"Processing class: {class_name}")
+            for file_path in files[:20]:  # Prenez les 20 premiers fichiers par classe
+                file_name = os.path.basename(file_path)
+                print(f"Playing sound: {file_name}")
+                play_sound(file_path)
+                time.sleep(args.pause)

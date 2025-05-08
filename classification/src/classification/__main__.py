@@ -107,11 +107,11 @@ def main(
     This way, you will directly receive the authentified packets from STDIN
     (standard input, i.e., the terminal).
     """
-    model = keras.models.load_model('classification/data/models/CNN_good_bcr.keras')
+    model = keras.models.load_model('classification/data/models/10525.keras')
 
 
     moving_avg = 0
-    threshold = 5
+    threshold = 3.5
     energy_flag = False
     memory = []
     ## Using a queue to store avg of before 
@@ -158,22 +158,20 @@ def main(
                 melvec -= np.mean(melvec)
                 melvec = melvec / np.linalg.norm(melvec)
 
-                # melvec = melvec.reshape(1,-1)
+                melvec = melvec.reshape((20, 20)).T
                 melvec = melvec.reshape((-1, 20, 20, 1))
                 
-                fig, ax = plt.subplots()
+                fig, ax = plt.subplots(figsize=(3, 3))  
                 plot_specgram(
-                            melvec[0, :, :, 0],
-                            ax=ax,
-                            is_mel=True,
-                            title="",
-                            xlabel="Mel vector",
-                            cb=False  # facultatif : supprime la colorbar pour gagner du temps
-                        )
-                fig.savefig(f"mel_{i}.png")
+                    melvec.reshape((20, 20)).T,  # Reshape le melvec pour l'affichage
+                    ax=ax,
+                    is_mel=True,
+                    title=f"Mel {i}",  
+                    xlabel="Mel vector"
+                )
+                fig.savefig(f"mcu/hands_on_feature_vectors/mel_{i}.png")  # Sauvegardez le plot
                 plt.close(fig)
-
-                i+=1
+                i += 1
                 proba = model.predict(melvec)
                 proba_array = np.array(proba)
 
@@ -195,14 +193,6 @@ def main(
 
                     sorted_indices = np.argsort(log_likelihood_sum)[::-1]  # Sort in descending order
                     most_likely_class_index = sorted_indices[0]
-                    second_most_likely_class_index = sorted_indices[1]
-
-                    confidence = log_likelihood_sum[most_likely_class_index] - log_likelihood_sum[second_most_likely_class_index]
-
-                    # threshold sur la confiance de la prédiction
-                    
-                    confidence_threshold = 0.45  
-
                     # On revient à un état où on relance la classification depuis le début
                     # => on clear la mémoire, et on relance le moving average mais on garde les valeurs 
                     # du moving average précédent sinon on perds trop d'infos
@@ -211,15 +201,8 @@ def main(
                     memory = []
                     
                     
-                    if confidence >= confidence_threshold:
-                        majority_class = CLASSNAMES[most_likely_class_index]
-                        if majority_class == "gun":
-                            majority_class = "gunshot"
-                        logger.info(f"Most likely class index: {majority_class}")
-                        logger.info(f"Confidence: {confidence}")
-                        # answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{majority_class}", timeout=1)
-                        # json_answer = json.loads(answer.text)
-                        # print(json_answer)                            
-                    else:
-                        logger.info(f"Confidence too low ({confidence}). Not submitting the guess.")
-                    
+                    majority_class = CLASSNAMES[most_likely_class_index]
+                    if majority_class == "gun":
+                        majority_class = "gunshot"
+                    logger.info(f"Most likely class index: {majority_class}")
+            

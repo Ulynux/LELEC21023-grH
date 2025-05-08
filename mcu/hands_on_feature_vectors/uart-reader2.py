@@ -16,8 +16,8 @@ import struct
 
 from classification.utils.plots import plot_specgram
 import seaborn as sns
-# from tensorflow.keras.models import load_model
-# import keras
+from tensorflow.keras.models import load_model
+import keras
 
 def payload_to_melvecs(
     payload: str, melvec_length: int = 20, n_melvecs: int = 20
@@ -32,6 +32,7 @@ def payload_to_melvecs(
     melvecs = np.fliplr(melvecs)
     return melvecs
 from collections import deque
+import os
 
 PRINT_PREFIX = "DF:HEX:"
 FREQ_SAMPLING = 10200
@@ -106,12 +107,14 @@ if __name__ == "__main__":
     else:
         input_stream = reader(port=args.port)
         
-        # model = load_model('classification/data/models/10525.keras')
-        model = pickle.load(open('classification/data/models/RF_05.pickle', 'rb'))
-        pca = pickle.load(open('classification/data/models/PCA_16_RF05.pickle', 'rb'))
+        model = load_model('classification/data/models/10525.keras')
+        print(model.summary())
+        print(f"Current working directory: {os.getcwd()}")
+        # model = pickle.load(open('classification/data/models/rf_model.pkl', 'rb'))
+        # pca = pickle.load(open('classification/data/models/pca_model_final.pkl', 'rb'))
+        
         # Parameters
-        threshold = 2
-        confidence_threshold = 3
+        threshold = 3.5
         melvec_length = 400  # Replace with actual value
         n_melvecs = 20       # Replace with actual value
         CLASSNAMES = ["chainsaw", "fire", "fireworks", "gunshot"]
@@ -163,9 +166,9 @@ if __name__ == "__main__":
                 # print(f"Melvec shape: {melvec.reshape(1,-1).shape}")
                 
                 ### -------- pour le CNN
-                # melvec = melvec.reshape((20, 20)).T
+                melvec = melvec.reshape((20, 20)).T
                 # Ajoutez les dimensions pour le batch et les canaux
-                # melvec = melvec.reshape((-1, 20, 20, 1))
+                melvec = melvec.reshape((-1, 20, 20, 1))
 
                 # melvecs_to_plot.append(melvec[0, :, :, 0])  # Stockez uniquement le 2D spectrogram
 
@@ -173,20 +176,21 @@ if __name__ == "__main__":
                 
                  ### -------- 
                 
-                fig, ax = plt.subplots(figsize=(3, 3))  # Créez un subplot pour un seul spectrogramme
+                fig, ax = plt.subplots(figsize=(3, 3))  
                 plot_specgram(
                     melvec.reshape((20, 20)).T,  # Reshape le melvec pour l'affichage
                     ax=ax,
                     is_mel=True,
-                    title=f"Mel {i}",  # Utilisez l'index actuel
-                    xlabel="Mel vector",
-                    cb=False  # Facultatif : supprime la colorbar
+                    title=f"Mel {i}",  
+                    xlabel="Mel vector"
                 )
                 fig.savefig(f"mcu/hands_on_feature_vectors/mel_{i}.png")  # Sauvegardez le plot
                 plt.close(fig)
                 i += 1
-                melvec = pca.transform(melvec.reshape(1, -1))
-                proba = model.predict_proba(melvec)  # Use predict instead of predict_proba
+                print(f"Melvec shape: {melvec.shape}")
+                print(f"Melvec shape: {melvec.reshape(1,-1).shape}")
+                # melvec = pca.transform(melvec.reshape(1, -1))
+                proba = model.predict(melvec)  # Use predict instead of predict_proba
                 proba_array = np.array(proba)
 
                 memory.append(proba_array)
@@ -206,9 +210,7 @@ if __name__ == "__main__":
 
                     sorted_indices = np.argsort(log_likelihood_sum)[::-1]  # Sort in descending order
                     most_likely_class_index = sorted_indices[0]
-                    second_most_likely_class_index = sorted_indices[1]
 
-                    confidence = log_likelihood_sum[most_likely_class_index] - log_likelihood_sum[second_most_likely_class_index]
 
                     # threshold sur la confiance de la prédiction
                     
@@ -221,14 +223,11 @@ if __name__ == "__main__":
                     memory = []
                     
                     
-                    if confidence >= confidence_threshold:
-                        majority_class = CLASSNAMES[most_likely_class_index]
-                        if majority_class == "gun":
-                            majority_class = "gunshot"
-                        print(f"Most likely class index: {majority_class}    ",confidence)
-                        # answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{majority_class}", timeout=1)
-                        # json_answer = json.loads(answer.text)
-                        # print(json_answer)                            
-                    else:
-                        print(f"Confidence too low ({confidence}). Not submitting the guess.")
+                    majority_class = CLASSNAMES[most_likely_class_index]
+                    if majority_class == "gun":
+                        majority_class = "gunshot"
+                    print(f"Most likely class index: {majority_class}")
+                    # answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{majority_class}", timeout=1)
+                    # json_answer = json.loads(answer.text)
+                    # print(json_answer)                            
                     

@@ -85,10 +85,16 @@ class AudioUtil:
         max_len = int(sr * max_ms / 1000)
 
         if sig_len > max_len:
-            # Truncate the signal to the given length at random position
-            # begin_len = random.randint(0, max_len)
-            begin_len = 0
-            sig = sig[begin_len : begin_len + max_len]
+            # Calculate the energy of the signal in sliding windows
+            window_size = max_len
+            energies = [
+                np.sum(sig[i:i + window_size] ** 2)
+                for i in range(0, sig_len - window_size + 1)
+            ]
+
+            # Find the starting position with the highest energy
+            start_idx = np.argmax(energies)
+            sig = sig[start_idx:start_idx + max_len]
 
         elif sig_len < max_len:
             # Length of padding to add at the beginning and end of the signal
@@ -99,7 +105,6 @@ class AudioUtil:
             pad_begin = np.zeros(pad_begin_len)
             pad_end = np.zeros(pad_end_len)
 
-            # sig = np.append([pad_begin, sig, pad_end])
             sig = np.concatenate((pad_begin, sig, pad_end))
 
         return (sig, sr)
