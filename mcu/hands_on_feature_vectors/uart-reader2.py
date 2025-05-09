@@ -107,8 +107,9 @@ if __name__ == "__main__":
     else:
         input_stream = reader(port=args.port)
         
-        model = load_model('classification/data/models/model_all.keras')
-        # print(model.summary())
+        model = load_model('classification/data/models/10525.keras')
+        
+        print(model.summary())
         # print(f"Current working directory: {os.getcwd()}")
         # model = pickle.load(open('classification/data/models/rf_model.pkl', 'rb'))
         # pca = pickle.load(open('classification/data/models/pca_model_final.pkl', 'rb'))
@@ -178,7 +179,7 @@ if __name__ == "__main__":
                 
                 fig, ax = plt.subplots(figsize=(3, 3))  
                 plot_specgram(
-                    melvec.reshape((20, 20)).T,  # Reshape le melvec pour l'affichage
+                    melvec.reshape((20, 20)),  # Reshape le melvec pour l'affichage
                     ax=ax,
                     is_mel=True,
                     title=f"Mel {i}",  
