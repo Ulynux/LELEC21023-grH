@@ -586,7 +586,7 @@ device_handler_fpga::set_gain(int device_number, bool direction, int channel, un
 
         // Write AGC loop gain at address 0x0408, 16 bits LSB
         LMS_WriteLMSReg(
-            device_handler_fpga::getInstance().get_device(device_number), 0x0408, 0x0600);
+            device_handler_fpga::getInstance().get_device(device_number), 0x0408, 0x1000);
 
         // Write AGC loop gain at address 0x0409[1:0], 2 bits MSB
         // Write AGC_ADESIRED[15:4]
@@ -594,7 +594,7 @@ device_handler_fpga::set_gain(int device_number, bool direction, int channel, un
         LMS_ReadLMSReg(
             device_handler_fpga::getInstance().get_device(device_number), 0x0409, &reg_value);
         reg_value &= 0x000C; // Clear all bits except 2 and 3
-        reg_value |= 0x0400; 
+        reg_value |= 0x0300; 
         LMS_WriteLMSReg(
             device_handler_fpga::getInstance().get_device(device_number), 0x0409, reg_value);
 
