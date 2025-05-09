@@ -107,9 +107,9 @@ if __name__ == "__main__":
     else:
         input_stream = reader(port=args.port)
         
-        model = load_model('classification/data/models/10525.keras')
-        print(model.summary())
-        print(f"Current working directory: {os.getcwd()}")
+        model = load_model('classification/data/models/model_all.keras')
+        # print(model.summary())
+        # print(f"Current working directory: {os.getcwd()}")
         # model = pickle.load(open('classification/data/models/rf_model.pkl', 'rb'))
         # pca = pickle.load(open('classification/data/models/pca_model_final.pkl', 'rb'))
         
@@ -127,7 +127,7 @@ if __name__ == "__main__":
         i = 0
         msg_counter = 0
         for melvec in input_stream:
-            print(msg_counter)
+            # print(msg_counter)
             msg_counter += 1
             # print(melvec)
             melvec = melvec.copy()
@@ -141,7 +141,7 @@ if __name__ == "__main__":
             if short_sum_1 >= threshold * moving_avg :
                 energy_flag = True
             else:
-                print(f"Energy not detected",moving_avg)
+                # print(f"Energy not detected",moving_avg)
                 long_sum.append(short_sum_1)
                 moving_avg = np.mean(long_sum)
                 
@@ -187,8 +187,8 @@ if __name__ == "__main__":
                 fig.savefig(f"mcu/hands_on_feature_vectors/mel_{i}.png")  # Sauvegardez le plot
                 plt.close(fig)
                 i += 1
-                print(f"Melvec shape: {melvec.shape}")
-                print(f"Melvec shape: {melvec.reshape(1,-1).shape}")
+                # print(f"Melvec shape: {melvec.shape}")
+                # print(f"Melvec shape: {melvec.reshape(1,-1).shape}")
                 # melvec = pca.transform(melvec.reshape(1, -1))
                 proba = model.predict(melvec)  # Use predict instead of predict_proba
                 proba_array = np.array(proba)
@@ -210,7 +210,10 @@ if __name__ == "__main__":
 
                     sorted_indices = np.argsort(log_likelihood_sum)[::-1]  # Sort in descending order
                     most_likely_class_index = sorted_indices[0]
-
+                    ## if the second most likely class is fireworks -> majority_class = fireworks
+                    second_most_likely_class_index = sorted_indices[1]
+                    if CLASSNAMES[second_most_likely_class_index] == "fireworks":
+                        majority_class = "fireworks"
 
                     # threshold sur la confiance de la prédiction
                     
