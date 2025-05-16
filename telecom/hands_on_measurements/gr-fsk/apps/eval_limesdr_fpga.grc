@@ -74,7 +74,7 @@ blocks:
     start: '1'
     step: '1'
     stop: '254'
-    value: '20'
+    value: '3'
     widget: counter_slider
   states:
     bus_sink: false
@@ -151,6 +151,22 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [664, 84.0]
+    rotation: 0
+    state: true
+- name: detect_threshold_entry
+  id: variable_qtgui_entry
+  parameters:
+    comment: ''
+    entry_signal: editingFinished
+    gui_hint: ''
+    label: Detection Threshold
+    type: real
+    value: 1e-3
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1184, 264.0]
     rotation: 0
     state: true
 - name: fdev
@@ -369,9 +385,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [152, 388.0]
+    coordinate: [400, 160.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: fsk_onQuery_noise_estimation_0
   id: fsk_onQuery_noise_estimation
   parameters:
@@ -408,6 +424,27 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [984, 404.0]
+    rotation: 0
+    state: enabled
+- name: fsk_preamble_detect_0
+  id: fsk_preamble_detect
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    drate: data_rate
+    enable: Enable_detection
+    fdev: fdev
+    fsamp: samp_rate
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    packet_len: packet_len
+    threshold: detect_threshold_entry
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [168, 360.0]
     rotation: 0
     state: enabled
 - name: fsk_synchronization_0
@@ -524,13 +561,13 @@ blocks:
     state: enabled
 
 connections:
-- [dc_blocker_xx_0, '0', fsk_flag_detector_0, '0']
 - [dc_blocker_xx_0, '0', fsk_onQuery_noise_estimation_0, '0']
+- [dc_blocker_xx_0, '0', fsk_preamble_detect_0, '0']
 - [dc_blocker_xx_0, '0', qtgui_sink_x_0, '0']
 - [fsk_demodulation_0, '0', fsk_packet_parser_0, '0']
-- [fsk_flag_detector_0, '0', fsk_synchronization_0, '0']
 - [fsk_onQuery_noise_estimation_0, NoisePow, fsk_synchronization_0, NoisePow]
 - [fsk_packet_parser_0, '0', zeromq_pub_sink_0, '0']
+- [fsk_preamble_detect_0, '0', fsk_synchronization_0, '0']
 - [fsk_synchronization_0, '0', fsk_demodulation_0, '0']
 - [limesdr_fpga_source_0, '0', dc_blocker_xx_0, '0']
 

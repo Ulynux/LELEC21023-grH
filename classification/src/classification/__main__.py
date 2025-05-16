@@ -111,7 +111,7 @@ def main(
 
 
     moving_avg = 0
-    threshold = 3.5
+    threshold = 2.2
     energy_flag = False
     memory = []
     ## Using a queue to store avg of before 
@@ -137,7 +137,7 @@ def main(
             else:
                 long_sum.append(short_sum_1)
                 moving_avg = np.mean(long_sum)
-                # logger.info(f"moving_avg  : {moving_avg.round(5)}")
+                logger.info(f"moving_avg  : {moving_avg.round(5)}")
 
             
             if not energy_flag:
@@ -147,32 +147,32 @@ def main(
                     long_sum.append(short_sum_2)
 
                     moving_avg = np.mean(long_sum)
-                    # logger.info(f"moving_avg  : {moving_avg.round(5)}")
+                    logger.info(f"moving_avg  : {moving_avg.round(5)}")
 
             if energy_flag: # Mtn que l'on est sur qu'il y a un signal, on peut faire la classification 
                             # sans regarder à la valeur du moving average car on ne va pas regarder 
                             # qu'après on a plus de signal et stopper la classif en plein milieu
                             # de celle-ci et recommencer à chaque fois 
                         
-                # logger.info(f"Starting classification")
+                logger.info(f"Starting classification")
                 
                 melvec -= np.mean(melvec)
                 melvec = melvec / np.linalg.norm(melvec)
 
-                melvec = melvec.reshape((20, 20)).T
+                melvec = melvec.reshape((20, 20))
                 melvec = melvec.reshape((-1, 20, 20, 1))
                 
-                # fig, ax = plt.subplots(figsize=(3, 3))  
-                # plot_specgram(
-                #     melvec.reshape((20, 20)),  # Reshape le melvec pour l'affichage
-                #     ax=ax,
-                #     is_mel=True,
-                #     title=f"Mel {i}",  
-                #     xlabel="Mel vector"
-                # )
-                # fig.savefig(f"mcu/hands_on_feature_vectors/mel_{i}.png")  # Sauvegardez le plot
-                # plt.close(fig)
-                # i += 1
+                fig, ax = plt.subplots(figsize=(3, 3))  
+                plot_specgram(
+                    melvec.reshape((20, 20)).T,  # Reshape le melvec pour l'affichage
+                    ax=ax,
+                    is_mel=True,
+                    title=f"Mel {i}",  
+                    xlabel="Mel vector"
+                )
+                fig.savefig(f"mcu/hands_on_feature_vectors/mel_{i}.png")  # Sauvegardez le plot
+                plt.close(fig)
+                i += 1
                 proba = model.predict(melvec)
                 proba_array = np.array(proba)
 
@@ -206,5 +206,8 @@ def main(
                     majority_class = CLASSNAMES[most_likely_class_index]
                     if majority_class == "gun":
                         majority_class = "gunshot"
+                    answer = requests.post(f"{hostname}/lelec210x/leaderboard/submit/{key}/{majority_class}", timeout=1)
+                    json_answer = json.loads(answer.text)
+                    print(json_answer)     
                     logger.info(f"Most likely class index: {majority_class}")
             

@@ -19,7 +19,7 @@ void eval_radio(void)
 
 	uint8_t buf[PAYLOAD_LEN*2];
 	for (uint16_t i=0; i < PAYLOAD_LEN; i+=1) {
-		buf[i] = (uint8_t) (0xC0);
+		buf[i] = (uint8_t) (i & 0xFF);
 	}
 	conv_encoder(buf, buf+PAYLOAD_LEN, PAYLOAD_LEN);
 	for (int n = 0; n < PAYLOAD_LEN*2; n++){

@@ -10,11 +10,12 @@ version = "0.1.0"
 dependencies = [
     "pyserial>=3.5",
     "soundfile>=0.12.1",
-    "keras>=3.9.0",
+    "keras>=3.9.2",
     "xgboost>=2.1.4",
     "scikeras[tensorflow]>=0.13.0",
     "plotly>=6.0.1",
     "optuna>=4.3.0",
+    "pyqt5>=5.15.11",
 ]
 
 [tool.ruff]

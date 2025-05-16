@@ -584,42 +584,42 @@ device_handler_fpga::set_gain(int device_number, bool direction, int channel, un
 
         uint16_t reg_value;
 
-        // Write AGC loop gain at address 0x0408, 16 bits LSB
-        LMS_WriteLMSReg(
-            device_handler_fpga::getInstance().get_device(device_number), 0x0408, 0x1000);
-
-        // Write AGC loop gain at address 0x0409[1:0], 2 bits MSB
-        // Write AGC_ADESIRED[15:4]
-        // Bits 2 and 3 are reserved
-        LMS_ReadLMSReg(
-            device_handler_fpga::getInstance().get_device(device_number), 0x0409, &reg_value);
-        reg_value &= 0x000C; // Clear all bits except 2 and 3
-        reg_value |= 0x0300; 
-        LMS_WriteLMSReg(
-            device_handler_fpga::getInstance().get_device(device_number), 0x0409, reg_value);
-
-        // Write at address 0x040A, AGC_Mode[13:12] = 0, AGC_AVG[2:0] = 2
-        LMS_ReadLMSReg(
-            device_handler_fpga::getInstance().get_device(device_number), 0x040A, &reg_value);
-        reg_value &= 0xCFFF; // Clear all bits except 12 and 13
-        reg_value |= 0x0002; // Set bits 12 and 13 to 0, bits [2:0] = 2
-        LMS_WriteLMSReg(
-            device_handler_fpga::getInstance().get_device(device_number), 0x040A, reg_value);
-
-        // Write AGC bypass at address 0x040C, bit 6 = 1 (7th bit)
-        LMS_ReadLMSReg(
-            device_handler_fpga::getInstance().get_device(device_number), 0x040C, &reg_value);
-        reg_value &= 0xFFBF; // Keep all bits except 6
-        LMS_WriteLMSReg(
-            device_handler_fpga::getInstance().get_device(device_number), 0x040C, reg_value);
-        
-        // // Write bits 9-6 to 1 and 1-0 to 1
-        // LMS_ReadLMSReg(
-        //     device_handler_fpga::getInstance().get_device(device_number), 0x0113, &reg_value);
-        // reg_value &= 0xFC3C; // Keep all bits except 6
-        // reg_value |= 0x0041; // Set bits 12 and 13 to 0, bits [2:0] = 2
+        // // Write AGC loop gain at address 0x0408, 16 bits LSB
         // LMS_WriteLMSReg(
-        //     device_handler_fpga::getInstance().get_device(device_number), 0x0113, reg_value);
+        //     device_handler_fpga::getInstance().get_device(device_number), 0x0408, 0x1000);
+
+        // // Write AGC loop gain at address 0x0409[1:0], 2 bits MSB
+        // // Write AGC_ADESIRED[15:4]
+        // // Bits 2 and 3 are reserved
+        // LMS_ReadLMSReg(
+        //     device_handler_fpga::getInstance().get_device(device_number), 0x0409, &reg_value);
+        // reg_value &= 0x000C; // Clear all bits except 2 and 3
+        // reg_value |= 0x0400; 
+        // LMS_WriteLMSReg(
+        //     device_handler_fpga::getInstance().get_device(device_number), 0x0409, reg_value);
+
+        // // Write at address 0x040A, AGC_Mode[13:12] = 0, AGC_AVG[2:0] = 2
+        // LMS_ReadLMSReg(
+        //     device_handler_fpga::getInstance().get_device(device_number), 0x040A, &reg_value);
+        // reg_value &= 0xCFFF; // Clear all bits except 12 and 13
+        // reg_value |= 0x0002; // Set bits 12 and 13 to 0, bits [2:0] = 2
+        // LMS_WriteLMSReg(
+        //     device_handler_fpga::getInstance().get_device(device_number), 0x040A, reg_value);
+
+        // // Write AGC bypass at address 0x040C, bit 6 = 1 (7th bit)
+        // LMS_ReadLMSReg(
+        //     device_handler_fpga::getInstance().get_device(device_number), 0x040C, &reg_value);
+        // reg_value &= 0xFFBF; // Keep all bits except 6
+        // LMS_WriteLMSReg(
+        //     device_handler_fpga::getInstance().get_device(device_number), 0x040C, reg_value);
+        
+        // // // Write bits 9-6 to 1 and 1-0 to 1
+        // // LMS_ReadLMSReg(
+        // //     device_handler_fpga::getInstance().get_device(device_number), 0x0113, &reg_value);
+        // // reg_value &= 0xFC3C; // Keep all bits except 6
+        // // reg_value |= 0x0041; // Set bits 12 and 13 to 0, bits [2:0] = 2
+        // // LMS_WriteLMSReg(
+        // //     device_handler_fpga::getInstance().get_device(device_number), 0x0113, reg_value);
         
 
 
@@ -631,10 +631,10 @@ device_handler_fpga::set_gain(int device_number, bool direction, int channel, un
         
     
 
-        // LMS_SetGaindB(device_handler_fpga::getInstance().get_device(device_number),
-        //               direction,
-        //               channel,
-        //               gain_dB);
+        LMS_SetGaindB(device_handler_fpga::getInstance().get_device(device_number),
+                      direction,
+                      channel,
+                      gain_dB);
 
         std::string s_dir[2] = { "RX", "TX" };
 
