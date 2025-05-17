@@ -22,7 +22,7 @@ def extract_data(file_path):
         print(f"Erreur lors de la lecture du fichier : {e}")
 
 
-file_path = 'telecom/Data.txt'
+file_path = 'Data.txt'
 # Remplace par le chemin réel de ton fichier
 data_exp = extract_data(file_path)
 
@@ -79,20 +79,20 @@ for i in range(len(INVALID)):
     PACKET_ERROR.append(packet/100)
 
 
-# plt.figure()
-# plt.hist(cfo,bins = 20)
-# plt.xlabel("CFO")
-# plt.ylabel("OCCURENCe")
-# plt.savefig('telecom/CFO.png')
+plt.figure()
+plt.hist(cfo,bins = 20)
+plt.xlabel("CFO")
+plt.ylabel("OCCURENCe")
+plt.savefig('telecom/CFO.png')
 
 
-# plt.figure()
-# plt.plot(SNR_aver,PACKET_ERROR,'o',linestyle = '-')
-# plt.yscale('log')
-# plt.grid(True)
-# plt.xlabel('SNR')
-# plt.ylabel('PER')
-# plt.savefig('telecom/test_packet.png')
+plt.figure()
+plt.plot(SNR_aver,PACKET_ERROR,'o',linestyle = '-')
+plt.yscale('log')
+plt.grid(True)
+plt.xlabel('SNR')
+plt.ylabel('PER')
+plt.savefig('telecom/test_packet.png')
 
-# plt.show()
+plt.show()
 
