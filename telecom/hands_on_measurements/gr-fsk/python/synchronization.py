@@ -33,7 +33,7 @@ def cfo_estimation(y, B, R, Fdev):
     """
 
     
-    N = np.array([2]) # Block of 4 bits (instructions) / Block of 2 bits (respect condition |cfo| < B/2N with cfo_range = 10e4)
+    N = np.array([2,4,8]) # Block of 4 bits (instructions) / Block of 2 bits (respect condition |cfo| < B/2N with cfo_range = 10e4)
     Nt = N*R # Number of blocks used for CFO estimation
     T = 1/B # B=1/T
 
@@ -96,7 +96,7 @@ def sto_estimation(y, B, R, Fdev):
 
         return derivative
 
-    # phase_function = savgol_filter(phase_function, 51, 3)
+    phase_function = savgol_filter(phase_function, 51, 3)
     phase_derivative_2 = np.abs(second_derivative(phase_function, order))
     #phase_derivative_2 = np.abs(weno5_second_derivative(phase_function, 1/R))
 
