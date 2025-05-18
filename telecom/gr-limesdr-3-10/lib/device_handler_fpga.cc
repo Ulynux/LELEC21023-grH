@@ -613,13 +613,13 @@ device_handler_fpga::set_gain(int device_number, bool direction, int channel, un
         // LMS_WriteLMSReg(
         //     device_handler_fpga::getInstance().get_device(device_number), 0x040C, reg_value);
         
-        // // // Write bits 9-6 to 1 and 1-0 to 1
-        // // LMS_ReadLMSReg(
-        // //     device_handler_fpga::getInstance().get_device(device_number), 0x0113, &reg_value);
-        // // reg_value &= 0xFC3C; // Keep all bits except 6
-        // // reg_value |= 0x0041; // Set bits 12 and 13 to 0, bits [2:0] = 2
-        // // LMS_WriteLMSReg(
-        // //     device_handler_fpga::getInstance().get_device(device_number), 0x0113, reg_value);
+        // // Write bits 9-6 to 1 and 1-0 to 1
+        // LMS_ReadLMSReg(
+        //     device_handler_fpga::getInstance().get_device(device_number), 0x0113, &reg_value);
+        // reg_value &= 0xFC3C; // Keep all bits except 6
+        // reg_value |= 0x0041; // Set bits 12 and 13 to 0, bits [2:0] = 2
+        // LMS_WriteLMSReg(
+        //     device_handler_fpga::getInstance().get_device(device_number), 0x0113, reg_value);
         
 
 

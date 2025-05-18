@@ -1,5 +1,6 @@
 from collections import Counter
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def extract_data(file_path):
@@ -27,7 +28,7 @@ def extract_data(file_path):
 
 
 
-file_path = 'telecom/Data.txt'
+file_path = 'Data.txt'
 
 # Remplace par le chemin réel de ton fichier
 data_exp = extract_data(file_path)
@@ -91,31 +92,52 @@ for i in range(len(INVALID)):
     PACKET_ERROR.append(packet/1000)
 
 
+PER = []
+PER.append(np.mean(PACKET_ERROR[:4]))
+PER.append(np.mean(PACKET_ERROR[4:6]))
+PER += PACKET_ERROR[6:]
+PER.append(0)
+PER = np.array(PER)
 
+SNR = []
+SNR.append(np.mean(SNR_aver[:4]))
+SNR.append(np.mean(SNR_aver[4:6]))
+SNR += SNR_aver[6:]
+SNR.append(20)
+SNR = np.array(SNR)
 
 print("SNR : ",SNR_aver)
 print("PER : ",PACKET_ERROR)
+print("PER : ",PER)
+print("SNR : ",SNR)
+
+
+
 plt.figure()
-plt.plot(SNR_aver,PACKET_ERROR,marker='o',linestyle = '-')
-
-
-
+plt.plot(SNR, PER, marker='o', linestyle = '-')
 plt.grid(True)
-plt.xlabel('SNR')
-plt.ylabel('PER')
-#plt.savefig('telecom/test_packet.png')
-
+plt.title('PER vs SNR')
+plt.xlabel('SNRe [dB]')
+plt.ylabel('PER [-]')
+plt.yscale('log')
+plt.xlim(0, 20)
+plt.ylim(1e-3, 1)
+plt.savefig('telecom/PER_global_chain.pdf')
 plt.show()
+
+
+sorted_indices = np.argsort(np.array(SNR_aver))
+SNR_aver = np.array(SNR_aver)[sorted_indices]
+PACKET_ERROR = np.array(PACKET_ERROR)[sorted_indices]
 plt.figure()
-plt.plot(SNR_aver,PACKET_ERROR,marker='o',linestyle = '-')
-
-
-
+plt.plot(SNR_aver, PACKET_ERROR, marker='o', linestyle = '-')
 plt.grid(True)
-plt.xlabel('SNR')
+plt.title('PER vs SNR')
+plt.xlabel('SNRe [dB]')
 plt.ylabel('PER')
 plt.yscale('log')
-#plt.savefig('telecom/test_packet.png')
-
+plt.ylim(1e-3, 1e-1)
+plt.xlim(9, 17)
+plt.savefig('telecom/PER_zoom.pdf')
 plt.show()
 
