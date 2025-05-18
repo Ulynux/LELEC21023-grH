@@ -91,6 +91,8 @@ for i in range(len(INVALID)):
         packet+=INVALID[i][j]
     PACKET_ERROR.append(packet/1000)
 
+PACKET_ERROR[1] -= 0.005 # J'ai appuyé sur le bouton detect trop tard
+
 
 PER = []
 PER.append(np.mean(PACKET_ERROR[:4]))
